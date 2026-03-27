@@ -269,6 +269,11 @@
       Book: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>,
       Download: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>,
       ExternalLink: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>,
+      Columns: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg>,
+      Camera: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>,
+      ChevronLeft: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>,
+      Image: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>,
+      X: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
     };
 
     // ========================
@@ -349,6 +354,8 @@
         { id: "dashboard", label: "Dashboard", icon: Icons.Home },
         { id: "projecao", label: "Gastos", icon: Icons.DollarSign },
         { id: "cronograma", label: "Cronograma", icon: Icons.Calendar },
+        { id: "comparativo", label: "Comparar", icon: Icons.Columns },
+        { id: "galeria", label: "Galeria", icon: Icons.Camera },
         { id: "docs", label: "Docs", icon: Icons.Book },
         { id: "anotacoes", label: "Notas", icon: Icons.FileText },
         { id: "faq", label: "FAQ", icon: Icons.HelpCircle },
@@ -505,7 +512,7 @@
     // ========================
     // TELA: DASHBOARD
     // ========================
-    function Dashboard() {
+    function Dashboard({ decisao, setDecisao }) {
       const params = DEFAULTS;
       const pl = APARTAMENTOS.palestraLife;
       const up = APARTAMENTOS.uniquePalestra;
@@ -526,8 +533,110 @@
       const totalUP = totalParcelasUP + obraUP;
       const maisBarato = totalPL < totalUP ? "Palestra Life" : "Unique Palestra";
 
+      const [renda1, setRenda1] = useState(() => parseFloat(localStorage.getItem("nossoap_renda1")) || 0);
+      const [renda2, setRenda2] = useState(() => parseFloat(localStorage.getItem("nossoap_renda2")) || 0);
+      useEffect(() => { localStorage.setItem("nossoap_renda1", renda1); }, [renda1]);
+      useEffect(() => { localStorage.setItem("nossoap_renda2", renda2); }, [renda2]);
+
+      const escolhido = decisao === "pl" ? pl : decisao === "up" ? up : null;
+      const parcelaEscolhida = escolhido ? escolhido.parcelaPosChave : 0;
+      const rendaTotal = renda1 + renda2;
+      const comprometimento = rendaTotal > 0 ? ((parcelaEscolhida / rendaTotal) * 100) : 0;
+
+      const decisaoOpts = [
+        { id: "ambos", label: "Decidindo..." },
+        { id: "pl", label: "Palestra Life" },
+        { id: "up", label: "Unique Palestra" },
+      ];
+
       return (
         <div className="fade-in page-container">
+          {/* Decisao Card */}
+          <div style={{
+            background: "var(--bg-secondary)", border: "1px solid var(--border)",
+            borderRadius: "var(--radius)", padding: "18px", marginBottom: 20,
+            boxShadow: "var(--shadow)",
+          }}>
+            <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 12 }}>Nossa Decisao</h3>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: escolhido ? 16 : 0 }}>
+              {decisaoOpts.map(o => (
+                <button key={o.id} onClick={() => setDecisao(o.id)} style={{
+                  padding: "8px 16px",
+                  background: decisao === o.id
+                    ? (o.id === "pl" ? "var(--accent-indigo)" : o.id === "up" ? "var(--accent-amber)" : "var(--accent-green)")
+                    : "var(--bg-tertiary)",
+                  color: decisao === o.id ? "#fff" : "var(--text-secondary)",
+                  border: `1px solid ${decisao === o.id
+                    ? (o.id === "pl" ? "var(--accent-indigo)" : o.id === "up" ? "var(--accent-amber)" : "var(--accent-green)")
+                    : "var(--border)"}`,
+                  borderRadius: "var(--radius-sm)", cursor: "pointer",
+                  fontFamily: "inherit", fontSize: 13, fontWeight: 600,
+                }}>{o.label}</button>
+              ))}
+            </div>
+            {escolhido && (
+              <div style={{
+                background: "var(--bg-tertiary)", borderRadius: "var(--radius-sm)", padding: 14,
+                borderLeft: `3px solid ${escolhido.cor === "indigo" ? "var(--accent-indigo)" : "var(--accent-amber)"}`,
+              }}>
+                <div className="grid-2" style={{ marginBottom: 14 }}>
+                  <StatCard label="AP Escolhido" value={escolhido.nome} mono={false} />
+                  <StatCard label="Tipo" value={escolhido.tipo} mono={false} />
+                  <StatCard label="Valor Total" value={fmt(escolhido.valorTotal)} />
+                  <StatCard label="Parcela Pos-Chave" value={fmt(escolhido.parcelaPosChave)} />
+                  <StatCard label="Entrega" value={fmtMesAno(escolhido.entrega)} mono={false} />
+                  <StatCard label="Entrada" value={escolhido.fgts > 0 ? `Zerada (FGTS ${fmt(escolhido.fgts)})` : "Zerada"} mono={false} />
+                </div>
+                <div style={{
+                  background: "var(--bg-secondary)", borderRadius: "var(--radius-sm)", padding: 14,
+                }}>
+                  <p style={{ fontSize: 13, fontWeight: 600, marginBottom: 10 }}>Comprometimento de Renda</p>
+                  <div className="grid-2" style={{ marginBottom: 10 }}>
+                    <div>
+                      <label style={{ fontSize: 11, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>Renda Joao</label>
+                      <input type="number" value={renda1 || ""} onChange={e => setRenda1(parseFloat(e.target.value) || 0)}
+                        placeholder="0" style={{
+                          width: "100%", padding: "8px 10px", background: "var(--bg-tertiary)",
+                          border: "1px solid var(--border)", borderRadius: "var(--radius-sm)",
+                          color: "var(--text-primary)", fontSize: 14, fontFamily: "'JetBrains Mono', monospace", outline: "none",
+                        }} />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: 11, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>Renda parceira</label>
+                      <input type="number" value={renda2 || ""} onChange={e => setRenda2(parseFloat(e.target.value) || 0)}
+                        placeholder="0" style={{
+                          width: "100%", padding: "8px 10px", background: "var(--bg-tertiary)",
+                          border: "1px solid var(--border)", borderRadius: "var(--radius-sm)",
+                          color: "var(--text-primary)", fontSize: 14, fontFamily: "'JetBrains Mono', monospace", outline: "none",
+                        }} />
+                    </div>
+                  </div>
+                  {rendaTotal > 0 && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>Comprometimento</span>
+                        <span className="mono" style={{
+                          fontSize: 14, fontWeight: 700,
+                          color: comprometimento > 30 ? "var(--accent-red)" : "var(--accent-green)",
+                        }}>{fmtNum(comprometimento, 1)}%</span>
+                      </div>
+                      <div style={{ height: 6, background: "var(--border)", borderRadius: 3, overflow: "hidden" }}>
+                        <div style={{
+                          height: "100%", width: `${Math.min(comprometimento, 100)}%`,
+                          background: comprometimento > 30 ? "var(--accent-red)" : "var(--accent-green)",
+                          borderRadius: 3,
+                        }} />
+                      </div>
+                      <p style={{ fontSize: 12, color: "var(--text-secondary)" }}>
+                        Dividindo a parcela de {fmt(parcelaEscolhida)}: <strong className="mono">{fmt(parcelaEscolhida / 2)}/pessoa</strong>
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Indicator */}
           <div style={{
             background: "var(--bg-secondary)", border: "1px solid var(--border)",
@@ -1018,6 +1127,33 @@
     // TELA: CRONOGRAMA
     // ========================
     function Cronograma() {
+      const defaultChecklist = [
+        { id: 1, text: "RG e CPF (ambos)", done: false },
+        { id: 2, text: "Comprovante de renda / Imposto de Renda", done: false },
+        { id: 3, text: "Comprovante de endereco", done: false },
+        { id: 4, text: "Certidao de estado civil", done: false },
+        { id: 5, text: "Extrato FGTS", done: false },
+        { id: 6, text: "Contrato assinado com construtora", done: false },
+        { id: 7, text: "Aprovacao do financiamento pelo banco", done: false },
+        { id: 8, text: "Vistoria do imovel", done: false },
+        { id: 9, text: "Assinatura do contrato com o banco", done: false },
+        { id: 10, text: "Registro do imovel em cartorio", done: false },
+      ];
+      const [checklist, setChecklist] = useState(() => {
+        try { const saved = JSON.parse(localStorage.getItem("nossoap_checklist")); return saved && saved.length ? saved : defaultChecklist; } catch { return defaultChecklist; }
+      });
+      const [newItem, setNewItem] = useState("");
+      useEffect(() => { localStorage.setItem("nossoap_checklist", JSON.stringify(checklist)); }, [checklist]);
+
+      const toggleItem = (id) => setChecklist(checklist.map(c => c.id === id ? { ...c, done: !c.done } : c));
+      const removeItem = (id) => setChecklist(checklist.filter(c => c.id !== id));
+      const addItem = () => {
+        if (!newItem.trim()) return;
+        setChecklist([...checklist, { id: Date.now(), text: newItem.trim(), done: false }]);
+        setNewItem("");
+      };
+      const doneCount = checklist.filter(c => c.done).length;
+
       const marcos = [
         { data: "Mar 2026", label: "Assinatura do contrato", status: "done", cor: "var(--accent-green)" },
         { data: "Abr 2026", label: "Inicio da obra", status: "done", cor: "var(--accent-green)" },
@@ -1124,6 +1260,73 @@
                 </ul>
               </div>
             ))}
+          </div>
+
+          {/* Checklist de Documentacao */}
+          <div style={{
+            marginTop: 20, background: "var(--bg-secondary)", border: "1px solid var(--border)",
+            borderRadius: "var(--radius)", padding: "18px", boxShadow: "var(--shadow)",
+          }}>
+            <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 14 }}>Checklist de Documentacao</h3>
+
+            {/* Progress */}
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{doneCount} de {checklist.length} concluidos</span>
+                <span className="mono" style={{ fontSize: 12, color: doneCount === checklist.length ? "var(--accent-green)" : "var(--text-muted)" }}>
+                  {checklist.length > 0 ? fmtNum((doneCount / checklist.length) * 100, 0) : 0}%
+                </span>
+              </div>
+              <div style={{ height: 6, background: "var(--border)", borderRadius: 3, overflow: "hidden" }}>
+                <div style={{
+                  height: "100%", width: `${checklist.length > 0 ? (doneCount / checklist.length) * 100 : 0}%`,
+                  background: doneCount === checklist.length ? "var(--accent-green)" : "var(--accent-indigo)",
+                  borderRadius: 3, transition: "width 0.3s",
+                }} />
+              </div>
+            </div>
+
+            {/* Items */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 14 }}>
+              {checklist.map(item => (
+                <div key={item.id} style={{
+                  display: "flex", alignItems: "center", gap: 10, padding: "8px 10px",
+                  background: "var(--bg-tertiary)", borderRadius: "var(--radius-sm)",
+                }}>
+                  <input type="checkbox" checked={item.done} onChange={() => toggleItem(item.id)}
+                    style={{ width: 16, height: 16, accentColor: "var(--accent-indigo)", cursor: "pointer", flexShrink: 0 }} />
+                  <span style={{
+                    flex: 1, fontSize: 13,
+                    textDecoration: item.done ? "line-through" : "none",
+                    color: item.done ? "var(--text-muted)" : "var(--text-primary)",
+                  }}>{item.text}</span>
+                  <button onClick={() => removeItem(item.id)} style={{
+                    background: "none", border: "none", cursor: "pointer",
+                    color: "var(--text-muted)", padding: 3, display: "flex", alignItems: "center",
+                    opacity: 0.6,
+                  }} title="Remover"><Icons.X /></button>
+                </div>
+              ))}
+            </div>
+
+            {/* Add custom item */}
+            <div style={{ display: "flex", gap: 8 }}>
+              <input type="text" value={newItem} onChange={e => setNewItem(e.target.value)}
+                placeholder="Adicionar item..."
+                onKeyDown={e => e.key === "Enter" && addItem()}
+                style={{
+                  flex: 1, padding: "8px 12px", background: "var(--bg-tertiary)",
+                  border: "1px solid var(--border)", borderRadius: "var(--radius-sm)",
+                  color: "var(--text-primary)", fontSize: 13, fontFamily: "inherit", outline: "none",
+                }} />
+              <button onClick={addItem} style={{
+                padding: "8px 14px", background: "var(--accent-indigo)", color: "#fff",
+                border: "none", borderRadius: "var(--radius-sm)", cursor: "pointer",
+                fontFamily: "inherit", fontSize: 13, fontWeight: 600,
+                display: "flex", alignItems: "center", gap: 4,
+                opacity: newItem.trim() ? 1 : 0.5,
+              }}><Icons.Plus /> Adicionar</button>
+            </div>
           </div>
         </div>
       );
@@ -1472,30 +1675,299 @@
     }
 
     // ========================
+    // TELA: COMPARATIVO
+    // ========================
+    function Comparativo() {
+      const pl = APARTAMENTOS.palestraLife;
+      const up = APARTAMENTOS.uniquePalestra;
+      const params = DEFAULTS;
+      const prazoM = params.prazoAnos * 12;
+
+      const saldoPL = calcSaldoEntrega(pl.financiamento, params.incc, pl.mesesObra);
+      const saldoUP = calcSaldoEntrega(up.financiamento, params.incc, up.mesesObra);
+      const mesesRestPL = diffMeses(new Date(), pl.entrega);
+      const mesesRestUP = diffMeses(new Date(), up.entrega);
+      const evolPL = gerarEvolucaoObra(pl.financiamento, params.taxaJuros, params.incc, mesesRestPL, pl.percentualObra);
+      const evolUP = gerarEvolucaoObra(up.financiamento, params.taxaJuros, params.incc, mesesRestUP, up.percentualObra);
+      const obraPL = evolPL.reduce((s, m) => s + m.jurosMes, 0);
+      const obraUP = evolUP.reduce((s, m) => s + m.jurosMes, 0);
+      const totalFinPL = pl.parcelaPosChave * prazoM;
+      const totalFinUP = up.parcelaPosChave * prazoM;
+
+      const rows = [
+        { label: "Tipo", pl: pl.tipo, up: up.tipo },
+        { label: "Valor Total", pl: fmt(pl.valorTotal), up: fmt(up.valorTotal) },
+        { label: "Financiamento", pl: fmt(pl.financiamento), up: fmt(up.financiamento) },
+        { label: "Valor Avaliacao", pl: fmt(pl.valorAvaliacao), up: fmt(up.valorAvaliacao) },
+        { label: "Entrada", pl: "Zerada", up: "Zerada (FGTS R$5k)" },
+        { label: "Parcela Pos-Chave", pl: fmt(pl.parcelaPosChave), up: fmt(up.parcelaPosChave) },
+        { label: "Entrega", pl: fmtMesAno(pl.entrega), up: fmtMesAno(up.entrega) },
+        { label: "Meses de Obra", pl: String(pl.mesesObra), up: String(up.mesesObra) },
+        { label: "Obra atual", pl: `~${pl.percentualObra}%`, up: `~${up.percentualObra}%` },
+        { label: "Documentacao", pl: pl.documentacao, up: up.documentacao },
+        { label: "FGTS usado", pl: fmt(pl.fgts), up: fmt(up.fgts) },
+        { label: "Saldo na Entrega (est.)", pl: fmt(saldoPL), up: fmt(saldoUP) },
+        { label: "Evol. obra total (est.)", pl: fmt(obraPL), up: fmt(obraUP) },
+        { label: "Total financ. " + params.prazoAnos + " anos", pl: fmt(totalFinPL), up: fmt(totalFinUP) },
+      ];
+
+      return (
+        <div className="fade-in page-container" style={{ maxWidth: 900 }}>
+          <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 6 }}>Comparativo</h2>
+          <p style={{ color: "var(--text-muted)", fontSize: 13, marginBottom: 20 }}>
+            Comparacao lado a lado de todos os dados
+          </p>
+          <div style={{ overflowX: "auto" }}>
+            <table style={{
+              width: "100%", borderCollapse: "collapse", minWidth: 500,
+              background: "var(--bg-secondary)", borderRadius: "var(--radius)",
+              overflow: "hidden", boxShadow: "var(--shadow)",
+            }}>
+              <thead>
+                <tr>
+                  <th style={{
+                    padding: "12px 14px", textAlign: "left", fontSize: 13, fontWeight: 600,
+                    background: "var(--bg-tertiary)", borderBottom: "2px solid var(--border)",
+                    color: "var(--text-muted)", width: "34%",
+                  }}></th>
+                  <th style={{
+                    padding: "12px 14px", textAlign: "center", fontSize: 14, fontWeight: 700,
+                    background: "var(--bg-tertiary)", borderBottom: "2px solid var(--border)",
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--accent-indigo)", boxShadow: "0 0 6px var(--accent-indigo)" }} />
+                      Palestra Life
+                    </div>
+                  </th>
+                  <th style={{
+                    padding: "12px 14px", textAlign: "center", fontSize: 14, fontWeight: 700,
+                    background: "var(--bg-tertiary)", borderBottom: "2px solid var(--border)",
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--accent-amber)", boxShadow: "0 0 6px var(--accent-amber)" }} />
+                      Unique Palestra
+                    </div>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r, i) => (
+                  <tr key={i} style={{ background: i % 2 === 0 ? "var(--bg-secondary)" : "var(--bg-tertiary)" }}>
+                    <td style={{
+                      padding: "10px 14px", fontSize: 13, fontWeight: 600,
+                      borderBottom: "1px solid var(--border)", color: "var(--text-secondary)",
+                    }}>{r.label}</td>
+                    <td className="mono" style={{
+                      padding: "10px 14px", fontSize: 13, textAlign: "center",
+                      borderBottom: "1px solid var(--border)", borderLeft: "1px solid var(--border)",
+                    }}>{r.pl}</td>
+                    <td className="mono" style={{
+                      padding: "10px 14px", fontSize: 13, textAlign: "center",
+                      borderBottom: "1px solid var(--border)", borderLeft: "1px solid var(--border)",
+                    }}>{r.up}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      );
+    }
+
+    // ========================
+    // TELA: GALERIA
+    // ========================
+    function Galeria() {
+      const [fotos, setFotos] = useState(() => {
+        try { return JSON.parse(localStorage.getItem("nossoap_galeria") || "[]"); } catch { return []; }
+      });
+      const [viewing, setViewing] = useState(null);
+
+      useEffect(() => { localStorage.setItem("nossoap_galeria", JSON.stringify(fotos)); }, [fotos]);
+
+      const resizeAndStore = (file) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new window.Image();
+          img.onload = () => {
+            const maxW = 800;
+            let w = img.width, h = img.height;
+            if (w > maxW) { h = Math.round(h * (maxW / w)); w = maxW; }
+            const canvas = document.createElement("canvas");
+            canvas.width = w; canvas.height = h;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0, w, h);
+            const data = canvas.toDataURL("image/jpeg", 0.8);
+            const newFoto = { id: Date.now(), data, caption: file.name.replace(/\.[^.]+$/, ""), date: new Date().toLocaleDateString("pt-BR") };
+            setFotos(prev => [newFoto, ...prev]);
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      };
+
+      const handleUpload = (e) => {
+        const files = Array.from(e.target.files);
+        files.forEach(resizeAndStore);
+        e.target.value = "";
+      };
+
+      const updateCaption = (id, caption) => {
+        setFotos(fotos.map(f => f.id === id ? { ...f, caption } : f));
+      };
+
+      const deleteFoto = (id) => {
+        setFotos(fotos.filter(f => f.id !== id));
+        if (viewing && viewing.id === id) setViewing(null);
+      };
+
+      return (
+        <div className="fade-in page-container">
+          <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 6 }}>Galeria</h2>
+          <p style={{ color: "var(--text-muted)", fontSize: 13, marginBottom: 16 }}>
+            Fotos dos apartamentos e da obra
+          </p>
+
+          {/* Warning */}
+          <div style={{
+            background: "var(--bg-tertiary)", border: "1px solid var(--border)",
+            borderRadius: "var(--radius-sm)", padding: "10px 14px", marginBottom: 16,
+            display: "flex", alignItems: "center", gap: 8,
+          }}>
+            <Icons.AlertCircle />
+            <p style={{ fontSize: 12, color: "var(--text-muted)" }}>
+              As fotos sao armazenadas no localStorage do navegador (~5MB total). Imagens sao redimensionadas para max 800px.
+            </p>
+          </div>
+
+          {/* Upload button */}
+          <div style={{ marginBottom: 20 }}>
+            <label style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              padding: "10px 20px", background: "var(--accent-indigo)", color: "#fff",
+              borderRadius: "var(--radius-sm)", cursor: "pointer",
+              fontSize: 14, fontWeight: 600, fontFamily: "inherit",
+            }}>
+              <Icons.Camera /> Adicionar Fotos
+              <input type="file" accept="image/*" multiple onChange={handleUpload}
+                style={{ display: "none" }} />
+            </label>
+          </div>
+
+          {/* Photo grid */}
+          {fotos.length === 0 ? (
+            <div style={{
+              textAlign: "center", padding: 48, color: "var(--text-muted)",
+              background: "var(--bg-secondary)", border: "1px solid var(--border)",
+              borderRadius: "var(--radius)",
+            }}>
+              <Icons.Image />
+              <p style={{ marginTop: 10, fontSize: 13 }}>Nenhuma foto ainda. Clique em "Adicionar Fotos" acima.</p>
+            </div>
+          ) : (
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+              gap: 14,
+            }}>
+              {fotos.map(foto => (
+                <div key={foto.id} style={{
+                  background: "var(--bg-secondary)", border: "1px solid var(--border)",
+                  borderRadius: "var(--radius)", overflow: "hidden", boxShadow: "var(--shadow)",
+                }}>
+                  <div style={{ position: "relative", cursor: "pointer" }} onClick={() => setViewing(foto)}>
+                    <img src={foto.data} alt={foto.caption} style={{
+                      width: "100%", height: 180, objectFit: "cover", display: "block",
+                    }} />
+                  </div>
+                  <div style={{ padding: "10px 12px" }}>
+                    <input type="text" value={foto.caption} onChange={e => updateCaption(foto.id, e.target.value)}
+                      style={{
+                        width: "100%", padding: "4px 6px", background: "var(--bg-tertiary)",
+                        border: "1px solid var(--border)", borderRadius: 4,
+                        color: "var(--text-primary)", fontSize: 12, fontFamily: "inherit", outline: "none",
+                      }} />
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 6 }}>
+                      <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{foto.date}</span>
+                      <button onClick={() => deleteFoto(foto.id)} style={{
+                        background: "none", border: "none", cursor: "pointer",
+                        color: "var(--accent-red)", padding: 3, display: "flex", alignItems: "center",
+                        fontSize: 11, gap: 3, fontFamily: "inherit",
+                      }}><Icons.Trash /> Excluir</button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Fullscreen overlay */}
+          {viewing && (
+            <div style={{
+              position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+              background: "rgba(0,0,0,0.9)", zIndex: 1000,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              padding: 20,
+            }} onClick={() => setViewing(null)}>
+              <button onClick={() => setViewing(null)} style={{
+                position: "absolute", top: 16, right: 16,
+                background: "rgba(255,255,255,0.15)", border: "none",
+                borderRadius: 8, padding: 8, cursor: "pointer", color: "#fff",
+                display: "flex", alignItems: "center",
+              }}><Icons.X /></button>
+              <img src={viewing.data} alt={viewing.caption} style={{
+                maxWidth: "100%", maxHeight: "90vh", objectFit: "contain",
+                borderRadius: "var(--radius)",
+              }} onClick={e => e.stopPropagation()} />
+              <p style={{
+                position: "absolute", bottom: 24, color: "#fff",
+                fontSize: 14, fontWeight: 500, textAlign: "center",
+              }}>{viewing.caption}</p>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // ========================
     // APP PRINCIPAL
     // ========================
     function App() {
       const [loggedIn, setLoggedIn] = useState(() => sessionStorage.getItem("nossoap_auth") === "1");
       const [page, setPage] = useState("dashboard");
       const [theme, setTheme] = useState(() => localStorage.getItem("nossoap_theme") || "dark");
+      const [decisao, setDecisao] = useState(() => localStorage.getItem("nossoap_decisao") || "ambos");
 
       useEffect(() => {
         document.documentElement.setAttribute("data-theme", theme);
         localStorage.setItem("nossoap_theme", theme);
       }, [theme]);
 
+      useEffect(() => { localStorage.setItem("nossoap_decisao", decisao); }, [decisao]);
+
       const toggleTheme = () => setTheme(t => t === "dark" ? "light" : "dark");
       const handleLogout = () => { sessionStorage.removeItem("nossoap_auth"); setLoggedIn(false); };
 
       if (!loggedIn) return <LoginScreen onLogin={() => setLoggedIn(true)} />;
 
-      const pages = { dashboard: Dashboard, projecao: Projecao, cronograma: Cronograma, docs: Documentos, anotacoes: Anotacoes, faq: FAQ };
-      const PageComponent = pages[page] || Dashboard;
+      const renderPage = () => {
+        switch (page) {
+          case "dashboard": return <Dashboard decisao={decisao} setDecisao={setDecisao} />;
+          case "projecao": return <Projecao />;
+          case "cronograma": return <Cronograma />;
+          case "comparativo": return <Comparativo />;
+          case "galeria": return <Galeria />;
+          case "docs": return <Documentos />;
+          case "anotacoes": return <Anotacoes />;
+          case "faq": return <FAQ />;
+          default: return <Dashboard decisao={decisao} setDecisao={setDecisao} />;
+        }
+      };
 
       return (
         <div style={{ minHeight: "100vh", background: "var(--bg-primary)" }}>
           <Header page={page} setPage={setPage} theme={theme} toggleTheme={toggleTheme} onLogout={handleLogout} />
-          <main style={{ paddingBottom: 32 }}><PageComponent /></main>
+          <main style={{ paddingBottom: 32 }}>{renderPage()}</main>
           <footer style={{
             textAlign: "center", padding: "16px", color: "var(--text-muted)", fontSize: 11,
             borderTop: "1px solid var(--border)",
