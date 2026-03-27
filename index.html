@@ -2,8 +2,13 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#09090b">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Nosso AP</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='url(%23g)'/><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0%25' stop-color='%236366f1'/><stop offset='100%25' stop-color='%23f59e0b'/></linearGradient></defs><text x='50' y='68' text-anchor='middle' font-size='50' font-family='sans-serif' fill='white' font-weight='bold'>AP</text></svg>">
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -31,6 +36,7 @@
       --shadow-lg: 0 4px 12px rgba(0,0,0,0.5);
       --radius: 12px;
       --radius-sm: 8px;
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
     }
 
     [data-theme="light"] {
@@ -59,12 +65,13 @@
       color: var(--text-primary);
       min-height: 100vh;
       transition: background 0.3s, color 0.3s;
+      -webkit-tap-highlight-color: transparent;
     }
 
     .mono { font-family: 'JetBrains Mono', monospace; }
 
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: var(--bg-primary); }
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; }
 
     input[type="range"] {
@@ -83,36 +90,102 @@
     }
     .fade-in { animation: fadeIn 0.3s ease-out; }
 
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(100%); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
     @keyframes pulse {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.6; }
     }
 
-    /* Mobile responsive */
-    .cards-row { display: flex; gap: 20px; flex-wrap: wrap; }
-    .cards-row > * { flex: 1; min-width: 300px; }
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .grid-2-lg { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    .page-container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-
-    @media (max-width: 680px) {
-      .cards-row > * { min-width: 100%; }
-      .grid-2 { grid-template-columns: 1fr; }
-      .grid-2-lg { grid-template-columns: 1fr; }
-      .page-container { padding: 12px; }
-      .hide-mobile { display: none !important; }
-      .nav-label { font-size: 12px !important; }
-    }
+    .page-container { max-width: 800px; margin: 0 auto; padding: 16px; padding-bottom: 100px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .grid-2-lg { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 
     @media (max-width: 400px) {
-      .nav-label { display: none; }
+      .grid-2 { grid-template-columns: 1fr; }
+      .page-container { padding: 12px; padding-bottom: 100px; }
+    }
+
+    /* Bottom nav */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border);
+      display: flex; justify-content: space-around; align-items: center;
+      padding: 6px 0; padding-bottom: calc(6px + var(--safe-bottom));
+      z-index: 100;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    .bottom-nav button {
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      background: none; border: none; cursor: pointer;
+      color: var(--text-muted); font-family: inherit; font-size: 10px;
+      padding: 6px 12px; border-radius: 10px; transition: all 0.2s;
+      min-width: 56px;
+    }
+    .bottom-nav button.active {
+      color: var(--accent-indigo);
+    }
+    .bottom-nav button.active svg {
+      filter: drop-shadow(0 0 4px rgba(99,102,241,0.4));
+    }
+
+    /* Page header */
+    .page-header {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 16px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 50;
+    }
+    .page-header h2 { font-size: 17px; font-weight: 700; flex: 1; }
+
+    .back-btn {
+      display: flex; align-items: center; justify-content: center;
+      width: 34px; height: 34px; border-radius: 9px;
+      background: var(--bg-tertiary); border: 1px solid var(--border);
+      color: var(--text-primary); cursor: pointer;
+    }
+
+    /* Module cards */
+    .module-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+    }
+    .module-card {
+      background: var(--bg-secondary); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 16px;
+      cursor: pointer; transition: all 0.2s;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .module-card:active { transform: scale(0.97); background: var(--bg-tertiary); }
+
+    /* Onboarding */
+    .onboarding-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.85); z-index: 200;
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+      backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    }
+    .onboarding-card {
+      background: var(--bg-secondary); border: 1px solid var(--border);
+      border-radius: 20px; padding: 32px 24px; max-width: 380px; width: 100%;
+      text-align: center; animation: slideUp 0.4s ease-out;
+    }
+
+    @keyframes shake {
+      0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)}
     }
   </style>
 </head>
 <body>
   <div id="root"></div>
   <script type="text/babel">
-    const { useState, useEffect, useCallback, useMemo } = React;
+    const { useState, useEffect, useCallback, useMemo, useRef } = React;
 
     // ========================
     // DADOS DOS APARTAMENTOS
@@ -181,35 +254,19 @@
       return (parcela * prazoMeses) - saldo;
     }
 
-    // Evolucao de obra: juros sobre o valor ja liberado ao construtor.
-    // O banco libera $ proporcionalmente ao avanco da obra.
-    // Buyer paga juros mensais sobre o valor liberado -> cresce todo mes.
-    // percentualAtual = % da obra ja feito (ex: 50 = metade construida)
-    // Retorna array mes a mes com: mes, percentual liberado, juros do mes, saldo corrigido
     function gerarEvolucaoObra(financiamento, taxaJurosAnual, inccAnual, mesesRestantes, percentualAtual) {
       const jurosMensal = Math.pow(1 + taxaJurosAnual / 100, 1 / 12) - 1;
       const inccMensal = Math.pow(1 + inccAnual / 100, 1 / 12) - 1;
       const percAtual = percentualAtual / 100;
       const meses = [];
       let saldo = financiamento;
-      // Calcula saldo ja corrigido ate agora (obra ja andou)
-      const mesesJaPassados = Math.round((percAtual) * (mesesRestantes / (1 - percAtual + 0.001)));
 
       for (let m = 0; m < mesesRestantes; m++) {
-        // % liberado cresce linearmente de percAtual ate 100%
         const perc = percAtual + ((1 - percAtual) * ((m + 1) / mesesRestantes));
         const valorLiberado = financiamento * perc;
         const jurosMes = valorLiberado * jurosMensal;
-        // Saldo cresce pelo INCC
         saldo *= (1 + inccMensal);
-
-        meses.push({
-          mes: m + 1,
-          percentual: Math.round(perc * 100),
-          valorLiberado,
-          jurosMes,
-          saldo,
-        });
+        meses.push({ mes: m + 1, percentual: Math.round(perc * 100), valorLiberado, jurosMes, saldo });
       }
       return meses;
     }
@@ -218,10 +275,7 @@
       const mensal = Math.pow(1 + inccAnual / 100, 1 / 12) - 1;
       const pontos = [{ mes: 0, saldo }];
       let s = saldo;
-      for (let m = 1; m <= meses; m++) {
-        s *= (1 + mensal);
-        pontos.push({ mes: m, saldo: s });
-      }
+      for (let m = 1; m <= meses; m++) { s *= (1 + mensal); pontos.push({ mes: m, saldo: s }); }
       return pontos;
     }
 
@@ -250,13 +304,13 @@
     // ========================
     const Icons = {
       Lock: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>,
-      Home: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
+      Home: () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
       Calendar: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>,
-      DollarSign: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>,
-      FileText: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>,
+      DollarSign: () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>,
+      FileText: () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>,
       HelpCircle: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
-      Sun: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>,
-      Moon: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>,
+      Sun: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>,
+      Moon: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>,
       LogOut: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>,
       Trash: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>,
       ChevronDown: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>,
@@ -264,16 +318,21 @@
       Clock: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
       Check: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
       Building: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></svg>,
-      TrendingUp: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>,
+      TrendingUp: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>,
       AlertCircle: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>,
       Book: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>,
       Download: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>,
       ExternalLink: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>,
       Columns: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg>,
       Camera: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>,
-      ChevronLeft: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>,
+      ChevronLeft: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>,
+      ChevronRight: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>,
       Image: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>,
       X: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
+      Grid: () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>,
+      Share: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>,
+      Smartphone: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>,
+      Settings: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
     };
 
     // ========================
@@ -303,19 +362,19 @@
         }}>
           <div className="fade-in" style={{
             background: "var(--bg-secondary)", border: "1px solid var(--border)",
-            borderRadius: "16px", padding: "40px 32px", maxWidth: "380px", width: "100%",
+            borderRadius: "20px", padding: "40px 28px", maxWidth: "360px", width: "100%",
             textAlign: "center", boxShadow: "var(--shadow-lg)",
             animation: shake ? "shake 0.5s ease" : undefined,
           }}>
             <div style={{
-              width: 56, height: 56, borderRadius: "14px",
+              width: 60, height: 60, borderRadius: "16px",
               background: "linear-gradient(135deg, var(--accent-indigo), var(--accent-amber))",
               display: "flex", alignItems: "center", justifyContent: "center",
-              margin: "0 auto 20px",
+              margin: "0 auto 20px", boxShadow: "0 4px 16px rgba(99,102,241,0.3)",
             }}>
               <Icons.Building />
             </div>
-            <h1 style={{ fontSize: "24px", fontWeight: 700, marginBottom: 6 }}>Nosso AP</h1>
+            <h1 style={{ fontSize: "22px", fontWeight: 700, marginBottom: 6 }}>Nosso AP</h1>
             <p style={{ color: "var(--text-muted)", marginBottom: 28, fontSize: 13 }}>
               Planejamento financeiro imobiliario
             </p>
@@ -325,92 +384,191 @@
                 onChange={(e) => { setSenha(e.target.value); setErro(false); }}
                 placeholder="Digite a senha"
                 style={{
-                  width: "100%", padding: "12px 14px", marginBottom: 12,
+                  width: "100%", padding: "14px 16px", marginBottom: 12,
                   background: "var(--bg-tertiary)",
                   border: `1px solid ${erro ? "var(--accent-red)" : "var(--border)"}`,
-                  borderRadius: "var(--radius-sm)", color: "var(--text-primary)",
-                  fontSize: 15, outline: "none", fontFamily: "inherit",
+                  borderRadius: "var(--radius)", color: "var(--text-primary)",
+                  fontSize: 16, outline: "none", fontFamily: "inherit",
                 }}
                 autoFocus
               />
               {erro && <p style={{ color: "var(--accent-red)", fontSize: 12, marginBottom: 8 }}>Senha incorreta.</p>}
               <button type="submit" style={{
-                width: "100%", padding: "12px", background: "var(--accent-indigo)", color: "#fff",
-                border: "none", borderRadius: "var(--radius-sm)", fontSize: 15, fontWeight: 600,
+                width: "100%", padding: "14px", background: "var(--accent-indigo)", color: "#fff",
+                border: "none", borderRadius: "var(--radius)", fontSize: 16, fontWeight: 600,
                 cursor: "pointer", fontFamily: "inherit",
               }}>Entrar</button>
             </form>
           </div>
-          <style>{`@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)} }`}</style>
         </div>
       );
     }
 
     // ========================
-    // HEADER + NAV
+    // ONBOARDING
     // ========================
-    function Header({ page, setPage, theme, toggleTheme, onLogout }) {
-      const navItems = [
-        { id: "dashboard", label: "Dashboard", icon: Icons.Home },
-        { id: "projecao", label: "Gastos", icon: Icons.DollarSign },
-        { id: "cronograma", label: "Cronograma", icon: Icons.Calendar },
-        { id: "comparativo", label: "Comparar", icon: Icons.Columns },
-        { id: "galeria", label: "Galeria", icon: Icons.Camera },
-        { id: "docs", label: "Docs", icon: Icons.Book },
-        { id: "anotacoes", label: "Notas", icon: Icons.FileText },
-        { id: "faq", label: "FAQ", icon: Icons.HelpCircle },
+    function Onboarding({ onDone }) {
+      const [step, setStep] = useState(0);
+      const [naoMostrar, setNaoMostrar] = useState(false);
+
+      const steps = [
+        {
+          icon: <Icons.Building />,
+          title: "Bem-vindos ao Nosso AP",
+          desc: "Seu app de planejamento financeiro imobiliario. Acompanhe tudo sobre a compra dos apartamentos em um so lugar.",
+          gradient: "linear-gradient(135deg, #6366f1, #f59e0b)",
+        },
+        {
+          icon: <Icons.DollarSign />,
+          title: "Projecoes e Gastos",
+          desc: "Veja a evolucao de obra, parcelas, saldo devedor e custo total estimado. Tudo calculado automaticamente.",
+          gradient: "linear-gradient(135deg, #6366f1, #22c55e)",
+        },
+        {
+          icon: <Icons.FileText />,
+          title: "Documentos e Notas",
+          desc: "Acesse os books dos empreendimentos, faca anotacoes e acompanhe o checklist de documentacao.",
+          gradient: "linear-gradient(135deg, #f59e0b, #ef4444)",
+        },
       ];
 
+      const handleDone = () => {
+        if (naoMostrar) localStorage.setItem("nossoap_onboarding_done", "1");
+        onDone();
+      };
+
+      const s = steps[step];
+      const isLast = step === steps.length - 1;
+
       return (
-        <header style={{
-          background: "var(--bg-secondary)", borderBottom: "1px solid var(--border)",
-          position: "sticky", top: 0, zIndex: 100,
+        <div className="onboarding-overlay">
+          <div className="onboarding-card">
+            <div style={{
+              width: 64, height: 64, borderRadius: 16,
+              background: s.gradient,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              margin: "0 auto 20px", boxShadow: "0 4px 20px rgba(99,102,241,0.3)",
+            }}>{s.icon}</div>
+            <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 10 }}>{s.title}</h2>
+            <p style={{ color: "var(--text-secondary)", fontSize: 14, lineHeight: 1.6, marginBottom: 24 }}>{s.desc}</p>
+
+            {/* Dots */}
+            <div style={{ display: "flex", justifyContent: "center", gap: 6, marginBottom: 20 }}>
+              {steps.map((_, i) => (
+                <div key={i} style={{
+                  width: i === step ? 20 : 6, height: 6, borderRadius: 3,
+                  background: i === step ? "var(--accent-indigo)" : "var(--border)",
+                  transition: "all 0.3s",
+                }} />
+              ))}
+            </div>
+
+            <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+              {!isLast ? (
+                <>
+                  <button onClick={handleDone} style={{
+                    padding: "10px 20px", background: "var(--bg-tertiary)",
+                    border: "1px solid var(--border)", borderRadius: "var(--radius-sm)",
+                    color: "var(--text-muted)", cursor: "pointer", fontFamily: "inherit", fontSize: 14,
+                  }}>Pular</button>
+                  <button onClick={() => setStep(step + 1)} style={{
+                    padding: "10px 24px", background: "var(--accent-indigo)", color: "#fff",
+                    border: "none", borderRadius: "var(--radius-sm)",
+                    cursor: "pointer", fontFamily: "inherit", fontSize: 14, fontWeight: 600,
+                  }}>Proximo</button>
+                </>
+              ) : (
+                <button onClick={handleDone} style={{
+                  padding: "12px 32px", background: "var(--accent-indigo)", color: "#fff",
+                  border: "none", borderRadius: "var(--radius-sm)",
+                  cursor: "pointer", fontFamily: "inherit", fontSize: 15, fontWeight: 600,
+                }}>Comecar</button>
+              )}
+            </div>
+
+            {isLast && (
+              <label style={{
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                marginTop: 16, fontSize: 12, color: "var(--text-muted)", cursor: "pointer",
+              }}>
+                <input type="checkbox" checked={naoMostrar} onChange={e => setNaoMostrar(e.target.checked)}
+                  style={{ accentColor: "var(--accent-indigo)" }} />
+                Nao mostrar novamente
+              </label>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // ========================
+    // PWA INSTALL PROMPT
+    // ========================
+    function InstallBanner() {
+      const [deferredPrompt, setDeferredPrompt] = useState(null);
+      const [showIOSInstructions, setShowIOSInstructions] = useState(false);
+      const [dismissed, setDismissed] = useState(() => localStorage.getItem("nossoap_install_dismissed") === "1");
+
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      const isStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
+
+      useEffect(() => {
+        const handler = (e) => { e.preventDefault(); setDeferredPrompt(e); };
+        window.addEventListener("beforeinstallprompt", handler);
+        return () => window.removeEventListener("beforeinstallprompt", handler);
+      }, []);
+
+      if (isStandalone || dismissed) return null;
+      if (!deferredPrompt && !isIOS) return null;
+
+      const handleInstall = async () => {
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          const result = await deferredPrompt.userChoice;
+          if (result.outcome === "accepted") setDismissed(true);
+          setDeferredPrompt(null);
+        }
+      };
+
+      const handleDismiss = () => {
+        setDismissed(true);
+        localStorage.setItem("nossoap_install_dismissed", "1");
+      };
+
+      return (
+        <div style={{
+          background: "linear-gradient(135deg, rgba(99,102,241,0.15), rgba(245,158,11,0.15))",
+          border: "1px solid var(--border)",
+          borderRadius: "var(--radius)", padding: "14px 16px", marginBottom: 14,
+          display: "flex", alignItems: "center", gap: 12,
         }}>
           <div style={{
-            maxWidth: 1200, margin: "0 auto", padding: "10px 16px",
-            display: "flex", alignItems: "center", justifyContent: "space-between",
-          }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <div style={{
-                width: 28, height: 28, borderRadius: 7,
-                background: "linear-gradient(135deg, var(--accent-indigo), var(--accent-amber))",
-                display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12,
-              }}><Icons.Building /></div>
-              <span style={{ fontWeight: 700, fontSize: 16 }}>Nosso AP</span>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <button onClick={toggleTheme} style={{
-                background: "var(--bg-tertiary)", border: "1px solid var(--border)",
-                borderRadius: 7, padding: "6px", cursor: "pointer", color: "var(--text-primary)",
-                display: "flex", alignItems: "center",
-              }}>{theme === "dark" ? <Icons.Sun /> : <Icons.Moon />}</button>
-              <button onClick={onLogout} style={{
-                background: "var(--bg-tertiary)", border: "1px solid var(--border)",
-                borderRadius: 7, padding: "6px", cursor: "pointer", color: "var(--text-muted)",
-                display: "flex", alignItems: "center",
-              }}><Icons.LogOut /></button>
-            </div>
+            width: 40, height: 40, borderRadius: 10, flexShrink: 0,
+            background: "linear-gradient(135deg, var(--accent-indigo), var(--accent-amber))",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}><Icons.Smartphone /></div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ fontSize: 13, fontWeight: 600, marginBottom: 2 }}>Instalar como app</p>
+            {isIOS && !deferredPrompt ? (
+              <p style={{ fontSize: 11, color: "var(--text-muted)", lineHeight: 1.4 }}>
+                Toque em <Icons.Share /> e depois "Adicionar a Tela de Inicio"
+              </p>
+            ) : (
+              <p style={{ fontSize: 11, color: "var(--text-muted)" }}>Acesse direto da tela inicial</p>
+            )}
           </div>
-          <nav style={{
-            maxWidth: 1200, margin: "0 auto", padding: "0 16px",
-            display: "flex", gap: 2, overflowX: "auto", WebkitOverflowScrolling: "touch",
-          }}>
-            {navItems.map(item => (
-              <button key={item.id} onClick={() => setPage(item.id)} style={{
-                display: "flex", alignItems: "center", gap: 5,
-                padding: "8px 12px", background: page === item.id ? "var(--bg-tertiary)" : "transparent",
-                border: "none", borderBottom: page === item.id ? "2px solid var(--accent-indigo)" : "2px solid transparent",
-                color: page === item.id ? "var(--text-primary)" : "var(--text-muted)",
-                cursor: "pointer", fontFamily: "inherit", fontSize: 13,
-                fontWeight: page === item.id ? 600 : 400, whiteSpace: "nowrap",
-                borderRadius: "8px 8px 0 0", transition: "all 0.2s", flexShrink: 0,
-              }}>
-                <item.icon />
-                <span className="nav-label">{item.label}</span>
-              </button>
-            ))}
-          </nav>
-        </header>
+          {deferredPrompt && (
+            <button onClick={handleInstall} style={{
+              padding: "8px 14px", background: "var(--accent-indigo)", color: "#fff",
+              border: "none", borderRadius: "var(--radius-sm)", fontSize: 12,
+              fontWeight: 600, fontFamily: "inherit", cursor: "pointer", whiteSpace: "nowrap",
+            }}>Instalar</button>
+          )}
+          <button onClick={handleDismiss} style={{
+            background: "none", border: "none", color: "var(--text-muted)",
+            cursor: "pointer", padding: 4, display: "flex", flexShrink: 0,
+          }}><Icons.X /></button>
+        </div>
       );
     }
 
@@ -421,294 +579,226 @@
       return (
         <div style={{ background: "var(--bg-tertiary)", borderRadius: "var(--radius-sm)", padding: "10px 12px" }}>
           <p style={{ color: "var(--text-muted)", fontSize: 10, marginBottom: 3, textTransform: "uppercase", letterSpacing: "0.5px" }}>{label}</p>
-          <p className={mono ? "mono" : ""} style={{ fontSize: 15, fontWeight: 600, color: color || "var(--text-primary)" }}>{value}</p>
+          <p className={mono ? "mono" : ""} style={{ fontSize: 14, fontWeight: 600, color: color || "var(--text-primary)" }}>{value}</p>
           {sub && <p style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>{sub}</p>}
         </div>
       );
     }
 
     // ========================
-    // CARD DO APARTAMENTO
+    // PAGE HEADER COM BACK
     // ========================
-    function ApartmentCard({ ap, params }) {
-      const saldoEntrega = calcSaldoEntrega(ap.financiamento, params.incc, ap.mesesObra);
-      const mesesRest = diffMeses(new Date(), ap.entrega);
-      const evolObra = gerarEvolucaoObra(ap.financiamento, params.taxaJuros, params.incc, mesesRest, ap.percentualObra);
-      const obraHoje = evolObra.length > 0 ? evolObra[0].jurosMes : 0;
-      const obraUltimo = evolObra.length > 0 ? evolObra[evolObra.length - 1].jurosMes : 0;
-      const obraTotal = evolObra.reduce((s, m) => s + m.jurosMes, 0);
-      const dias = diffDias(ap.entrega);
-      const prog = progresso(ap.entrega, ap.mesesObra);
-      const corVar = ap.cor === "indigo" ? "var(--accent-indigo)" : "var(--accent-amber)";
-
+    function PageHeader({ title, onBack, right }) {
       return (
-        <div className="fade-in" style={{
-          background: "var(--bg-secondary)", border: "1px solid var(--border)",
-          borderRadius: "var(--radius)", padding: "20px", boxShadow: "var(--shadow)",
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-            <div style={{
-              width: 8, height: 8, borderRadius: "50%", background: corVar,
-              boxShadow: `0 0 8px ${corVar}`,
-            }} />
-            <h3 style={{ fontSize: 16, fontWeight: 700 }}>{ap.nome}</h3>
-          </div>
-          <p style={{ color: "var(--text-muted)", fontSize: 12, marginBottom: 14 }}>{ap.tipo}</p>
-
-          <div className="grid-2" style={{ marginBottom: 16 }}>
-            <StatCard label="Valor Total" value={fmt(ap.valorTotal)} />
-            <StatCard label="Parcela Pos-Chave" value={fmt(ap.parcelaPosChave)} />
-            <StatCard label="Saldo na Entrega" value={fmt(saldoEntrega)} color="var(--accent-red)" sub={`+${fmt(saldoEntrega - ap.financiamento)} INCC`} />
-            <StatCard label="Evol. Obra Hoje" value={fmt(obraHoje)} color="var(--accent-amber)" sub={`Ultimo mes: ${fmt(obraUltimo)}`} />
-          </div>
-          <div style={{
-            background: "var(--bg-tertiary)", borderRadius: "var(--radius-sm)",
-            padding: "10px 12px", marginBottom: 12, borderLeft: "3px solid var(--accent-amber)",
-          }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div>
-                <p style={{ color: "var(--text-muted)", fontSize: 10, textTransform: "uppercase" }}>Total Evol. Obra Estimado</p>
-                <p style={{ fontSize: 11, color: "var(--text-muted)" }}>({mesesRest} meses, obra ~{ap.percentualObra}% hoje)</p>
-              </div>
-              <p className="mono" style={{ fontSize: 15, fontWeight: 700, color: "var(--accent-red)" }}>{fmt(obraTotal)}</p>
-            </div>
-          </div>
-
-          {/* Progress bar */}
-          <div style={{
-            background: "var(--bg-tertiary)", borderRadius: "var(--radius-sm)",
-            padding: "12px", marginBottom: 10,
-          }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-              <span style={{ color: "var(--text-muted)", fontSize: 11, display: "flex", alignItems: "center", gap: 4 }}>
-                <Icons.Clock /> ENTREGA
-              </span>
-              <span className="mono" style={{ fontSize: 12, fontWeight: 500 }}>
-                {dias > 0 ? `${dias} dias (${mesesRest} meses)` : "Entregue!"}
-              </span>
-            </div>
-            <div style={{ height: 5, background: "var(--border)", borderRadius: 3, overflow: "hidden" }}>
-              <div style={{
-                height: "100%", width: `${Math.min(prog, 100)}%`,
-                background: `linear-gradient(90deg, ${corVar}, ${ap.cor === "indigo" ? "var(--accent-indigo-light)" : "var(--accent-amber-light)"})`,
-                borderRadius: 3,
-              }} />
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
-              <span style={{ fontSize: 10, color: "var(--text-muted)" }}>Obra</span>
-              <span className="mono" style={{ fontSize: 10, color: "var(--text-muted)" }}>{fmtNum(prog, 1)}%</span>
-            </div>
-          </div>
-
-          {ap.fgts > 0 && (
-            <div style={{ display: "flex", alignItems: "center", gap: 5, color: "var(--accent-green)", fontSize: 12 }}>
-              <Icons.Check /> FGTS utilizado: {fmt(ap.fgts)}
-            </div>
-          )}
+        <div className="page-header">
+          <button className="back-btn" onClick={onBack}><Icons.ChevronLeft /></button>
+          <h2>{title}</h2>
+          {right && <div style={{ display: "flex", gap: 6 }}>{right}</div>}
         </div>
       );
     }
 
     // ========================
-    // TELA: DASHBOARD
+    // BOTTOM NAV
     // ========================
-    function Dashboard({ decisao, setDecisao }) {
+    function BottomNav({ page, setPage }) {
+      const items = [
+        { id: "home", label: "Inicio", icon: Icons.Home },
+        { id: "projecao", label: "Gastos", icon: Icons.DollarSign },
+        { id: "cronograma", label: "Cronograma", icon: Icons.Calendar },
+        { id: "anotacoes", label: "Notas", icon: Icons.FileText },
+      ];
+
+      return (
+        <nav className="bottom-nav">
+          {items.map(item => (
+            <button key={item.id} className={page === item.id ? "active" : ""} onClick={() => setPage(item.id)}>
+              <item.icon />
+              <span>{item.label}</span>
+            </button>
+          ))}
+        </nav>
+      );
+    }
+
+    // ========================
+    // TELA: HOME
+    // ========================
+    function HomeScreen({ setPage, decisao, setDecisao, theme, toggleTheme, onLogout }) {
       const params = DEFAULTS;
       const pl = APARTAMENTOS.palestraLife;
       const up = APARTAMENTOS.uniquePalestra;
-      const prazoM = params.prazoAnos * 12;
 
       const mesesRestPL = diffMeses(new Date(), pl.entrega);
       const mesesRestUP = diffMeses(new Date(), up.entrega);
       const evolPL = gerarEvolucaoObra(pl.financiamento, params.taxaJuros, params.incc, mesesRestPL, pl.percentualObra);
       const evolUP = gerarEvolucaoObra(up.financiamento, params.taxaJuros, params.incc, mesesRestUP, up.percentualObra);
-      const obraPL = evolPL.reduce((s, m) => s + m.jurosMes, 0);
-      const obraUP = evolUP.reduce((s, m) => s + m.jurosMes, 0);
       const obraHojePL = evolPL.length > 0 ? evolPL[0].jurosMes : 0;
       const obraHojeUP = evolUP.length > 0 ? evolUP[0].jurosMes : 0;
 
-      const totalParcelasPL = pl.parcelaPosChave * prazoM;
-      const totalParcelasUP = up.parcelaPosChave * prazoM;
-      const totalPL = totalParcelasPL + obraPL;
-      const totalUP = totalParcelasUP + obraUP;
-      const maisBarato = totalPL < totalUP ? "Palestra Life" : "Unique Palestra";
-
-      const [renda1, setRenda1] = useState(() => parseFloat(localStorage.getItem("nossoap_renda1")) || 0);
-      const [renda2, setRenda2] = useState(() => parseFloat(localStorage.getItem("nossoap_renda2")) || 0);
-      useEffect(() => { localStorage.setItem("nossoap_renda1", renda1); }, [renda1]);
-      useEffect(() => { localStorage.setItem("nossoap_renda2", renda2); }, [renda2]);
+      const diasPL = diffDias(pl.entrega);
+      const diasUP = diffDias(up.entrega);
+      const progPL = progresso(pl.entrega, pl.mesesObra);
+      const progUP = progresso(up.entrega, up.mesesObra);
 
       const escolhido = decisao === "pl" ? pl : decisao === "up" ? up : null;
-      const parcelaEscolhida = escolhido ? escolhido.parcelaPosChave : 0;
-      const rendaTotal = renda1 + renda2;
-      const comprometimento = rendaTotal > 0 ? ((parcelaEscolhida / rendaTotal) * 100) : 0;
 
-      const decisaoOpts = [
-        { id: "ambos", label: "Decidindo..." },
-        { id: "pl", label: "Palestra Life" },
-        { id: "up", label: "Unique Palestra" },
+      const modules = [
+        { id: "projecao", label: "Gastos", desc: "Projecao completa", icon: Icons.DollarSign, color: "var(--accent-indigo)" },
+        { id: "cronograma", label: "Cronograma", desc: "Timeline e checklist", icon: Icons.Calendar, color: "var(--accent-green)" },
+        { id: "comparativo", label: "Comparar", desc: "Lado a lado", icon: Icons.Columns, color: "var(--accent-amber)" },
+        { id: "galeria", label: "Galeria", desc: "Fotos da obra", icon: Icons.Camera, color: "#ec4899" },
+        { id: "docs", label: "Documentos", desc: "Books e PDFs", icon: Icons.Book, color: "#8b5cf6" },
+        { id: "anotacoes", label: "Notas", desc: "Suas anotacoes", icon: Icons.FileText, color: "#06b6d4" },
+        { id: "faq", label: "FAQ", desc: "Duvidas frequentes", icon: Icons.HelpCircle, color: "#f97316" },
       ];
 
       return (
-        <div className="fade-in page-container">
-          {/* Decisao Card */}
+        <div className="fade-in page-container" style={{ paddingTop: 0 }}>
+          {/* Top bar */}
+          <div style={{
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            padding: "16px 0 12px",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{
+                width: 36, height: 36, borderRadius: 10,
+                background: "linear-gradient(135deg, var(--accent-indigo), var(--accent-amber))",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                boxShadow: "0 2px 8px rgba(99,102,241,0.3)",
+              }}><Icons.Building /></div>
+              <div>
+                <h1 style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.2 }}>Nosso AP</h1>
+                <p style={{ fontSize: 11, color: "var(--text-muted)" }}>Planejamento imobiliario</p>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 6 }}>
+              <button onClick={toggleTheme} style={{
+                background: "var(--bg-secondary)", border: "1px solid var(--border)",
+                borderRadius: 9, padding: 8, cursor: "pointer", color: "var(--text-primary)",
+                display: "flex", alignItems: "center",
+              }}>{theme === "dark" ? <Icons.Sun /> : <Icons.Moon />}</button>
+              <button onClick={onLogout} style={{
+                background: "var(--bg-secondary)", border: "1px solid var(--border)",
+                borderRadius: 9, padding: 8, cursor: "pointer", color: "var(--text-muted)",
+                display: "flex", alignItems: "center",
+              }}><Icons.LogOut /></button>
+            </div>
+          </div>
+
+          {/* Install banner */}
+          <InstallBanner />
+
+          {/* Decisao rapida */}
           <div style={{
             background: "var(--bg-secondary)", border: "1px solid var(--border)",
-            borderRadius: "var(--radius)", padding: "18px", marginBottom: 20,
-            boxShadow: "var(--shadow)",
+            borderRadius: "var(--radius)", padding: "14px", marginBottom: 14,
           }}>
-            <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 12 }}>Nossa Decisao</h3>
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: escolhido ? 16 : 0 }}>
-              {decisaoOpts.map(o => (
+            <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 8, color: "var(--text-secondary)" }}>Nossa Decisao</p>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              {[
+                { id: "ambos", label: "Decidindo...", cor: "var(--accent-green)" },
+                { id: "pl", label: "Palestra Life", cor: "var(--accent-indigo)" },
+                { id: "up", label: "Unique", cor: "var(--accent-amber)" },
+              ].map(o => (
                 <button key={o.id} onClick={() => setDecisao(o.id)} style={{
-                  padding: "8px 16px",
-                  background: decisao === o.id
-                    ? (o.id === "pl" ? "var(--accent-indigo)" : o.id === "up" ? "var(--accent-amber)" : "var(--accent-green)")
-                    : "var(--bg-tertiary)",
+                  padding: "7px 14px", fontSize: 12, fontWeight: 600,
+                  background: decisao === o.id ? o.cor : "var(--bg-tertiary)",
                   color: decisao === o.id ? "#fff" : "var(--text-secondary)",
-                  border: `1px solid ${decisao === o.id
-                    ? (o.id === "pl" ? "var(--accent-indigo)" : o.id === "up" ? "var(--accent-amber)" : "var(--accent-green)")
-                    : "var(--border)"}`,
-                  borderRadius: "var(--radius-sm)", cursor: "pointer",
-                  fontFamily: "inherit", fontSize: 13, fontWeight: 600,
+                  border: `1px solid ${decisao === o.id ? o.cor : "var(--border)"}`,
+                  borderRadius: "var(--radius-sm)", cursor: "pointer", fontFamily: "inherit",
                 }}>{o.label}</button>
               ))}
             </div>
-            {escolhido && (
-              <div style={{
-                background: "var(--bg-tertiary)", borderRadius: "var(--radius-sm)", padding: 14,
-                borderLeft: `3px solid ${escolhido.cor === "indigo" ? "var(--accent-indigo)" : "var(--accent-amber)"}`,
-              }}>
-                <div className="grid-2" style={{ marginBottom: 14 }}>
-                  <StatCard label="AP Escolhido" value={escolhido.nome} mono={false} />
-                  <StatCard label="Tipo" value={escolhido.tipo} mono={false} />
-                  <StatCard label="Valor Total" value={fmt(escolhido.valorTotal)} />
-                  <StatCard label="Parcela Pos-Chave" value={fmt(escolhido.parcelaPosChave)} />
-                  <StatCard label="Entrega" value={fmtMesAno(escolhido.entrega)} mono={false} />
-                  <StatCard label="Entrada" value={escolhido.fgts > 0 ? `Zerada (FGTS ${fmt(escolhido.fgts)})` : "Zerada"} mono={false} />
-                </div>
-                <div style={{
-                  background: "var(--bg-secondary)", borderRadius: "var(--radius-sm)", padding: 14,
-                }}>
-                  <p style={{ fontSize: 13, fontWeight: 600, marginBottom: 10 }}>Comprometimento de Renda</p>
-                  <div className="grid-2" style={{ marginBottom: 10 }}>
-                    <div>
-                      <label style={{ fontSize: 11, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>Renda Joao</label>
-                      <input type="number" value={renda1 || ""} onChange={e => setRenda1(parseFloat(e.target.value) || 0)}
-                        placeholder="0" style={{
-                          width: "100%", padding: "8px 10px", background: "var(--bg-tertiary)",
-                          border: "1px solid var(--border)", borderRadius: "var(--radius-sm)",
-                          color: "var(--text-primary)", fontSize: 14, fontFamily: "'JetBrains Mono', monospace", outline: "none",
-                        }} />
-                    </div>
-                    <div>
-                      <label style={{ fontSize: 11, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>Renda parceira</label>
-                      <input type="number" value={renda2 || ""} onChange={e => setRenda2(parseFloat(e.target.value) || 0)}
-                        placeholder="0" style={{
-                          width: "100%", padding: "8px 10px", background: "var(--bg-tertiary)",
-                          border: "1px solid var(--border)", borderRadius: "var(--radius-sm)",
-                          color: "var(--text-primary)", fontSize: 14, fontFamily: "'JetBrains Mono', monospace", outline: "none",
-                        }} />
-                    </div>
-                  </div>
-                  {rendaTotal > 0 && (
-                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>Comprometimento</span>
-                        <span className="mono" style={{
-                          fontSize: 14, fontWeight: 700,
-                          color: comprometimento > 30 ? "var(--accent-red)" : "var(--accent-green)",
-                        }}>{fmtNum(comprometimento, 1)}%</span>
-                      </div>
-                      <div style={{ height: 6, background: "var(--border)", borderRadius: 3, overflow: "hidden" }}>
-                        <div style={{
-                          height: "100%", width: `${Math.min(comprometimento, 100)}%`,
-                          background: comprometimento > 30 ? "var(--accent-red)" : "var(--accent-green)",
-                          borderRadius: 3,
-                        }} />
-                      </div>
-                      <p style={{ fontSize: 12, color: "var(--text-secondary)" }}>
-                        Dividindo a parcela de {fmt(parcelaEscolhida)}: <strong className="mono">{fmt(parcelaEscolhida / 2)}/pessoa</strong>
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
           </div>
 
-          {/* Indicator */}
+          {/* O que paga agora card */}
           <div style={{
-            background: "var(--bg-secondary)", border: "1px solid var(--border)",
-            borderRadius: "var(--radius)", padding: "14px 18px", marginBottom: 20,
-            display: "flex", alignItems: "center", gap: 10, boxShadow: "var(--shadow)",
-            flexWrap: "wrap",
-          }}>
-            <div style={{
-              width: 36, height: 36, borderRadius: 9, background: "rgba(34,197,94,0.15)",
-              display: "flex", alignItems: "center", justifyContent: "center", color: "var(--accent-green)",
-            }}><Icons.TrendingUp /></div>
-            <div style={{ flex: 1, minWidth: 150 }}>
-              <p style={{ fontSize: 12, color: "var(--text-muted)" }}>Mais barato no total (estimativa)</p>
-              <p style={{ fontSize: 16, fontWeight: 700, color: "var(--accent-green)" }}>{maisBarato}</p>
-            </div>
-            <div style={{ textAlign: "right" }}>
-              <p className="mono" style={{ fontSize: 12, color: "var(--text-muted)" }}>Diferenca</p>
-              <p className="mono" style={{ fontSize: 15, fontWeight: 600 }}>{fmt(Math.abs(totalPL - totalUP))}</p>
-            </div>
-          </div>
-
-          {/* Info sobre o que paga agora */}
-          <div style={{
-            background: "var(--bg-secondary)", border: "1px solid var(--border)",
-            borderRadius: "var(--radius)", padding: "14px 18px", marginBottom: 20,
-            boxShadow: "var(--shadow)",
+            background: "linear-gradient(135deg, rgba(99,102,241,0.12), rgba(245,158,11,0.08))",
+            border: "1px solid var(--border)",
+            borderRadius: "var(--radius)", padding: "14px", marginBottom: 14,
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
               <Icons.AlertCircle />
-              <p style={{ fontSize: 13, fontWeight: 600 }}>O que voce paga AGORA</p>
+              <p style={{ fontSize: 12, fontWeight: 600 }}>Custo mensal atual (evol. obra)</p>
             </div>
-            <p style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.6 }}>
-              Ate receber as chaves, voce paga a <strong>evolucao de obra</strong> (juros sobre o valor ja liberado ao construtor).
-              Hoje: ~{fmt(obraHojePL)}/mes (PL) + ~{fmt(obraHojeUP)}/mes (UP) = ~{fmt(obraHojePL + obraHojeUP)}/mes.
-              Esse valor <strong>cresce todo mes</strong> conforme a obra avanca. Parcelas do financiamento so apos as chaves.
-            </p>
-          </div>
-
-          {/* Cards */}
-          <div className="cards-row">
-            <ApartmentCard ap={pl} params={params} />
-            <ApartmentCard ap={up} params={params} />
-          </div>
-
-          {/* Custo Total */}
-          <div style={{
-            marginTop: 20, background: "var(--bg-secondary)", border: "1px solid var(--border)",
-            borderRadius: "var(--radius)", padding: "18px", boxShadow: "var(--shadow)",
-          }}>
-            <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 14 }}>Custo Total Estimado (PRICE {params.prazoAnos} anos)</h3>
-            <div className="grid-2-lg">
-              <div style={{
-                background: "var(--bg-tertiary)", borderRadius: "var(--radius-sm)",
-                padding: 14, borderLeft: "3px solid var(--accent-indigo)",
-              }}>
-                <p style={{ color: "var(--text-muted)", fontSize: 11, marginBottom: 3 }}>Palestra Life</p>
-                <p className="mono" style={{ fontSize: 18, fontWeight: 700 }}>{fmt(totalPL)}</p>
-                <p className="mono" style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 3 }}>
-                  Parcelas: {fmt(totalParcelasPL)} | Evol. obra: {fmt(obraPL)}
-                </p>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <div style={{ flex: 1, minWidth: 100 }}>
+                <p style={{ fontSize: 10, color: "var(--text-muted)" }}>Palestra Life</p>
+                <p className="mono" style={{ fontSize: 16, fontWeight: 700, color: "var(--accent-indigo)" }}>~{fmt(obraHojePL)}</p>
               </div>
-              <div style={{
-                background: "var(--bg-tertiary)", borderRadius: "var(--radius-sm)",
-                padding: 14, borderLeft: "3px solid var(--accent-amber)",
-              }}>
-                <p style={{ color: "var(--text-muted)", fontSize: 11, marginBottom: 3 }}>Unique Palestra</p>
-                <p className="mono" style={{ fontSize: 18, fontWeight: 700 }}>{fmt(totalUP)}</p>
-                <p className="mono" style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 3 }}>
-                  Parcelas: {fmt(totalParcelasUP)} | Evol. obra: {fmt(obraUP)}
-                </p>
+              <div style={{ flex: 1, minWidth: 100 }}>
+                <p style={{ fontSize: 10, color: "var(--text-muted)" }}>Unique</p>
+                <p className="mono" style={{ fontSize: 16, fontWeight: 700, color: "var(--accent-amber)" }}>~{fmt(obraHojeUP)}</p>
+              </div>
+              <div style={{ flex: 1, minWidth: 100 }}>
+                <p style={{ fontSize: 10, color: "var(--text-muted)" }}>Total/mes</p>
+                <p className="mono" style={{ fontSize: 16, fontWeight: 700, color: "var(--accent-red)" }}>~{fmt(obraHojePL + obraHojeUP)}</p>
               </div>
             </div>
+          </div>
+
+          {/* Progress cards */}
+          <div style={{ display: "flex", gap: 10, marginBottom: 14 }}>
+            {[
+              { ap: pl, dias: diasPL, prog: progPL, meses: mesesRestPL, cor: "var(--accent-indigo)", corLight: "var(--accent-indigo-light)" },
+              { ap: up, dias: diasUP, prog: progUP, meses: mesesRestUP, cor: "var(--accent-amber)", corLight: "var(--accent-amber-light)" },
+            ].map((item, i) => (
+              <div key={i} style={{
+                flex: 1, background: "var(--bg-secondary)", border: "1px solid var(--border)",
+                borderRadius: "var(--radius)", padding: "12px", overflow: "hidden",
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 8 }}>
+                  <div style={{ width: 6, height: 6, borderRadius: "50%", background: item.cor, boxShadow: `0 0 6px ${item.cor}` }} />
+                  <p style={{ fontSize: 12, fontWeight: 600 }}>{item.ap.nome}</p>
+                </div>
+                <p className="mono" style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 6 }}>
+                  {item.dias > 0 ? `${item.dias} dias` : "Entregue!"} ({item.meses} meses)
+                </p>
+                <div style={{ height: 4, background: "var(--border)", borderRadius: 2, overflow: "hidden" }}>
+                  <div style={{
+                    height: "100%", width: `${Math.min(item.prog, 100)}%`,
+                    background: `linear-gradient(90deg, ${item.cor}, ${item.corLight})`,
+                    borderRadius: 2,
+                  }} />
+                </div>
+                <p className="mono" style={{ fontSize: 10, color: "var(--text-muted)", marginTop: 4, textAlign: "right" }}>
+                  {fmtNum(item.prog, 0)}%
+                </p>
+              </div>
+            ))}
+          </div>
+
+          {/* Resumo financeiro rapido */}
+          <div className="grid-2" style={{ marginBottom: 20 }}>
+            <StatCard label="Parcela PL (pos-chave)" value={fmt(pl.parcelaPosChave)} color="var(--accent-indigo)" />
+            <StatCard label="Parcela UP (pos-chave)" value={fmt(up.parcelaPosChave)} color="var(--accent-amber)" />
+            <StatCard label="Entrega PL" value={fmtMesAno(pl.entrega)} mono={false} />
+            <StatCard label="Entrega UP" value={fmtMesAno(up.entrega)} mono={false} />
+          </div>
+
+          {/* Modules grid */}
+          <p style={{ fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 10 }}>Modulos</p>
+          <div className="module-grid">
+            {modules.map(mod => (
+              <div key={mod.id} className="module-card" onClick={() => setPage(mod.id)}>
+                <div style={{
+                  width: 38, height: 38, borderRadius: 10,
+                  background: `${mod.color}18`,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  color: mod.color,
+                }}>
+                  <mod.icon />
+                </div>
+                <div>
+                  <p style={{ fontSize: 14, fontWeight: 600 }}>{mod.label}</p>
+                  <p style={{ fontSize: 11, color: "var(--text-muted)" }}>{mod.desc}</p>
+                </div>
+                <div style={{ display: "flex", justifyContent: "flex-end", color: "var(--text-muted)" }}>
+                  <Icons.ChevronRight />
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       );
@@ -717,33 +807,10 @@
     // ========================
     // GRAFICO SVG SIMPLES
     // ========================
-    function BarChart({ dados, maxVal }) {
-      const max = maxVal || Math.max(...dados.map(d => d.valor));
-      return (
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {dados.map((d, i) => (
-            <div key={i}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                <span style={{ fontSize: 12, fontWeight: 500 }}>{d.label}</span>
-                <span className="mono" style={{ fontSize: 12, fontWeight: 600, color: d.cor }}>{fmt(d.valor)}/mes</span>
-              </div>
-              <div style={{ height: 20, background: "var(--border)", borderRadius: 4, overflow: "hidden", position: "relative" }}>
-                <div style={{
-                  height: "100%", width: `${Math.max(2, (d.valor / max) * 100)}%`,
-                  background: d.cor, borderRadius: 4, transition: "width 0.5s",
-                }} />
-              </div>
-              {d.sub && <p style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>{d.sub}</p>}
-            </div>
-          ))}
-        </div>
-      );
-    }
-
     function SaldoEvolutionChart({ pontos, cor, width, height }) {
       if (!pontos.length) return null;
       const w = width || 300;
-      const h = height || 120;
+      const h = height || 110;
       const pad = { top: 10, right: 10, bottom: 25, left: 10 };
       const chartW = w - pad.left - pad.right;
       const chartH = h - pad.top - pad.bottom;
@@ -771,7 +838,6 @@
           </defs>
           <path d={areaPath} fill={`url(#grad-${cor})`} />
           <path d={linePath} fill="none" stroke={cor} strokeWidth="2" />
-          {/* Labels */}
           <text x={pad.left} y={h - 4} fill="var(--text-muted)" fontSize="9" fontFamily="JetBrains Mono">{fmt(pontos[0].saldo)}</text>
           <text x={w - pad.right} y={h - 4} fill={cor} fontSize="9" fontFamily="JetBrains Mono" textAnchor="end">{fmt(pontos[pontos.length - 1].saldo)}</text>
           <text x={w / 2} y={h - 4} fill="var(--text-muted)" fontSize="9" fontFamily="DM Sans" textAnchor="middle">{pontos.length - 1} meses</text>
@@ -782,7 +848,7 @@
     // ========================
     // TELA: PROJECAO DE GASTOS
     // ========================
-    function Projecao() {
+    function Projecao({ onBack }) {
       const [view, setView] = useState("combinado");
       const pl = APARTAMENTOS.palestraLife;
       const up = APARTAMENTOS.uniquePalestra;
@@ -807,7 +873,6 @@
       const totalFinUP = up.parcelaPosChave * prazoM;
       const grandTotal = obraTotalPL + obraTotalUP + totalFinPL + totalFinUP;
 
-      // Timeline mes a mes com evolucao de obra crescente
       const gerarTimeline = () => {
         const meses = [];
         const now = new Date();
@@ -815,28 +880,18 @@
         for (let m = 0; m < Math.min(totalMeses, 42); m++) {
           const data = new Date(now.getFullYear(), now.getMonth() + m, 1);
           let custoPL = 0, custoUP = 0, descPL = "", descUP = "";
-
           if (data < pl.entrega) {
             const idx = Math.min(m, evolObraPL.length - 1);
             custoPL = idx >= 0 && evolObraPL[idx] ? evolObraPL[idx].jurosMes : 0;
             descPL = `Evol. obra (${evolObraPL[idx] ? evolObraPL[idx].percentual : 0}%)`;
-          } else {
-            custoPL = pl.parcelaPosChave;
-            descPL = "Parcela PRICE";
-          }
-
+          } else { custoPL = pl.parcelaPosChave; descPL = "Parcela PRICE"; }
           if (data < up.entrega) {
             const idx = Math.min(m, evolObraUP.length - 1);
             custoUP = idx >= 0 && evolObraUP[idx] ? evolObraUP[idx].jurosMes : 0;
             descUP = `Evol. obra (${evolObraUP[idx] ? evolObraUP[idx].percentual : 0}%)`;
-          } else {
-            custoUP = up.parcelaPosChave;
-            descUP = "Parcela PRICE";
-          }
-
+          } else { custoUP = up.parcelaPosChave; descUP = "Parcela PRICE"; }
           meses.push({
-            data, label: fmtMesAno(data),
-            custoPL, custoUP, descPL, descUP,
+            data, label: fmtMesAno(data), custoPL, custoUP, descPL, descUP,
             total: custoPL + custoUP,
             marco: data.getTime() === pl.entrega.getTime() ? "Chave Palestra Life" :
                    data.getTime() === up.entrega.getTime() ? "Chave Unique Palestra" : null,
@@ -854,64 +909,57 @@
         { id: "unique", label: "Unique" },
       ];
 
-      // Bloco individual de apartamento
       const ApartmentDetail = ({ ap, evolObra, evolSaldo, saldoEntrega, obraTotal, totalFin, cor, corHex }) => (
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          {/* Evolucao da taxa mes a mes */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <div style={{
             background: "var(--bg-secondary)", border: "1px solid var(--border)",
-            borderRadius: "var(--radius)", padding: "16px", boxShadow: "var(--shadow)",
+            borderRadius: "var(--radius)", padding: "14px",
           }}>
             <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>Evolucao de Obra - Mes a Mes</h3>
-            <p style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 12 }}>
-              Juros sobre o valor liberado ao construtor. Cresce conforme a obra avanca.
+            <p style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 10 }}>
+              Juros sobre o valor liberado ao construtor.
             </p>
-            <div style={{ maxHeight: 350, overflowY: "auto" }}>
+            <div style={{ maxHeight: 300, overflowY: "auto" }}>
               {evolObra.map((m, i) => {
                 const maxJ = evolObra[evolObra.length - 1].jurosMes;
                 return (
-                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "3px 0", borderBottom: "1px solid var(--border)" }}>
-                    <span className="mono" style={{ fontSize: 10, color: "var(--text-muted)", width: 50, flexShrink: 0 }}>Mes {m.mes}</span>
-                    <span className="mono" style={{ fontSize: 10, color: "var(--text-muted)", width: 35, flexShrink: 0 }}>{m.percentual}%</span>
-                    <div style={{ flex: 1, height: 12, background: "var(--border)", borderRadius: 3, overflow: "hidden" }}>
-                      <div style={{
-                        height: "100%", width: `${(m.jurosMes / maxJ) * 100}%`,
-                        background: cor, borderRadius: 3,
-                      }} />
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, padding: "3px 0", borderBottom: "1px solid var(--border)" }}>
+                    <span className="mono" style={{ fontSize: 10, color: "var(--text-muted)", width: 42, flexShrink: 0 }}>M{m.mes}</span>
+                    <span className="mono" style={{ fontSize: 10, color: "var(--text-muted)", width: 30, flexShrink: 0 }}>{m.percentual}%</span>
+                    <div style={{ flex: 1, height: 10, background: "var(--border)", borderRadius: 3, overflow: "hidden" }}>
+                      <div style={{ height: "100%", width: `${(m.jurosMes / maxJ) * 100}%`, background: cor, borderRadius: 3 }} />
                     </div>
-                    <span className="mono" style={{ fontSize: 11, fontWeight: 600, width: 75, textAlign: "right", flexShrink: 0 }}>{fmt(m.jurosMes)}</span>
+                    <span className="mono" style={{ fontSize: 10, fontWeight: 600, width: 68, textAlign: "right", flexShrink: 0 }}>{fmt(m.jurosMes)}</span>
                   </div>
                 );
               })}
             </div>
             <div style={{
-              marginTop: 10, padding: "8px 10px", background: "var(--bg-tertiary)",
+              marginTop: 8, padding: "8px 10px", background: "var(--bg-tertiary)",
               borderRadius: "var(--radius-sm)", display: "flex", justifyContent: "space-between",
             }}>
-              <span style={{ fontSize: 12, fontWeight: 600 }}>Total estimado evol. obra</span>
-              <span className="mono" style={{ fontSize: 14, fontWeight: 700, color: "var(--accent-red)" }}>{fmt(obraTotal)}</span>
+              <span style={{ fontSize: 12, fontWeight: 600 }}>Total evol. obra</span>
+              <span className="mono" style={{ fontSize: 13, fontWeight: 700, color: "var(--accent-red)" }}>{fmt(obraTotal)}</span>
             </div>
           </div>
 
-          {/* Saldo devedor INCC */}
           <div style={{
             background: "var(--bg-secondary)", border: "1px solid var(--border)",
-            borderRadius: "var(--radius)", padding: "16px", boxShadow: "var(--shadow)",
+            borderRadius: "var(--radius)", padding: "14px",
           }}>
             <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>Saldo Devedor (INCC {params.incc}% a.a.)</h3>
-            <p style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 10 }}>O valor que sera financiado pelo banco na entrega das chaves.</p>
-            <SaldoEvolutionChart pontos={evolSaldo} cor={corHex} width={500} height={110} />
-            <p className="mono" style={{ fontSize: 13, marginTop: 6 }}>
+            <p style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 8 }}>Valor financiado na entrega das chaves.</p>
+            <SaldoEvolutionChart pontos={evolSaldo} cor={corHex} width={500} height={100} />
+            <p className="mono" style={{ fontSize: 12, marginTop: 6 }}>
               {fmt(ap.financiamento)} <span style={{ color: "var(--accent-red)" }}>+{fmt(saldoEntrega - ap.financiamento)}</span> = <strong>{fmt(saldoEntrega)}</strong>
             </p>
           </div>
 
-          {/* Resumo custo total */}
           <div style={{
             background: "var(--bg-secondary)", border: "1px solid var(--border)",
-            borderRadius: "var(--radius)", padding: "16px", boxShadow: "var(--shadow)",
+            borderRadius: "var(--radius)", padding: "14px",
           }}>
-            <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>Custo Total - {ap.nome}</h3>
+            <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 10 }}>Custo Total - {ap.nome}</h3>
             {[
               { label: "Evolucao de obra (estimada)", valor: obraTotal },
               { label: `Financiamento PRICE (${params.prazoAnos} anos x ${fmt(ap.parcelaPosChave)})`, valor: totalFin },
@@ -930,194 +978,170 @@
       );
 
       return (
-        <div className="fade-in page-container">
-          <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 6 }}>Projecao de Gastos</h2>
-          <p style={{ color: "var(--text-muted)", fontSize: 13, marginBottom: 16 }}>
-            Visao completa de quanto voce gasta em cada fase, por apartamento ou combinado
-          </p>
+        <div className="fade-in">
+          <PageHeader title="Projecao de Gastos" onBack={onBack} />
+          <div className="page-container">
+            <p style={{ color: "var(--text-muted)", fontSize: 12, marginBottom: 14 }}>
+              Visao completa de quanto voce gasta em cada fase
+            </p>
 
-          {/* View toggle */}
-          <div style={{ display: "flex", gap: 6, marginBottom: 20, flexWrap: "wrap" }}>
-            {viewButtons.map(v => (
-              <button key={v.id} onClick={() => setView(v.id)} style={{
-                padding: "8px 16px",
-                background: view === v.id ? "var(--accent-indigo)" : "var(--bg-secondary)",
-                color: view === v.id ? "#fff" : "var(--text-secondary)",
-                border: `1px solid ${view === v.id ? "var(--accent-indigo)" : "var(--border)"}`,
-                borderRadius: "var(--radius-sm)", cursor: "pointer",
-                fontFamily: "inherit", fontSize: 13, fontWeight: 600,
-              }}>{v.label}</button>
-            ))}
-          </div>
+            <div style={{ display: "flex", gap: 6, marginBottom: 16, flexWrap: "wrap" }}>
+              {viewButtons.map(v => (
+                <button key={v.id} onClick={() => setView(v.id)} style={{
+                  padding: "7px 14px",
+                  background: view === v.id ? "var(--accent-indigo)" : "var(--bg-secondary)",
+                  color: view === v.id ? "#fff" : "var(--text-secondary)",
+                  border: `1px solid ${view === v.id ? "var(--accent-indigo)" : "var(--border)"}`,
+                  borderRadius: "var(--radius-sm)", cursor: "pointer",
+                  fontFamily: "inherit", fontSize: 12, fontWeight: 600,
+                }}>{v.label}</button>
+              ))}
+            </div>
 
-          {/* VISAO COMBINADA */}
-          {view === "combinado" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              {/* Fases */}
-              {[
-                {
-                  nome: "Fase 1: Evolucao de Obra (ambos)",
-                  periodo: `Agora ate ${fmtMesAno(pl.entrega)}`,
-                  meses: mesesRestPL,
-                  custoInicio: (evolObraPL[0]?.jurosMes || 0) + (evolObraUP[0]?.jurosMes || 0),
-                  custoFim: (evolObraPL[mesesRestPL - 1]?.jurosMes || 0) + (evolObraUP[mesesRestPL - 1]?.jurosMes || 0),
-                  cor: "var(--accent-green)",
-                  desc: "Juros de evolucao de obra dos dois APs. O valor CRESCE todo mes.",
-                },
-                {
-                  nome: "Fase 2: Parcela PL + Evol. Obra UP",
-                  periodo: `${fmtMesAno(pl.entrega)} ate ${fmtMesAno(up.entrega)}`,
-                  meses: mesesFase2,
-                  custoInicio: pl.parcelaPosChave + (evolObraUP[mesesRestPL]?.jurosMes || 0),
-                  custoFim: pl.parcelaPosChave + (evolObraUP[mesesRestUP - 1]?.jurosMes || 0),
-                  cor: "var(--accent-amber)",
-                  desc: "Parcela fixa do PL + evolucao de obra crescente do Unique.",
-                },
-                {
-                  nome: "Fase 3: Ambas Parcelas PRICE",
-                  periodo: `${fmtMesAno(up.entrega)} em diante`,
-                  meses: prazoM,
-                  custoInicio: pl.parcelaPosChave + up.parcelaPosChave,
-                  custoFim: pl.parcelaPosChave + up.parcelaPosChave,
-                  cor: "var(--accent-indigo)",
-                  desc: "Parcelas fixas (PRICE). Studio pode gerar renda no Airbnb pra cobrir.",
-                },
-              ].map((f, i) => (
-                <div key={i} style={{
-                  background: "var(--bg-secondary)", border: "1px solid var(--border)",
-                  borderRadius: "var(--radius)", padding: "16px", boxShadow: "var(--shadow)",
-                  borderLeft: `3px solid ${f.cor}`,
-                }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
-                    <div style={{ flex: 1, minWidth: 200 }}>
-                      <h4 style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>{f.nome}</h4>
-                      <p className="mono" style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 6 }}>{f.periodo} ({f.meses} meses)</p>
-                      <p style={{ fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.5 }}>{f.desc}</p>
-                    </div>
-                    <div style={{ textAlign: "right", minWidth: 140 }}>
+            {view === "combinado" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                {[
+                  {
+                    nome: "Fase 1: Evolucao de Obra (ambos)",
+                    periodo: `Agora ate ${fmtMesAno(pl.entrega)}`, meses: mesesRestPL,
+                    custoInicio: (evolObraPL[0]?.jurosMes || 0) + (evolObraUP[0]?.jurosMes || 0),
+                    custoFim: (evolObraPL[mesesRestPL - 1]?.jurosMes || 0) + (evolObraUP[mesesRestPL - 1]?.jurosMes || 0),
+                    cor: "var(--accent-green)", desc: "Juros de evolucao de obra dos dois APs. CRESCE todo mes.",
+                  },
+                  {
+                    nome: "Fase 2: Parcela PL + Evol. Obra UP",
+                    periodo: `${fmtMesAno(pl.entrega)} ate ${fmtMesAno(up.entrega)}`, meses: mesesFase2,
+                    custoInicio: pl.parcelaPosChave + (evolObraUP[mesesRestPL]?.jurosMes || 0),
+                    custoFim: pl.parcelaPosChave + (evolObraUP[mesesRestUP - 1]?.jurosMes || 0),
+                    cor: "var(--accent-amber)", desc: "Parcela fixa do PL + evolucao de obra crescente do Unique.",
+                  },
+                  {
+                    nome: "Fase 3: Ambas Parcelas PRICE",
+                    periodo: `${fmtMesAno(up.entrega)} em diante`, meses: prazoM,
+                    custoInicio: pl.parcelaPosChave + up.parcelaPosChave,
+                    custoFim: pl.parcelaPosChave + up.parcelaPosChave,
+                    cor: "var(--accent-indigo)", desc: "Parcelas fixas (PRICE). Studio pode gerar renda no Airbnb.",
+                  },
+                ].map((f, i) => (
+                  <div key={i} style={{
+                    background: "var(--bg-secondary)", border: "1px solid var(--border)",
+                    borderRadius: "var(--radius)", padding: "14px",
+                    borderLeft: `3px solid ${f.cor}`,
+                  }}>
+                    <h4 style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>{f.nome}</h4>
+                    <p className="mono" style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 6 }}>{f.periodo} ({f.meses} meses)</p>
+                    <p style={{ fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.5, marginBottom: 8 }}>{f.desc}</p>
+                    <div style={{ textAlign: "right" }}>
                       {f.custoInicio !== f.custoFim ? (
                         <>
                           <p style={{ fontSize: 10, color: "var(--text-muted)" }}>INICIO → FIM</p>
-                          <p className="mono" style={{ fontSize: 14, fontWeight: 700, color: f.cor }}>
-                            {fmt(f.custoInicio)}
-                          </p>
-                          <p className="mono" style={{ fontSize: 14, fontWeight: 700, color: "var(--accent-red)" }}>
-                            → {fmt(f.custoFim)}
-                          </p>
+                          <p className="mono" style={{ fontSize: 14, fontWeight: 700, color: f.cor }}>{fmt(f.custoInicio)}</p>
+                          <p className="mono" style={{ fontSize: 14, fontWeight: 700, color: "var(--accent-red)" }}>→ {fmt(f.custoFim)}</p>
                         </>
                       ) : (
                         <>
                           <p style={{ fontSize: 10, color: "var(--text-muted)" }}>CUSTO/MES (FIXO)</p>
-                          <p className="mono" style={{ fontSize: 18, fontWeight: 700, color: f.cor }}>{fmt(f.custoInicio)}</p>
+                          <p className="mono" style={{ fontSize: 16, fontWeight: 700, color: f.cor }}>{fmt(f.custoInicio)}</p>
                         </>
                       )}
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
 
-              {/* Timeline combinada */}
-              <div style={{
-                background: "var(--bg-secondary)", border: "1px solid var(--border)",
-                borderRadius: "var(--radius)", padding: "16px", boxShadow: "var(--shadow)",
-              }}>
-                <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>Linha do Tempo - Mes a Mes</h3>
-                <p style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 12 }}>Veja como o custo mensal muda ao longo do tempo</p>
-                <div style={{ maxHeight: 400, overflowY: "auto" }}>
-                  {timeline.map((t, i) => (
-                    <div key={i}>
-                      {t.marco && (
-                        <div style={{
-                          padding: "6px 10px", marginBottom: 4, marginTop: i > 0 ? 4 : 0,
-                          background: "rgba(99,102,241,0.1)", borderRadius: 6,
-                          display: "flex", alignItems: "center", gap: 6,
-                        }}>
-                          <Icons.Check />
-                          <span style={{ fontSize: 12, fontWeight: 600, color: "var(--accent-indigo)" }}>{t.marco}</span>
-                        </div>
-                      )}
-                      <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "3px 0", borderBottom: "1px solid var(--border)" }}>
-                        <span className="mono" style={{ fontSize: 10, color: "var(--text-muted)", width: 62, flexShrink: 0 }}>{t.label}</span>
-                        <div style={{ flex: 1, display: "flex", gap: 1, height: 14 }}>
+                {/* Timeline */}
+                <div style={{
+                  background: "var(--bg-secondary)", border: "1px solid var(--border)",
+                  borderRadius: "var(--radius)", padding: "14px",
+                }}>
+                  <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 10 }}>Linha do Tempo - Mes a Mes</h3>
+                  <div style={{ maxHeight: 350, overflowY: "auto" }}>
+                    {timeline.map((t, i) => (
+                      <div key={i}>
+                        {t.marco && (
                           <div style={{
-                            height: "100%", width: `${(t.custoPL / maxTimeline) * 100}%`,
-                            background: "var(--accent-indigo)", borderRadius: "3px 0 0 3px",
-                            minWidth: t.custoPL > 0 ? 2 : 0,
-                          }} />
-                          <div style={{
-                            height: "100%", width: `${(t.custoUP / maxTimeline) * 100}%`,
-                            background: "var(--accent-amber)", borderRadius: "0 3px 3px 0",
-                            minWidth: t.custoUP > 0 ? 2 : 0,
-                          }} />
+                            padding: "5px 8px", marginBottom: 3, marginTop: i > 0 ? 3 : 0,
+                            background: "rgba(99,102,241,0.1)", borderRadius: 6,
+                            display: "flex", alignItems: "center", gap: 5,
+                          }}>
+                            <Icons.Check />
+                            <span style={{ fontSize: 11, fontWeight: 600, color: "var(--accent-indigo)" }}>{t.marco}</span>
+                          </div>
+                        )}
+                        <div style={{ display: "flex", alignItems: "center", gap: 5, padding: "3px 0", borderBottom: "1px solid var(--border)" }}>
+                          <span className="mono" style={{ fontSize: 9, color: "var(--text-muted)", width: 56, flexShrink: 0 }}>{t.label}</span>
+                          <div style={{ flex: 1, display: "flex", gap: 1, height: 12 }}>
+                            <div style={{
+                              height: "100%", width: `${(t.custoPL / maxTimeline) * 100}%`,
+                              background: "var(--accent-indigo)", borderRadius: "3px 0 0 3px",
+                              minWidth: t.custoPL > 0 ? 2 : 0,
+                            }} />
+                            <div style={{
+                              height: "100%", width: `${(t.custoUP / maxTimeline) * 100}%`,
+                              background: "var(--accent-amber)", borderRadius: "0 3px 3px 0",
+                              minWidth: t.custoUP > 0 ? 2 : 0,
+                            }} />
+                          </div>
+                          <span className="mono" style={{ fontSize: 10, fontWeight: 600, width: 65, textAlign: "right", flexShrink: 0 }}>{fmt(t.total)}</span>
                         </div>
-                        <span className="mono" style={{ fontSize: 10, fontWeight: 600, width: 72, textAlign: "right", flexShrink: 0 }}>{fmt(t.total)}</span>
                       </div>
+                    ))}
+                  </div>
+                  <div style={{ display: "flex", gap: 12, marginTop: 8 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                      <div style={{ width: 8, height: 8, borderRadius: 2, background: "var(--accent-indigo)" }} />
+                      <span style={{ fontSize: 10, color: "var(--text-muted)" }}>PL</span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                      <div style={{ width: 8, height: 8, borderRadius: 2, background: "var(--accent-amber)" }} />
+                      <span style={{ fontSize: 10, color: "var(--text-muted)" }}>UP</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Total */}
+                <div style={{
+                  background: "var(--bg-secondary)", border: "1px solid var(--border)",
+                  borderRadius: "var(--radius)", padding: "14px",
+                }}>
+                  <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 10 }}>Custo Total - Tudo Somado</h3>
+                  {[
+                    { label: `Evol. obra PL (${mesesRestPL} m)`, valor: obraTotalPL },
+                    { label: `Evol. obra UP (${mesesRestUP} m)`, valor: obraTotalUP },
+                    { label: `Financ. PL (${params.prazoAnos}a x ${fmt(pl.parcelaPosChave)})`, valor: totalFinPL },
+                    { label: `Financ. UP (${params.prazoAnos}a x ${fmt(up.parcelaPosChave)})`, valor: totalFinUP },
+                  ].map((item, i) => (
+                    <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "5px 0", borderBottom: "1px solid var(--border)", flexWrap: "wrap" }}>
+                      <span style={{ fontSize: 11 }}>{item.label}</span>
+                      <span className="mono" style={{ fontSize: 11, fontWeight: 600 }}>{fmt(item.valor)}</span>
                     </div>
                   ))}
-                </div>
-                <div style={{ display: "flex", gap: 14, marginTop: 8 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                    <div style={{ width: 10, height: 10, borderRadius: 2, background: "var(--accent-indigo)" }} />
-                    <span style={{ fontSize: 11, color: "var(--text-muted)" }}>Palestra Life</span>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                    <div style={{ width: 10, height: 10, borderRadius: 2, background: "var(--accent-amber)" }} />
-                    <span style={{ fontSize: 11, color: "var(--text-muted)" }}>Unique Palestra</span>
+                  <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", marginTop: 4 }}>
+                    <span style={{ fontSize: 14, fontWeight: 700 }}>TOTAL GERAL</span>
+                    <span className="mono" style={{ fontSize: 16, fontWeight: 700, color: "var(--accent-indigo)" }}>{fmt(grandTotal)}</span>
                   </div>
                 </div>
               </div>
+            )}
 
-              {/* Resumo total */}
-              <div style={{
-                background: "var(--bg-secondary)", border: "1px solid var(--border)",
-                borderRadius: "var(--radius)", padding: "16px", boxShadow: "var(--shadow)",
-              }}>
-                <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>Custo Total - Tudo Somado</h3>
-                {[
-                  { label: `Evol. obra PL (${mesesRestPL} meses)`, valor: obraTotalPL },
-                  { label: `Evol. obra UP (${mesesRestUP} meses)`, valor: obraTotalUP },
-                  { label: `Financiamento PL (${params.prazoAnos} anos x ${fmt(pl.parcelaPosChave)})`, valor: totalFinPL },
-                  { label: `Financiamento UP (${params.prazoAnos} anos x ${fmt(up.parcelaPosChave)})`, valor: totalFinUP },
-                ].map((item, i) => (
-                  <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid var(--border)", flexWrap: "wrap" }}>
-                    <span style={{ fontSize: 12 }}>{item.label}</span>
-                    <span className="mono" style={{ fontSize: 12, fontWeight: 600 }}>{fmt(item.valor)}</span>
-                  </div>
-                ))}
-                <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", marginTop: 4 }}>
-                  <span style={{ fontSize: 15, fontWeight: 700 }}>TOTAL GERAL</span>
-                  <span className="mono" style={{ fontSize: 18, fontWeight: 700, color: "var(--accent-indigo)" }}>{fmt(grandTotal)}</span>
-                </div>
-              </div>
+            {view === "palestraLife" && (
+              <ApartmentDetail ap={pl} evolObra={evolObraPL} evolSaldo={evolSaldoPL}
+                saldoEntrega={saldoPL} obraTotal={obraTotalPL} totalFin={totalFinPL}
+                cor="var(--accent-indigo)" corHex="#6366f1" />
+            )}
+
+            {view === "unique" && (
+              <ApartmentDetail ap={up} evolObra={evolObraUP} evolSaldo={evolSaldoUP}
+                saldoEntrega={saldoUP} obraTotal={obraTotalUP} totalFin={totalFinUP}
+                cor="var(--accent-amber)" corHex="#f59e0b" />
+            )}
+
+            <div style={{
+              marginTop: 14, padding: "10px 12px", background: "var(--bg-tertiary)",
+              borderRadius: "var(--radius-sm)", fontSize: 11, color: "var(--text-secondary)", lineHeight: 1.5,
+            }}>
+              <strong>Nota:</strong> Valores de evolucao de obra sao estimativas ({params.taxaJuros}% a.a.).
+              Parcelas informadas pelo banco podem mudar na entrega devido ao INCC.
             </div>
-          )}
-
-          {/* VISAO PALESTRA LIFE */}
-          {view === "palestraLife" && (
-            <ApartmentDetail
-              ap={pl} evolObra={evolObraPL} evolSaldo={evolSaldoPL}
-              saldoEntrega={saldoPL} obraTotal={obraTotalPL} totalFin={totalFinPL}
-              cor="var(--accent-indigo)" corHex="#6366f1"
-            />
-          )}
-
-          {/* VISAO UNIQUE */}
-          {view === "unique" && (
-            <ApartmentDetail
-              ap={up} evolObra={evolObraUP} evolSaldo={evolSaldoUP}
-              saldoEntrega={saldoUP} obraTotal={obraTotalUP} totalFin={totalFinUP}
-              cor="var(--accent-amber)" corHex="#f59e0b"
-            />
-          )}
-
-          {/* Nota importante */}
-          <div style={{
-            marginTop: 16, padding: "10px 12px", background: "var(--bg-tertiary)",
-            borderRadius: "var(--radius-sm)", fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.5,
-          }}>
-            <strong>Nota:</strong> Os valores de evolucao de obra sao estimativas baseadas em juros de {params.taxaJuros}% a.a.
-            sobre o valor proporcionalmente liberado. As parcelas ({fmt(pl.parcelaPosChave)} e {fmt(up.parcelaPosChave)})
-            foram informadas pelo banco e podem mudar na entrega devido ao INCC. Confirme os valores exatos com o corretor.
           </div>
         </div>
       );
@@ -1126,7 +1150,7 @@
     // ========================
     // TELA: CRONOGRAMA
     // ========================
-    function Cronograma() {
+    function Cronograma({ onBack }) {
       const defaultChecklist = [
         { id: 1, text: "RG e CPF (ambos)", done: false },
         { id: 2, text: "Comprovante de renda / Imposto de Renda", done: false },
@@ -1164,168 +1188,136 @@
       ];
 
       const fases = [
-        {
-          titulo: "Fase 1: Obra",
-          descricao: "Acompanhamento do andamento. Voce paga somente seguro obra.",
-          itens: [
-            "Seguro obra mensal (unico custo ate a chave)",
-            "Saldo devedor corrigido pelo INCC",
-            "Acompanhar andamento com a construtora",
-          ],
-        },
-        {
-          titulo: "Fase 2: Vistoria",
-          descricao: "Verificacao do imovel antes de receber a chave",
-          itens: [
-            "Agendar vistoria com construtora",
-            "Verificar acabamentos, instalacoes, medidas",
-            "Documentar problemas encontrados",
-          ],
-        },
-        {
-          titulo: "Fase 3: Chave + Financiamento",
-          descricao: "Inicio do financiamento bancario (Tabela PRICE)",
-          itens: [
-            "Assinatura do contrato com o banco",
-            "Primeira parcela do financiamento (PRICE fixa)",
-            "Registro do imovel em cartorio",
-          ],
-        },
+        { titulo: "Fase 1: Obra", descricao: "Acompanhamento do andamento.", itens: ["Evol. obra mensal", "Saldo devedor corrigido INCC", "Acompanhar construtora"] },
+        { titulo: "Fase 2: Vistoria", descricao: "Verificacao antes de receber a chave", itens: ["Agendar com construtora", "Verificar acabamentos", "Documentar problemas"] },
+        { titulo: "Fase 3: Chave", descricao: "Inicio do financiamento PRICE", itens: ["Contrato com banco", "Primeira parcela", "Registro em cartorio"] },
       ];
 
       return (
-        <div className="fade-in page-container">
-          <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 20 }}>Cronograma</h2>
-
-          <div style={{
-            background: "var(--bg-secondary)", border: "1px solid var(--border)",
-            borderRadius: "var(--radius)", padding: "18px", marginBottom: 20, boxShadow: "var(--shadow)",
-          }}>
-            <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 16 }}>Marcos Importantes</h3>
-            <div style={{ position: "relative", paddingLeft: 28 }}>
-              <div style={{
-                position: "absolute", left: 9, top: 8, bottom: 8, width: 2, background: "var(--border)",
-              }} />
-              {marcos.map((m, i) => (
-                <div key={i} style={{
-                  display: "flex", alignItems: "flex-start", gap: 12,
-                  marginBottom: i < marcos.length - 1 ? 20 : 0, position: "relative",
-                }}>
-                  <div style={{
-                    position: "absolute", left: -22,
-                    width: 10, height: 10, borderRadius: "50%",
-                    background: m.status === "done" ? m.cor : "var(--bg-tertiary)",
-                    border: `2px solid ${m.cor}`, marginTop: 4,
-                  }} />
-                  <div style={{ flex: 1 }}>
-                    <p className="mono" style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 1 }}>{m.data}</p>
-                    <p style={{ fontSize: 14, fontWeight: 500 }}>{m.label}</p>
+        <div className="fade-in">
+          <PageHeader title="Cronograma" onBack={onBack} />
+          <div className="page-container">
+            {/* Marcos */}
+            <div style={{
+              background: "var(--bg-secondary)", border: "1px solid var(--border)",
+              borderRadius: "var(--radius)", padding: "14px", marginBottom: 14,
+            }}>
+              <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 14 }}>Marcos Importantes</h3>
+              <div style={{ position: "relative", paddingLeft: 24 }}>
+                <div style={{ position: "absolute", left: 7, top: 8, bottom: 8, width: 2, background: "var(--border)" }} />
+                {marcos.map((m, i) => (
+                  <div key={i} style={{
+                    display: "flex", alignItems: "flex-start", gap: 10,
+                    marginBottom: i < marcos.length - 1 ? 16 : 0, position: "relative",
+                  }}>
+                    <div style={{
+                      position: "absolute", left: -20,
+                      width: 10, height: 10, borderRadius: "50%",
+                      background: m.status === "done" ? m.cor : "var(--bg-tertiary)",
+                      border: `2px solid ${m.cor}`, marginTop: 4,
+                    }} />
+                    <div style={{ flex: 1 }}>
+                      <p className="mono" style={{ fontSize: 10, color: "var(--text-muted)", marginBottom: 1 }}>{m.data}</p>
+                      <p style={{ fontSize: 13, fontWeight: 500 }}>{m.label}</p>
+                    </div>
+                    {m.status === "done" && (
+                      <span style={{
+                        fontSize: 9, fontWeight: 600, color: "var(--accent-green)",
+                        background: "rgba(34,197,94,0.1)", padding: "2px 6px", borderRadius: 4,
+                      }}>OK</span>
+                    )}
                   </div>
-                  {m.status === "done" && (
-                    <span style={{
-                      fontSize: 10, fontWeight: 600, color: "var(--accent-green)",
-                      background: "rgba(34,197,94,0.1)", padding: "2px 6px", borderRadius: 4,
-                    }}>Concluido</span>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 14 }}>
-            {fases.map((f, i) => (
-              <div key={i} style={{
-                background: "var(--bg-secondary)", border: "1px solid var(--border)",
-                borderRadius: "var(--radius)", padding: "16px", boxShadow: "var(--shadow)",
-              }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
-                  <span style={{
-                    width: 22, height: 22, borderRadius: 5, background: "var(--accent-indigo)",
-                    color: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 11, fontWeight: 700,
-                  }}>{i + 1}</span>
-                  <h4 style={{ fontSize: 14, fontWeight: 600 }}>{f.titulo}</h4>
-                </div>
-                <p style={{ color: "var(--text-muted)", fontSize: 12, marginBottom: 10 }}>{f.descricao}</p>
-                <ul style={{ listStyle: "none", paddingLeft: 0 }}>
-                  {f.itens.map((item, j) => (
-                    <li key={j} style={{
-                      display: "flex", alignItems: "flex-start", gap: 6,
-                      fontSize: 12, color: "var(--text-secondary)", marginBottom: 5,
-                    }}>
-                      <span style={{ color: "var(--text-muted)", marginTop: 1 }}>&#8226;</span>
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-
-          {/* Checklist de Documentacao */}
-          <div style={{
-            marginTop: 20, background: "var(--bg-secondary)", border: "1px solid var(--border)",
-            borderRadius: "var(--radius)", padding: "18px", boxShadow: "var(--shadow)",
-          }}>
-            <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 14 }}>Checklist de Documentacao</h3>
-
-            {/* Progress */}
-            <div style={{ marginBottom: 14 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{doneCount} de {checklist.length} concluidos</span>
-                <span className="mono" style={{ fontSize: 12, color: doneCount === checklist.length ? "var(--accent-green)" : "var(--text-muted)" }}>
-                  {checklist.length > 0 ? fmtNum((doneCount / checklist.length) * 100, 0) : 0}%
-                </span>
-              </div>
-              <div style={{ height: 6, background: "var(--border)", borderRadius: 3, overflow: "hidden" }}>
-                <div style={{
-                  height: "100%", width: `${checklist.length > 0 ? (doneCount / checklist.length) * 100 : 0}%`,
-                  background: doneCount === checklist.length ? "var(--accent-green)" : "var(--accent-indigo)",
-                  borderRadius: 3, transition: "width 0.3s",
-                }} />
+                ))}
               </div>
             </div>
 
-            {/* Items */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 14 }}>
-              {checklist.map(item => (
-                <div key={item.id} style={{
-                  display: "flex", alignItems: "center", gap: 10, padding: "8px 10px",
-                  background: "var(--bg-tertiary)", borderRadius: "var(--radius-sm)",
+            {/* Fases */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 14 }}>
+              {fases.map((f, i) => (
+                <div key={i} style={{
+                  background: "var(--bg-secondary)", border: "1px solid var(--border)",
+                  borderRadius: "var(--radius)", padding: "14px",
                 }}>
-                  <input type="checkbox" checked={item.done} onChange={() => toggleItem(item.id)}
-                    style={{ width: 16, height: 16, accentColor: "var(--accent-indigo)", cursor: "pointer", flexShrink: 0 }} />
-                  <span style={{
-                    flex: 1, fontSize: 13,
-                    textDecoration: item.done ? "line-through" : "none",
-                    color: item.done ? "var(--text-muted)" : "var(--text-primary)",
-                  }}>{item.text}</span>
-                  <button onClick={() => removeItem(item.id)} style={{
-                    background: "none", border: "none", cursor: "pointer",
-                    color: "var(--text-muted)", padding: 3, display: "flex", alignItems: "center",
-                    opacity: 0.6,
-                  }} title="Remover"><Icons.X /></button>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+                    <span style={{
+                      width: 20, height: 20, borderRadius: 5, background: "var(--accent-indigo)",
+                      color: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 10, fontWeight: 700,
+                    }}>{i + 1}</span>
+                    <h4 style={{ fontSize: 13, fontWeight: 600 }}>{f.titulo}</h4>
+                  </div>
+                  <p style={{ color: "var(--text-muted)", fontSize: 11, marginBottom: 8 }}>{f.descricao}</p>
+                  <ul style={{ listStyle: "none", paddingLeft: 0 }}>
+                    {f.itens.map((item, j) => (
+                      <li key={j} style={{ display: "flex", alignItems: "flex-start", gap: 5, fontSize: 12, color: "var(--text-secondary)", marginBottom: 4 }}>
+                        <span style={{ color: "var(--text-muted)", marginTop: 1 }}>&#8226;</span> {item}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               ))}
             </div>
 
-            {/* Add custom item */}
-            <div style={{ display: "flex", gap: 8 }}>
-              <input type="text" value={newItem} onChange={e => setNewItem(e.target.value)}
-                placeholder="Adicionar item..."
-                onKeyDown={e => e.key === "Enter" && addItem()}
-                style={{
-                  flex: 1, padding: "8px 12px", background: "var(--bg-tertiary)",
-                  border: "1px solid var(--border)", borderRadius: "var(--radius-sm)",
-                  color: "var(--text-primary)", fontSize: 13, fontFamily: "inherit", outline: "none",
-                }} />
-              <button onClick={addItem} style={{
-                padding: "8px 14px", background: "var(--accent-indigo)", color: "#fff",
-                border: "none", borderRadius: "var(--radius-sm)", cursor: "pointer",
-                fontFamily: "inherit", fontSize: 13, fontWeight: 600,
-                display: "flex", alignItems: "center", gap: 4,
-                opacity: newItem.trim() ? 1 : 0.5,
-              }}><Icons.Plus /> Adicionar</button>
+            {/* Checklist */}
+            <div style={{
+              background: "var(--bg-secondary)", border: "1px solid var(--border)",
+              borderRadius: "var(--radius)", padding: "14px",
+            }}>
+              <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>Checklist de Documentacao</h3>
+              <div style={{ marginBottom: 12 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                  <span style={{ fontSize: 11, color: "var(--text-secondary)" }}>{doneCount} de {checklist.length}</span>
+                  <span className="mono" style={{ fontSize: 11, color: doneCount === checklist.length ? "var(--accent-green)" : "var(--text-muted)" }}>
+                    {checklist.length > 0 ? fmtNum((doneCount / checklist.length) * 100, 0) : 0}%
+                  </span>
+                </div>
+                <div style={{ height: 5, background: "var(--border)", borderRadius: 3, overflow: "hidden" }}>
+                  <div style={{
+                    height: "100%", width: `${checklist.length > 0 ? (doneCount / checklist.length) * 100 : 0}%`,
+                    background: doneCount === checklist.length ? "var(--accent-green)" : "var(--accent-indigo)",
+                    borderRadius: 3, transition: "width 0.3s",
+                  }} />
+                </div>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 12 }}>
+                {checklist.map(item => (
+                  <div key={item.id} style={{
+                    display: "flex", alignItems: "center", gap: 8, padding: "8px 10px",
+                    background: "var(--bg-tertiary)", borderRadius: "var(--radius-sm)",
+                  }}>
+                    <input type="checkbox" checked={item.done} onChange={() => toggleItem(item.id)}
+                      style={{ width: 16, height: 16, accentColor: "var(--accent-indigo)", cursor: "pointer", flexShrink: 0 }} />
+                    <span style={{
+                      flex: 1, fontSize: 13,
+                      textDecoration: item.done ? "line-through" : "none",
+                      color: item.done ? "var(--text-muted)" : "var(--text-primary)",
+                    }}>{item.text}</span>
+                    <button onClick={() => removeItem(item.id)} style={{
+                      background: "none", border: "none", cursor: "pointer",
+                      color: "var(--text-muted)", padding: 3, display: "flex", alignItems: "center", opacity: 0.6,
+                    }}><Icons.X /></button>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ display: "flex", gap: 8 }}>
+                <input type="text" value={newItem} onChange={e => setNewItem(e.target.value)}
+                  placeholder="Adicionar item..."
+                  onKeyDown={e => e.key === "Enter" && addItem()}
+                  style={{
+                    flex: 1, padding: "8px 12px", background: "var(--bg-tertiary)",
+                    border: "1px solid var(--border)", borderRadius: "var(--radius-sm)",
+                    color: "var(--text-primary)", fontSize: 13, fontFamily: "inherit", outline: "none",
+                  }} />
+                <button onClick={addItem} style={{
+                  padding: "8px 12px", background: "var(--accent-indigo)", color: "#fff",
+                  border: "none", borderRadius: "var(--radius-sm)", cursor: "pointer",
+                  fontFamily: "inherit", fontSize: 12, fontWeight: 600,
+                  display: "flex", alignItems: "center", gap: 4,
+                  opacity: newItem.trim() ? 1 : 0.5,
+                }}><Icons.Plus /></button>
+              </div>
             </div>
           </div>
         </div>
@@ -1335,7 +1327,7 @@
     // ========================
     // TELA: ANOTACOES
     // ========================
-    function Anotacoes() {
+    function Anotacoes({ onBack }) {
       const [notas, setNotas] = useState(() => {
         try { return JSON.parse(localStorage.getItem("nossoap_notas") || "[]"); } catch { return []; }
       });
@@ -1354,228 +1346,171 @@
       };
 
       return (
-        <div className="fade-in page-container" style={{ maxWidth: 800 }}>
-          <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 20 }}>Anotacoes</h2>
-
-          <div style={{
-            background: "var(--bg-secondary)", border: "1px solid var(--border)",
-            borderRadius: "var(--radius)", padding: "16px", marginBottom: 20, boxShadow: "var(--shadow)",
-          }}>
-            <textarea
-              value={texto} onChange={(e) => setTexto(e.target.value)}
-              placeholder="Escreva uma nota..."
-              rows={3}
-              style={{
-                width: "100%", padding: 12, background: "var(--bg-tertiary)",
-                border: "1px solid var(--border)", borderRadius: "var(--radius-sm)",
-                color: "var(--text-primary)", fontSize: 14, fontFamily: "inherit",
-                resize: "vertical", outline: "none",
-              }}
-            />
-            <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 10, flexWrap: "wrap" }}>
-              {categorias.map(c => (
-                <button key={c} onClick={() => setCategoria(c)} style={{
-                  padding: "5px 12px",
-                  background: categoria === c ? catCores[c] : "var(--bg-tertiary)",
-                  color: categoria === c ? "#fff" : "var(--text-secondary)",
-                  border: `1px solid ${categoria === c ? catCores[c] : "var(--border)"}`,
-                  borderRadius: 5, cursor: "pointer", fontSize: 12, fontFamily: "inherit", fontWeight: 500,
-                }}>{c}</button>
-              ))}
-              <button onClick={addNota} style={{
-                marginLeft: "auto", padding: "6px 16px",
-                background: "var(--accent-indigo)", color: "#fff",
-                border: "none", borderRadius: "var(--radius-sm)",
-                cursor: "pointer", fontSize: 13, fontWeight: 600, fontFamily: "inherit",
-                display: "flex", alignItems: "center", gap: 4,
-                opacity: texto.trim() ? 1 : 0.5,
-              }}><Icons.Plus /> Adicionar</button>
+        <div className="fade-in">
+          <PageHeader title="Anotacoes" onBack={onBack} />
+          <div className="page-container">
+            <div style={{
+              background: "var(--bg-secondary)", border: "1px solid var(--border)",
+              borderRadius: "var(--radius)", padding: "14px", marginBottom: 16,
+            }}>
+              <textarea
+                value={texto} onChange={(e) => setTexto(e.target.value)}
+                placeholder="Escreva uma nota..."
+                rows={3}
+                style={{
+                  width: "100%", padding: 12, background: "var(--bg-tertiary)",
+                  border: "1px solid var(--border)", borderRadius: "var(--radius-sm)",
+                  color: "var(--text-primary)", fontSize: 14, fontFamily: "inherit",
+                  resize: "vertical", outline: "none",
+                }}
+              />
+              <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 10, flexWrap: "wrap" }}>
+                {categorias.map(c => (
+                  <button key={c} onClick={() => setCategoria(c)} style={{
+                    padding: "5px 10px",
+                    background: categoria === c ? catCores[c] : "var(--bg-tertiary)",
+                    color: categoria === c ? "#fff" : "var(--text-secondary)",
+                    border: `1px solid ${categoria === c ? catCores[c] : "var(--border)"}`,
+                    borderRadius: 5, cursor: "pointer", fontSize: 11, fontFamily: "inherit", fontWeight: 500,
+                  }}>{c}</button>
+                ))}
+                <button onClick={addNota} style={{
+                  marginLeft: "auto", padding: "6px 14px",
+                  background: "var(--accent-indigo)", color: "#fff",
+                  border: "none", borderRadius: "var(--radius-sm)",
+                  cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: "inherit",
+                  display: "flex", alignItems: "center", gap: 4,
+                  opacity: texto.trim() ? 1 : 0.5,
+                }}><Icons.Plus /> Salvar</button>
+              </div>
             </div>
-          </div>
 
-          {notas.length === 0 ? (
-            <div style={{ textAlign: "center", padding: 32, color: "var(--text-muted)", fontSize: 13 }}>
-              Nenhuma anotacao ainda. Comece escrevendo acima!
-            </div>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {notas.map(n => (
-                <div key={n.id} style={{
-                  background: "var(--bg-secondary)", border: "1px solid var(--border)",
-                  borderRadius: "var(--radius)", padding: "12px 16px", boxShadow: "var(--shadow)",
-                  borderLeft: `3px solid ${catCores[n.categoria] || "var(--border)"}`,
-                }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6, flexWrap: "wrap" }}>
-                    <span style={{
-                      fontSize: 10, fontWeight: 600, color: catCores[n.categoria] || "var(--text-muted)",
-                      background: "var(--bg-tertiary)", padding: "2px 6px", borderRadius: 3,
-                    }}>{n.categoria}</span>
-                    <span style={{ fontSize: 11, color: "var(--text-muted)", display: "flex", alignItems: "center", gap: 3 }}>
-                      <Icons.Clock /> {n.data}
-                    </span>
-                    <button onClick={() => setNotas(notas.filter(x => x.id !== n.id))} style={{
-                      marginLeft: "auto", background: "none", border: "none",
-                      cursor: "pointer", color: "var(--text-muted)", padding: 3, display: "flex", alignItems: "center",
-                    }}><Icons.Trash /></button>
+            {notas.length === 0 ? (
+              <div style={{ textAlign: "center", padding: 32, color: "var(--text-muted)", fontSize: 13 }}>
+                Nenhuma anotacao ainda.
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {notas.map(n => (
+                  <div key={n.id} style={{
+                    background: "var(--bg-secondary)", border: "1px solid var(--border)",
+                    borderRadius: "var(--radius)", padding: "12px 14px",
+                    borderLeft: `3px solid ${catCores[n.categoria] || "var(--border)"}`,
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6, flexWrap: "wrap" }}>
+                      <span style={{
+                        fontSize: 10, fontWeight: 600, color: catCores[n.categoria] || "var(--text-muted)",
+                        background: "var(--bg-tertiary)", padding: "2px 6px", borderRadius: 3,
+                      }}>{n.categoria}</span>
+                      <span style={{ fontSize: 10, color: "var(--text-muted)", display: "flex", alignItems: "center", gap: 3 }}>
+                        <Icons.Clock /> {n.data}
+                      </span>
+                      <button onClick={() => setNotas(notas.filter(x => x.id !== n.id))} style={{
+                        marginLeft: "auto", background: "none", border: "none",
+                        cursor: "pointer", color: "var(--text-muted)", padding: 3, display: "flex", alignItems: "center",
+                      }}><Icons.Trash /></button>
+                    </div>
+                    <p style={{ fontSize: 13, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{n.texto}</p>
                   </div>
-                  <p style={{ fontSize: 13, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{n.texto}</p>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       );
     }
 
     // ========================
-    // TELA: FAQ
-    // ========================
-    // ========================
     // TELA: DOCUMENTOS
     // ========================
-    function Documentos() {
+    function Documentos({ onBack }) {
       const [viewing, setViewing] = useState(null);
 
       const docs = [
         {
-          id: "pl",
-          nome: "Palestra Life - Book Digital",
-          desc: "Book completo do empreendimento Palestra Life (Nov/2023). Plantas, areas comuns, localizacao e diferenciais.",
+          id: "pl", nome: "Palestra Life - Book Digital",
+          desc: "Book completo: plantas, areas comuns, localizacao.",
           arquivo: "public/2915 - Palestra Life - Book - Novembro - 2023 - Digital.pdf",
-          tamanho: "3,1 MB",
-          cor: "var(--accent-indigo)",
-          ap: "Palestra Life",
+          tamanho: "3,1 MB", cor: "var(--accent-indigo)", ap: "Palestra Life",
         },
         {
-          id: "up",
-          nome: "Unique Palestra - Book de Vendas",
-          desc: "Book de vendas do Unique Palestra (Nova Smart). Plantas, informacoes e condicoes comerciais.",
+          id: "up", nome: "Unique Palestra - Book de Vendas",
+          desc: "Book de vendas: plantas, condicoes comerciais.",
           arquivo: "public/2011_68_BOOK_RVE_NOVASMART_2FASEDEVENDAS_ALT3 (1) 2.pdf",
-          tamanho: "23,9 MB",
-          cor: "var(--accent-amber)",
-          ap: "Unique Palestra",
+          tamanho: "23,9 MB", cor: "var(--accent-amber)", ap: "Unique Palestra",
         },
       ];
 
-      // Visualizacao embutida
       if (viewing) {
         const doc = docs.find(d => d.id === viewing);
         return (
-          <div className="fade-in" style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 100px)" }}>
+          <div className="fade-in" style={{ display: "flex", flexDirection: "column", height: "100vh" }}>
             <div style={{
               background: "var(--bg-secondary)", borderBottom: "1px solid var(--border)",
-              padding: "10px 16px", display: "flex", alignItems: "center", gap: 10,
-              flexWrap: "wrap",
+              padding: "10px 14px", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap",
             }}>
-              <button onClick={() => setViewing(null)} style={{
-                display: "flex", alignItems: "center", gap: 4,
-                padding: "6px 12px", background: "var(--bg-tertiary)",
+              <button onClick={() => setViewing(null)} className="back-btn"><Icons.ChevronLeft /></button>
+              <span style={{ fontSize: 13, fontWeight: 600, flex: 1 }}>{doc.nome}</span>
+              <a href={doc.arquivo} target="_blank" rel="noopener noreferrer" style={{
+                display: "inline-flex", alignItems: "center", gap: 4,
+                padding: "6px 10px", background: "var(--bg-tertiary)",
                 border: "1px solid var(--border)", borderRadius: "var(--radius-sm)",
-                color: "var(--text-primary)", cursor: "pointer", fontFamily: "inherit",
-                fontSize: 13, fontWeight: 500,
-              }}>
-                ← Voltar
-              </button>
-              <span style={{ fontSize: 14, fontWeight: 600, flex: 1 }}>{doc.nome}</span>
-              <div style={{ display: "flex", gap: 6 }}>
-                <a href={doc.arquivo} target="_blank" rel="noopener noreferrer" style={{
-                  display: "inline-flex", alignItems: "center", gap: 4,
-                  padding: "6px 12px", background: "var(--bg-tertiary)",
-                  border: "1px solid var(--border)", borderRadius: "var(--radius-sm)",
-                  color: "var(--text-secondary)", textDecoration: "none",
-                  fontSize: 12, fontFamily: "inherit",
-                }}>
-                  <Icons.ExternalLink /> Nova aba
-                </a>
-                <a href={doc.arquivo} download style={{
-                  display: "inline-flex", alignItems: "center", gap: 4,
-                  padding: "6px 12px", background: doc.cor, color: "#fff",
-                  border: "none", borderRadius: "var(--radius-sm)",
-                  textDecoration: "none", fontSize: 12, fontFamily: "inherit",
-                }}>
-                  <Icons.Download /> Baixar
-                </a>
-              </div>
+                color: "var(--text-secondary)", textDecoration: "none", fontSize: 11,
+              }}><Icons.ExternalLink /> Aba</a>
+              <a href={doc.arquivo} download style={{
+                display: "inline-flex", alignItems: "center", gap: 4,
+                padding: "6px 10px", background: doc.cor, color: "#fff",
+                border: "none", borderRadius: "var(--radius-sm)",
+                textDecoration: "none", fontSize: 11,
+              }}><Icons.Download /></a>
             </div>
             <div style={{ flex: 1, background: "var(--bg-tertiary)" }}>
-              <iframe
-                src={doc.arquivo}
-                style={{ width: "100%", height: "100%", border: "none" }}
-                title={doc.nome}
-              />
-              {/* Fallback para mobile que nao suporta iframe PDF */}
-              <noscript>
-                <p>Seu navegador nao suporta visualizacao de PDF. <a href={doc.arquivo}>Clique aqui para baixar.</a></p>
-              </noscript>
+              <iframe src={doc.arquivo} style={{ width: "100%", height: "100%", border: "none" }} title={doc.nome} />
             </div>
           </div>
         );
       }
 
       return (
-        <div className="fade-in page-container" style={{ maxWidth: 800 }}>
-          <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 6 }}>Documentos</h2>
-          <p style={{ color: "var(--text-muted)", fontSize: 13, marginBottom: 20 }}>
-            Books e materiais dos empreendimentos
-          </p>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            {docs.map((d, i) => (
-              <div key={i} style={{
-                background: "var(--bg-secondary)", border: "1px solid var(--border)",
-                borderRadius: "var(--radius)", padding: "20px", boxShadow: "var(--shadow)",
-                borderLeft: `3px solid ${d.cor}`,
-              }}>
-                <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
-                  <div style={{
-                    width: 44, height: 44, borderRadius: 10, flexShrink: 0,
-                    background: "var(--bg-tertiary)", display: "flex",
-                    alignItems: "center", justifyContent: "center", color: d.cor,
-                  }}>
-                    <Icons.Book />
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4, flexWrap: "wrap" }}>
-                      <h3 style={{ fontSize: 15, fontWeight: 600 }}>{d.nome}</h3>
-                      <span style={{
-                        fontSize: 10, fontWeight: 600, color: d.cor,
-                        background: "var(--bg-tertiary)", padding: "2px 6px", borderRadius: 3,
-                      }}>{d.ap}</span>
-                    </div>
-                    <p style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.5, marginBottom: 12 }}>{d.desc}</p>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                      <button onClick={() => setViewing(d.id)} style={{
-                        display: "inline-flex", alignItems: "center", gap: 5,
-                        padding: "8px 16px", background: d.cor, color: "#fff",
-                        border: "none", borderRadius: "var(--radius-sm)",
-                        fontSize: 13, fontWeight: 600, fontFamily: "inherit",
-                        cursor: "pointer",
-                      }}>
-                        <Icons.Book /> Ver no app
-                      </button>
-                      <a href={d.arquivo} target="_blank" rel="noopener noreferrer" style={{
-                        display: "inline-flex", alignItems: "center", gap: 5,
-                        padding: "8px 16px", background: "var(--bg-tertiary)",
-                        color: "var(--text-secondary)", border: "1px solid var(--border)",
-                        borderRadius: "var(--radius-sm)", textDecoration: "none",
-                        fontSize: 13, fontWeight: 500, fontFamily: "inherit",
-                      }}>
-                        <Icons.ExternalLink /> Nova aba
-                      </a>
-                      <a href={d.arquivo} download style={{
-                        display: "inline-flex", alignItems: "center", gap: 5,
-                        padding: "8px 16px", background: "var(--bg-tertiary)",
-                        color: "var(--text-secondary)", border: "1px solid var(--border)",
-                        borderRadius: "var(--radius-sm)", textDecoration: "none",
-                        fontSize: 13, fontWeight: 500, fontFamily: "inherit",
-                      }}>
-                        <Icons.Download /> Baixar ({d.tamanho})
-                      </a>
+        <div className="fade-in">
+          <PageHeader title="Documentos" onBack={onBack} />
+          <div className="page-container">
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {docs.map(d => (
+                <div key={d.id} style={{
+                  background: "var(--bg-secondary)", border: "1px solid var(--border)",
+                  borderRadius: "var(--radius)", padding: "16px",
+                  borderLeft: `3px solid ${d.cor}`,
+                }}>
+                  <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                    <div style={{
+                      width: 40, height: 40, borderRadius: 10, flexShrink: 0,
+                      background: "var(--bg-tertiary)", display: "flex",
+                      alignItems: "center", justifyContent: "center", color: d.cor,
+                    }}><Icons.Book /></div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>{d.nome}</h3>
+                      <p style={{ fontSize: 12, color: "var(--text-secondary)", marginBottom: 10 }}>{d.desc}</p>
+                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                        <button onClick={() => setViewing(d.id)} style={{
+                          display: "inline-flex", alignItems: "center", gap: 5,
+                          padding: "8px 14px", background: d.cor, color: "#fff",
+                          border: "none", borderRadius: "var(--radius-sm)",
+                          fontSize: 12, fontWeight: 600, fontFamily: "inherit", cursor: "pointer",
+                        }}><Icons.Book /> Ver</button>
+                        <a href={d.arquivo} download style={{
+                          display: "inline-flex", alignItems: "center", gap: 5,
+                          padding: "8px 14px", background: "var(--bg-tertiary)",
+                          color: "var(--text-secondary)", border: "1px solid var(--border)",
+                          borderRadius: "var(--radius-sm)", textDecoration: "none",
+                          fontSize: 12, fontFamily: "inherit",
+                        }}><Icons.Download /> {d.tamanho}</a>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       );
@@ -1584,91 +1519,55 @@
     // ========================
     // TELA: FAQ
     // ========================
-    function FAQ() {
+    function FAQ({ onBack }) {
       const [open, setOpen] = useState(null);
 
       const perguntas = [
-        {
-          q: "O que e INCC e como afeta nosso financiamento?",
-          a: "O INCC (Indice Nacional de Custo da Construcao) reajusta seu saldo devedor durante a obra. Ele reflete o aumento dos custos de construcao civil. Na pratica, o valor que voce vai financiar na entrega das chaves sera maior que o valor original do contrato. A media recente fica em torno de 6% ao ano. Por isso as parcelas informadas agora podem mudar um pouco."
-        },
-        {
-          q: "O que e a Tabela PRICE?",
-          a: "Na Tabela PRICE, as parcelas sao fixas durante todo o financiamento. No inicio, a maior parte da parcela vai para juros e pouco para amortizacao. Com o tempo, essa proporcao se inverte. A vantagem e a previsibilidade: voce sabe exatamente quanto vai pagar todo mes. O seu financiamento foi feito nesse sistema."
-        },
-        {
-          q: "O que e evolucao de obra e por que pago isso?",
-          a: "Durante a construcao, o banco libera dinheiro para a construtora conforme a obra avanca. Voce paga juros mensais sobre o valor ja liberado — isso e a 'evolucao de obra'. No inicio da obra, o valor e menor (pouco liberado). Conforme a obra progride, mais dinheiro e liberado e o custo mensal AUMENTA. Na entrega das chaves, esse custo acaba e comeca o financiamento normal."
-        },
-        {
-          q: "Como funciona o FGTS na amortizacao?",
-          a: "Voce pode usar o FGTS a cada 2 anos para amortizar (reduzir) o saldo devedor do financiamento. Isso pode diminuir o prazo ou o valor das parcelas. No caso do Unique Palestra, ja foram usados R$ 5.000 de FGTS. Requisitos: ter pelo menos 3 anos de trabalho com carteira assinada, nao ter outro financiamento ativo no SFH, e o imovel deve estar na cidade onde voce mora ou trabalha."
-        },
-        {
-          q: "O que e TR e como afeta o financiamento?",
-          a: "A TR (Taxa Referencial) e um indice do Banco Central que incide sobre o saldo devedor apos a entrega das chaves. Quando o banco diz '9,5% + TR', significa que a taxa efetiva sera um pouco maior que 9,5%. Atualmente gira em torno de 0,1% ao mes."
-        },
-        {
-          q: "O que significa 'entrada zerada'?",
-          a: "Significa que voce nao precisa pagar nenhum valor de entrada. O valor total e financiado. No Palestra Life, isso foi possivel porque o valor de avaliacao (R$ 350.000) e maior que o valor de compra (R$ 264.000), permitindo 100% de financiamento. No Unique, os R$ 5.000 de FGTS cobriram a diferenca."
-        },
-        {
-          q: "O que e documentacao gratis?",
-          a: "Normalmente voce paga escritura, registro em cartorio, ITBI (2-3% do valor). Quando a construtora oferece 'documentacao gratis', ela arca com esses custos. Pode representar economia de R$ 5.000 a R$ 15.000."
-        },
-        {
-          q: "Como funciona a vistoria?",
-          a: "A vistoria e feita antes de receber as chaves. Voce verifica acabamentos, pinturas, pisos, instalacoes eletricas e hidraulicas, portas, janelas e medidas. Se encontrar problemas, a construtora deve corrigir antes da entrega."
-        },
-        {
-          q: "Posso vender o apartamento na planta?",
-          a: "Sim, via cessao de direitos. A construtora geralmente cobra uma taxa de cessao (2-5% do valor). Se o imovel valorizar durante a obra, voce pode lucrar com a venda."
-        },
-        {
-          q: "O que acontece quando pego a chave?",
-          a: "Encerra a fase de obra (e o seguro obra) e comeca o financiamento bancario. O saldo devedor (ja corrigido pelo INCC) e transferido para o banco. Voce passa a pagar as parcelas fixas (Tabela PRICE). Pode morar no imovel ou aluga-lo — no caso do studio, a ideia e colocar no Airbnb pra ele se pagar."
-        },
-        {
-          q: "O studio pode se pagar com Airbnb?",
-          a: "Essa e a ideia mencionada pelo corretor. Quando o Unique Palestra for entregue, voce pode coloca-lo no Airbnb. Studios bem localizados em Palhoça/Florianopolis costumam ter boa demanda. A parcela e de R$ 958/mes — se o aluguel cobrir esse valor, o apartamento 'se paga sozinho'."
-        },
+        { q: "O que e INCC e como afeta nosso financiamento?", a: "O INCC (Indice Nacional de Custo da Construcao) reajusta seu saldo devedor durante a obra. Reflete o aumento dos custos de construcao. Na pratica, o valor financiado na entrega sera maior que o original. Media recente ~6% ao ano." },
+        { q: "O que e a Tabela PRICE?", a: "Na Tabela PRICE, as parcelas sao fixas durante todo o financiamento. No inicio, a maior parte vai para juros. Com o tempo, mais vai para amortizacao. Vantagem: previsibilidade. Seu financiamento usa esse sistema." },
+        { q: "O que e evolucao de obra?", a: "Durante a construcao, o banco libera dinheiro para a construtora conforme a obra avanca. Voce paga juros mensais sobre o valor ja liberado. No inicio e menor, e CRESCE conforme a obra progride. Na entrega das chaves, acaba e comeca o financiamento normal." },
+        { q: "Como funciona o FGTS na amortizacao?", a: "Voce pode usar o FGTS a cada 2 anos para amortizar o saldo devedor. Pode diminuir prazo ou parcelas. Requisitos: 3+ anos de carteira, sem outro financiamento SFH, imovel na cidade onde mora/trabalha." },
+        { q: "O que e TR?", a: "A TR (Taxa Referencial) incide sobre o saldo devedor apos a entrega. '9,5% + TR' significa taxa efetiva um pouco maior. Atualmente ~0,1% ao mes." },
+        { q: "O que significa 'entrada zerada'?", a: "O valor total e financiado. No Palestra Life, valor de avaliacao (R$ 350k) > valor de compra (R$ 264k), permitindo 100% de financiamento. No Unique, FGTS de R$ 5k cobriu a diferenca." },
+        { q: "O que e documentacao gratis?", a: "A construtora arca com escritura, registro, ITBI (2-3% do valor). Economia de R$ 5k a R$ 15k." },
+        { q: "Como funciona a vistoria?", a: "Feita antes de receber as chaves. Verificar acabamentos, pinturas, pisos, instalacoes, portas, janelas, medidas. Problemas encontrados devem ser corrigidos pela construtora." },
+        { q: "Posso vender na planta?", a: "Sim, via cessao de direitos. Construtora geralmente cobra taxa de 2-5%. Se valorizar durante obra, pode lucrar." },
+        { q: "O que acontece ao pegar a chave?", a: "Encerra fase de obra, comeca financiamento bancario. Saldo (corrigido INCC) transferido ao banco. Paga parcelas fixas (PRICE). Pode morar ou alugar — studio no Airbnb pode se pagar." },
       ];
 
       return (
-        <div className="fade-in page-container" style={{ maxWidth: 800 }}>
-          <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 6 }}>Perguntas Frequentes</h2>
-          <p style={{ color: "var(--text-muted)", fontSize: 13, marginBottom: 20 }}>
-            Tudo sobre financiamento imobiliario
-          </p>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            {perguntas.map((p, i) => (
-              <div key={i} style={{
-                background: "var(--bg-secondary)", border: "1px solid var(--border)",
-                borderRadius: "var(--radius)", boxShadow: "var(--shadow)", overflow: "hidden",
-              }}>
-                <button
-                  onClick={() => setOpen(open === i ? null : i)}
-                  style={{
-                    width: "100%", padding: "14px 16px", background: "none", border: "none",
-                    color: "var(--text-primary)", cursor: "pointer", fontFamily: "inherit",
-                    fontSize: 14, fontWeight: 500, display: "flex", alignItems: "center",
-                    justifyContent: "space-between", textAlign: "left",
-                  }}
-                >
-                  <span>{p.q}</span>
-                  <span style={{
-                    transform: open === i ? "rotate(180deg)" : "rotate(0)",
-                    transition: "transform 0.2s", flexShrink: 0, marginLeft: 10,
-                  }}><Icons.ChevronDown /></span>
-                </button>
-                {open === i && (
-                  <div style={{ padding: "0 16px 14px", color: "var(--text-secondary)", fontSize: 13, lineHeight: 1.7 }}>
-                    {p.a}
-                  </div>
-                )}
-              </div>
-            ))}
+        <div className="fade-in">
+          <PageHeader title="FAQ" onBack={onBack} />
+          <div className="page-container">
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {perguntas.map((p, i) => (
+                <div key={i} style={{
+                  background: "var(--bg-secondary)", border: "1px solid var(--border)",
+                  borderRadius: "var(--radius)", overflow: "hidden",
+                }}>
+                  <button
+                    onClick={() => setOpen(open === i ? null : i)}
+                    style={{
+                      width: "100%", padding: "12px 14px", background: "none", border: "none",
+                      color: "var(--text-primary)", cursor: "pointer", fontFamily: "inherit",
+                      fontSize: 13, fontWeight: 500, display: "flex", alignItems: "center",
+                      justifyContent: "space-between", textAlign: "left",
+                    }}
+                  >
+                    <span>{p.q}</span>
+                    <span style={{
+                      transform: open === i ? "rotate(180deg)" : "rotate(0)",
+                      transition: "transform 0.2s", flexShrink: 0, marginLeft: 8,
+                    }}><Icons.ChevronDown /></span>
+                  </button>
+                  {open === i && (
+                    <div style={{ padding: "0 14px 12px", color: "var(--text-secondary)", fontSize: 12, lineHeight: 1.7 }}>
+                      {p.a}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       );
@@ -1677,7 +1576,7 @@
     // ========================
     // TELA: COMPARATIVO
     // ========================
-    function Comparativo() {
+    function Comparativo({ onBack }) {
       const pl = APARTAMENTOS.palestraLife;
       const up = APARTAMENTOS.uniquePalestra;
       const params = DEFAULTS;
@@ -1698,77 +1597,54 @@
         { label: "Tipo", pl: pl.tipo, up: up.tipo },
         { label: "Valor Total", pl: fmt(pl.valorTotal), up: fmt(up.valorTotal) },
         { label: "Financiamento", pl: fmt(pl.financiamento), up: fmt(up.financiamento) },
-        { label: "Valor Avaliacao", pl: fmt(pl.valorAvaliacao), up: fmt(up.valorAvaliacao) },
+        { label: "Avaliacao", pl: fmt(pl.valorAvaliacao), up: fmt(up.valorAvaliacao) },
         { label: "Entrada", pl: "Zerada", up: "Zerada (FGTS R$5k)" },
         { label: "Parcela Pos-Chave", pl: fmt(pl.parcelaPosChave), up: fmt(up.parcelaPosChave) },
         { label: "Entrega", pl: fmtMesAno(pl.entrega), up: fmtMesAno(up.entrega) },
-        { label: "Meses de Obra", pl: String(pl.mesesObra), up: String(up.mesesObra) },
         { label: "Obra atual", pl: `~${pl.percentualObra}%`, up: `~${up.percentualObra}%` },
         { label: "Documentacao", pl: pl.documentacao, up: up.documentacao },
-        { label: "FGTS usado", pl: fmt(pl.fgts), up: fmt(up.fgts) },
-        { label: "Saldo na Entrega (est.)", pl: fmt(saldoPL), up: fmt(saldoUP) },
-        { label: "Evol. obra total (est.)", pl: fmt(obraPL), up: fmt(obraUP) },
-        { label: "Total financ. " + params.prazoAnos + " anos", pl: fmt(totalFinPL), up: fmt(totalFinUP) },
+        { label: "FGTS", pl: fmt(pl.fgts), up: fmt(up.fgts) },
+        { label: "Saldo entrega (est.)", pl: fmt(saldoPL), up: fmt(saldoUP) },
+        { label: "Evol. obra (est.)", pl: fmt(obraPL), up: fmt(obraUP) },
+        { label: "Total " + params.prazoAnos + "a", pl: fmt(totalFinPL), up: fmt(totalFinUP) },
       ];
 
       return (
-        <div className="fade-in page-container" style={{ maxWidth: 900 }}>
-          <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 6 }}>Comparativo</h2>
-          <p style={{ color: "var(--text-muted)", fontSize: 13, marginBottom: 20 }}>
-            Comparacao lado a lado de todos os dados
-          </p>
-          <div style={{ overflowX: "auto" }}>
-            <table style={{
-              width: "100%", borderCollapse: "collapse", minWidth: 500,
-              background: "var(--bg-secondary)", borderRadius: "var(--radius)",
-              overflow: "hidden", boxShadow: "var(--shadow)",
-            }}>
-              <thead>
-                <tr>
-                  <th style={{
-                    padding: "12px 14px", textAlign: "left", fontSize: 13, fontWeight: 600,
-                    background: "var(--bg-tertiary)", borderBottom: "2px solid var(--border)",
-                    color: "var(--text-muted)", width: "34%",
-                  }}></th>
-                  <th style={{
-                    padding: "12px 14px", textAlign: "center", fontSize: 14, fontWeight: 700,
-                    background: "var(--bg-tertiary)", borderBottom: "2px solid var(--border)",
-                  }}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--accent-indigo)", boxShadow: "0 0 6px var(--accent-indigo)" }} />
-                      Palestra Life
-                    </div>
-                  </th>
-                  <th style={{
-                    padding: "12px 14px", textAlign: "center", fontSize: 14, fontWeight: 700,
-                    background: "var(--bg-tertiary)", borderBottom: "2px solid var(--border)",
-                  }}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--accent-amber)", boxShadow: "0 0 6px var(--accent-amber)" }} />
-                      Unique Palestra
-                    </div>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((r, i) => (
-                  <tr key={i} style={{ background: i % 2 === 0 ? "var(--bg-secondary)" : "var(--bg-tertiary)" }}>
-                    <td style={{
-                      padding: "10px 14px", fontSize: 13, fontWeight: 600,
-                      borderBottom: "1px solid var(--border)", color: "var(--text-secondary)",
-                    }}>{r.label}</td>
-                    <td className="mono" style={{
-                      padding: "10px 14px", fontSize: 13, textAlign: "center",
-                      borderBottom: "1px solid var(--border)", borderLeft: "1px solid var(--border)",
-                    }}>{r.pl}</td>
-                    <td className="mono" style={{
-                      padding: "10px 14px", fontSize: 13, textAlign: "center",
-                      borderBottom: "1px solid var(--border)", borderLeft: "1px solid var(--border)",
-                    }}>{r.up}</td>
+        <div className="fade-in">
+          <PageHeader title="Comparativo" onBack={onBack} />
+          <div className="page-container">
+            <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+              <table style={{
+                width: "100%", borderCollapse: "collapse", minWidth: 360,
+                background: "var(--bg-secondary)", borderRadius: "var(--radius)",
+                overflow: "hidden",
+              }}>
+                <thead>
+                  <tr>
+                    <th style={{ padding: "10px", textAlign: "left", fontSize: 11, fontWeight: 600, background: "var(--bg-tertiary)", borderBottom: "2px solid var(--border)", color: "var(--text-muted)" }}></th>
+                    <th style={{ padding: "10px", textAlign: "center", fontSize: 12, fontWeight: 700, background: "var(--bg-tertiary)", borderBottom: "2px solid var(--border)" }}>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                        <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--accent-indigo)" }} />PL
+                      </span>
+                    </th>
+                    <th style={{ padding: "10px", textAlign: "center", fontSize: 12, fontWeight: 700, background: "var(--bg-tertiary)", borderBottom: "2px solid var(--border)" }}>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                        <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--accent-amber)" }} />UP
+                      </span>
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {rows.map((r, i) => (
+                    <tr key={i} style={{ background: i % 2 === 0 ? "var(--bg-secondary)" : "var(--bg-tertiary)" }}>
+                      <td style={{ padding: "8px 10px", fontSize: 11, fontWeight: 600, borderBottom: "1px solid var(--border)", color: "var(--text-secondary)" }}>{r.label}</td>
+                      <td className="mono" style={{ padding: "8px 10px", fontSize: 11, textAlign: "center", borderBottom: "1px solid var(--border)", borderLeft: "1px solid var(--border)" }}>{r.pl}</td>
+                      <td className="mono" style={{ padding: "8px 10px", fontSize: 11, textAlign: "center", borderBottom: "1px solid var(--border)", borderLeft: "1px solid var(--border)" }}>{r.up}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       );
@@ -1777,7 +1653,7 @@
     // ========================
     // TELA: GALERIA
     // ========================
-    function Galeria() {
+    function Galeria({ onBack }) {
       const [fotos, setFotos] = useState(() => {
         try { return JSON.parse(localStorage.getItem("nossoap_galeria") || "[]"); } catch { return []; }
       });
@@ -1795,11 +1671,9 @@
             if (w > maxW) { h = Math.round(h * (maxW / w)); w = maxW; }
             const canvas = document.createElement("canvas");
             canvas.width = w; canvas.height = h;
-            const ctx = canvas.getContext("2d");
-            ctx.drawImage(img, 0, 0, w, h);
+            canvas.getContext("2d").drawImage(img, 0, 0, w, h);
             const data = canvas.toDataURL("image/jpeg", 0.8);
-            const newFoto = { id: Date.now(), data, caption: file.name.replace(/\.[^.]+$/, ""), date: new Date().toLocaleDateString("pt-BR") };
-            setFotos(prev => [newFoto, ...prev]);
+            setFotos(prev => [{ id: Date.now(), data, caption: file.name.replace(/\.[^.]+$/, ""), date: new Date().toLocaleDateString("pt-BR") }, ...prev]);
           };
           img.src = e.target.result;
         };
@@ -1807,124 +1681,89 @@
       };
 
       const handleUpload = (e) => {
-        const files = Array.from(e.target.files);
-        files.forEach(resizeAndStore);
+        Array.from(e.target.files).forEach(resizeAndStore);
         e.target.value = "";
       };
 
-      const updateCaption = (id, caption) => {
-        setFotos(fotos.map(f => f.id === id ? { ...f, caption } : f));
-      };
-
-      const deleteFoto = (id) => {
-        setFotos(fotos.filter(f => f.id !== id));
-        if (viewing && viewing.id === id) setViewing(null);
-      };
-
       return (
-        <div className="fade-in page-container">
-          <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 6 }}>Galeria</h2>
-          <p style={{ color: "var(--text-muted)", fontSize: 13, marginBottom: 16 }}>
-            Fotos dos apartamentos e da obra
-          </p>
-
-          {/* Warning */}
-          <div style={{
-            background: "var(--bg-tertiary)", border: "1px solid var(--border)",
-            borderRadius: "var(--radius-sm)", padding: "10px 14px", marginBottom: 16,
-            display: "flex", alignItems: "center", gap: 8,
-          }}>
-            <Icons.AlertCircle />
-            <p style={{ fontSize: 12, color: "var(--text-muted)" }}>
-              As fotos sao armazenadas no localStorage do navegador (~5MB total). Imagens sao redimensionadas para max 800px.
-            </p>
-          </div>
-
-          {/* Upload button */}
-          <div style={{ marginBottom: 20 }}>
-            <label style={{
-              display: "inline-flex", alignItems: "center", gap: 6,
-              padding: "10px 20px", background: "var(--accent-indigo)", color: "#fff",
-              borderRadius: "var(--radius-sm)", cursor: "pointer",
-              fontSize: 14, fontWeight: 600, fontFamily: "inherit",
-            }}>
-              <Icons.Camera /> Adicionar Fotos
-              <input type="file" accept="image/*" multiple onChange={handleUpload}
-                style={{ display: "none" }} />
-            </label>
-          </div>
-
-          {/* Photo grid */}
-          {fotos.length === 0 ? (
+        <div className="fade-in">
+          <PageHeader title="Galeria" onBack={onBack} />
+          <div className="page-container">
             <div style={{
-              textAlign: "center", padding: 48, color: "var(--text-muted)",
-              background: "var(--bg-secondary)", border: "1px solid var(--border)",
-              borderRadius: "var(--radius)",
+              background: "var(--bg-tertiary)", border: "1px solid var(--border)",
+              borderRadius: "var(--radius-sm)", padding: "8px 12px", marginBottom: 14,
+              display: "flex", alignItems: "center", gap: 6,
             }}>
-              <Icons.Image />
-              <p style={{ marginTop: 10, fontSize: 13 }}>Nenhuma foto ainda. Clique em "Adicionar Fotos" acima.</p>
+              <Icons.AlertCircle />
+              <p style={{ fontSize: 11, color: "var(--text-muted)" }}>Fotos no localStorage (~5MB). Redimensionadas para max 800px.</p>
             </div>
-          ) : (
-            <div style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
-              gap: 14,
-            }}>
-              {fotos.map(foto => (
-                <div key={foto.id} style={{
-                  background: "var(--bg-secondary)", border: "1px solid var(--border)",
-                  borderRadius: "var(--radius)", overflow: "hidden", boxShadow: "var(--shadow)",
-                }}>
-                  <div style={{ position: "relative", cursor: "pointer" }} onClick={() => setViewing(foto)}>
-                    <img src={foto.data} alt={foto.caption} style={{
-                      width: "100%", height: 180, objectFit: "cover", display: "block",
-                    }} />
-                  </div>
-                  <div style={{ padding: "10px 12px" }}>
-                    <input type="text" value={foto.caption} onChange={e => updateCaption(foto.id, e.target.value)}
-                      style={{
-                        width: "100%", padding: "4px 6px", background: "var(--bg-tertiary)",
-                        border: "1px solid var(--border)", borderRadius: 4,
-                        color: "var(--text-primary)", fontSize: 12, fontFamily: "inherit", outline: "none",
-                      }} />
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 6 }}>
-                      <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{foto.date}</span>
-                      <button onClick={() => deleteFoto(foto.id)} style={{
-                        background: "none", border: "none", cursor: "pointer",
-                        color: "var(--accent-red)", padding: 3, display: "flex", alignItems: "center",
-                        fontSize: 11, gap: 3, fontFamily: "inherit",
-                      }}><Icons.Trash /> Excluir</button>
+
+            <div style={{ marginBottom: 16 }}>
+              <label style={{
+                display: "inline-flex", alignItems: "center", gap: 6,
+                padding: "10px 18px", background: "var(--accent-indigo)", color: "#fff",
+                borderRadius: "var(--radius-sm)", cursor: "pointer", fontSize: 13, fontWeight: 600,
+              }}>
+                <Icons.Camera /> Adicionar Fotos
+                <input type="file" accept="image/*" multiple onChange={handleUpload} style={{ display: "none" }} />
+              </label>
+            </div>
+
+            {fotos.length === 0 ? (
+              <div style={{
+                textAlign: "center", padding: 40, color: "var(--text-muted)",
+                background: "var(--bg-secondary)", border: "1px solid var(--border)", borderRadius: "var(--radius)",
+              }}>
+                <Icons.Image />
+                <p style={{ marginTop: 10, fontSize: 12 }}>Nenhuma foto ainda.</p>
+              </div>
+            ) : (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 10 }}>
+                {fotos.map(foto => (
+                  <div key={foto.id} style={{
+                    background: "var(--bg-secondary)", border: "1px solid var(--border)",
+                    borderRadius: "var(--radius)", overflow: "hidden",
+                  }}>
+                    <div style={{ cursor: "pointer" }} onClick={() => setViewing(foto)}>
+                      <img src={foto.data} alt={foto.caption} style={{ width: "100%", height: 140, objectFit: "cover", display: "block" }} />
+                    </div>
+                    <div style={{ padding: "8px 10px" }}>
+                      <input type="text" value={foto.caption} onChange={e => setFotos(fotos.map(f => f.id === foto.id ? { ...f, caption: e.target.value } : f))}
+                        style={{
+                          width: "100%", padding: "3px 5px", background: "var(--bg-tertiary)",
+                          border: "1px solid var(--border)", borderRadius: 4,
+                          color: "var(--text-primary)", fontSize: 11, fontFamily: "inherit", outline: "none",
+                        }} />
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 4 }}>
+                        <span style={{ fontSize: 10, color: "var(--text-muted)" }}>{foto.date}</span>
+                        <button onClick={() => { setFotos(fotos.filter(f => f.id !== foto.id)); if (viewing?.id === foto.id) setViewing(null); }} style={{
+                          background: "none", border: "none", cursor: "pointer",
+                          color: "var(--accent-red)", padding: 2, display: "flex", fontSize: 10, gap: 2,
+                        }}><Icons.Trash /></button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
 
-          {/* Fullscreen overlay */}
-          {viewing && (
-            <div style={{
-              position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
-              background: "rgba(0,0,0,0.9)", zIndex: 1000,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              padding: 20,
-            }} onClick={() => setViewing(null)}>
-              <button onClick={() => setViewing(null)} style={{
-                position: "absolute", top: 16, right: 16,
-                background: "rgba(255,255,255,0.15)", border: "none",
-                borderRadius: 8, padding: 8, cursor: "pointer", color: "#fff",
-                display: "flex", alignItems: "center",
-              }}><Icons.X /></button>
-              <img src={viewing.data} alt={viewing.caption} style={{
-                maxWidth: "100%", maxHeight: "90vh", objectFit: "contain",
-                borderRadius: "var(--radius)",
-              }} onClick={e => e.stopPropagation()} />
-              <p style={{
-                position: "absolute", bottom: 24, color: "#fff",
-                fontSize: 14, fontWeight: 500, textAlign: "center",
-              }}>{viewing.caption}</p>
-            </div>
-          )}
+            {viewing && (
+              <div style={{
+                position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+                background: "rgba(0,0,0,0.9)", zIndex: 1000,
+                display: "flex", alignItems: "center", justifyContent: "center", padding: 16,
+              }} onClick={() => setViewing(null)}>
+                <button onClick={() => setViewing(null)} style={{
+                  position: "absolute", top: 14, right: 14,
+                  background: "rgba(255,255,255,0.15)", border: "none",
+                  borderRadius: 8, padding: 8, cursor: "pointer", color: "#fff", display: "flex",
+                }}><Icons.X /></button>
+                <img src={viewing.data} alt={viewing.caption} style={{
+                  maxWidth: "100%", maxHeight: "90vh", objectFit: "contain", borderRadius: "var(--radius)",
+                }} onClick={e => e.stopPropagation()} />
+              </div>
+            )}
+          </div>
         </div>
       );
     }
@@ -1934,9 +1773,10 @@
     // ========================
     function App() {
       const [loggedIn, setLoggedIn] = useState(() => sessionStorage.getItem("nossoap_auth") === "1");
-      const [page, setPage] = useState("dashboard");
+      const [page, setPage] = useState("home");
       const [theme, setTheme] = useState(() => localStorage.getItem("nossoap_theme") || "dark");
       const [decisao, setDecisao] = useState(() => localStorage.getItem("nossoap_decisao") || "ambos");
+      const [showOnboarding, setShowOnboarding] = useState(false);
 
       useEffect(() => {
         document.documentElement.setAttribute("data-theme", theme);
@@ -1945,33 +1785,45 @@
 
       useEffect(() => { localStorage.setItem("nossoap_decisao", decisao); }, [decisao]);
 
+      // Service worker registration
+      useEffect(() => {
+        if ("serviceWorker" in navigator) {
+          navigator.serviceWorker.register("sw.js").catch(() => {});
+        }
+      }, []);
+
+      // Show onboarding on first login
+      useEffect(() => {
+        if (loggedIn && !localStorage.getItem("nossoap_onboarding_done")) {
+          setShowOnboarding(true);
+        }
+      }, [loggedIn]);
+
       const toggleTheme = () => setTheme(t => t === "dark" ? "light" : "dark");
       const handleLogout = () => { sessionStorage.removeItem("nossoap_auth"); setLoggedIn(false); };
+      const goHome = () => setPage("home");
 
       if (!loggedIn) return <LoginScreen onLogin={() => setLoggedIn(true)} />;
 
       const renderPage = () => {
         switch (page) {
-          case "dashboard": return <Dashboard decisao={decisao} setDecisao={setDecisao} />;
-          case "projecao": return <Projecao />;
-          case "cronograma": return <Cronograma />;
-          case "comparativo": return <Comparativo />;
-          case "galeria": return <Galeria />;
-          case "docs": return <Documentos />;
-          case "anotacoes": return <Anotacoes />;
-          case "faq": return <FAQ />;
-          default: return <Dashboard decisao={decisao} setDecisao={setDecisao} />;
+          case "home": return <HomeScreen setPage={setPage} decisao={decisao} setDecisao={setDecisao} theme={theme} toggleTheme={toggleTheme} onLogout={handleLogout} />;
+          case "projecao": return <Projecao onBack={goHome} />;
+          case "cronograma": return <Cronograma onBack={goHome} />;
+          case "comparativo": return <Comparativo onBack={goHome} />;
+          case "galeria": return <Galeria onBack={goHome} />;
+          case "docs": return <Documentos onBack={goHome} />;
+          case "anotacoes": return <Anotacoes onBack={goHome} />;
+          case "faq": return <FAQ onBack={goHome} />;
+          default: return <HomeScreen setPage={setPage} decisao={decisao} setDecisao={setDecisao} theme={theme} toggleTheme={toggleTheme} onLogout={handleLogout} />;
         }
       };
 
       return (
         <div style={{ minHeight: "100vh", background: "var(--bg-primary)" }}>
-          <Header page={page} setPage={setPage} theme={theme} toggleTheme={toggleTheme} onLogout={handleLogout} />
-          <main style={{ paddingBottom: 32 }}>{renderPage()}</main>
-          <footer style={{
-            textAlign: "center", padding: "16px", color: "var(--text-muted)", fontSize: 11,
-            borderTop: "1px solid var(--border)",
-          }}>Nosso AP &mdash; Planejamento Financeiro Imobiliario &mdash; 2026</footer>
+          {showOnboarding && <Onboarding onDone={() => setShowOnboarding(false)} />}
+          <main>{renderPage()}</main>
+          <BottomNav page={page} setPage={setPage} />
         </div>
       );
     }
