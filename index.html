@@ -266,6 +266,9 @@
       Building: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></svg>,
       TrendingUp: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>,
       AlertCircle: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>,
+      Book: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>,
+      Download: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>,
+      ExternalLink: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>,
     };
 
     // ========================
@@ -346,6 +349,7 @@
         { id: "dashboard", label: "Dashboard", icon: Icons.Home },
         { id: "projecao", label: "Gastos", icon: Icons.DollarSign },
         { id: "cronograma", label: "Cronograma", icon: Icons.Calendar },
+        { id: "docs", label: "Docs", icon: Icons.Book },
         { id: "anotacoes", label: "Notas", icon: Icons.FileText },
         { id: "faq", label: "FAQ", icon: Icons.HelpCircle },
       ];
@@ -1223,6 +1227,91 @@
     // ========================
     // TELA: FAQ
     // ========================
+    // ========================
+    // TELA: DOCUMENTOS
+    // ========================
+    function Documentos() {
+      const docs = [
+        {
+          nome: "Palestra Life - Book Digital",
+          desc: "Book completo do empreendimento Palestra Life (Nov/2023). Plantas, areas comuns, localizacao e diferenciais.",
+          arquivo: "public/2915 - Palestra Life - Book - Novembro - 2023 - Digital.pdf",
+          tamanho: "3,1 MB",
+          cor: "var(--accent-indigo)",
+          ap: "Palestra Life",
+        },
+        {
+          nome: "Unique Palestra - Book de Vendas",
+          desc: "Book de vendas do Unique Palestra (Nova Smart). Plantas, informacoes e condicoes comerciais.",
+          arquivo: "public/2011_68_BOOK_RVE_NOVASMART_2FASEDEVENDAS_ALT3 (1) 2.pdf",
+          tamanho: "23,9 MB",
+          cor: "var(--accent-amber)",
+          ap: "Unique Palestra",
+        },
+      ];
+
+      return (
+        <div className="fade-in page-container" style={{ maxWidth: 800 }}>
+          <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 6 }}>Documentos</h2>
+          <p style={{ color: "var(--text-muted)", fontSize: 13, marginBottom: 20 }}>
+            Books e materiais dos empreendimentos
+          </p>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            {docs.map((d, i) => (
+              <div key={i} style={{
+                background: "var(--bg-secondary)", border: "1px solid var(--border)",
+                borderRadius: "var(--radius)", padding: "20px", boxShadow: "var(--shadow)",
+                borderLeft: `3px solid ${d.cor}`,
+              }}>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
+                  <div style={{
+                    width: 44, height: 44, borderRadius: 10, flexShrink: 0,
+                    background: "var(--bg-tertiary)", display: "flex",
+                    alignItems: "center", justifyContent: "center", color: d.cor,
+                  }}>
+                    <Icons.Book />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4, flexWrap: "wrap" }}>
+                      <h3 style={{ fontSize: 15, fontWeight: 600 }}>{d.nome}</h3>
+                      <span style={{
+                        fontSize: 10, fontWeight: 600, color: d.cor,
+                        background: "var(--bg-tertiary)", padding: "2px 6px", borderRadius: 3,
+                      }}>{d.ap}</span>
+                    </div>
+                    <p style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.5, marginBottom: 12 }}>{d.desc}</p>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                      <a href={d.arquivo} target="_blank" rel="noopener noreferrer" style={{
+                        display: "inline-flex", alignItems: "center", gap: 5,
+                        padding: "8px 16px", background: d.cor, color: "#fff",
+                        borderRadius: "var(--radius-sm)", textDecoration: "none",
+                        fontSize: 13, fontWeight: 600, fontFamily: "inherit",
+                      }}>
+                        <Icons.ExternalLink /> Abrir PDF
+                      </a>
+                      <a href={d.arquivo} download style={{
+                        display: "inline-flex", alignItems: "center", gap: 5,
+                        padding: "8px 16px", background: "var(--bg-tertiary)",
+                        color: "var(--text-secondary)", border: "1px solid var(--border)",
+                        borderRadius: "var(--radius-sm)", textDecoration: "none",
+                        fontSize: 13, fontWeight: 500, fontFamily: "inherit",
+                      }}>
+                        <Icons.Download /> Baixar ({d.tamanho})
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // ========================
+    // TELA: FAQ
+    // ========================
     function FAQ() {
       const [open, setOpen] = useState(null);
 
@@ -1331,7 +1420,7 @@
 
       if (!loggedIn) return <LoginScreen onLogin={() => setLoggedIn(true)} />;
 
-      const pages = { dashboard: Dashboard, projecao: Projecao, cronograma: Cronograma, anotacoes: Anotacoes, faq: FAQ };
+      const pages = { dashboard: Dashboard, projecao: Projecao, cronograma: Cronograma, docs: Documentos, anotacoes: Anotacoes, faq: FAQ };
       const PageComponent = pages[page] || Dashboard;
 
       return (
