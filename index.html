@@ -87,20 +87,57 @@
     }
 
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
+      from { opacity: 0; transform: translateY(12px); }
       to { opacity: 1; transform: translateY(0); }
     }
-    .fade-in { animation: fadeIn 0.3s ease-out; }
+    .fade-in { animation: fadeIn 0.35s ease-out; }
 
     @keyframes slideUp {
       from { opacity: 0; transform: translateY(100%); }
       to { opacity: 1; transform: translateY(0); }
     }
 
+    @keyframes fadeScale {
+      from { opacity: 0; transform: scale(0.92); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
     @keyframes pulse {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.6; }
     }
+
+    @keyframes glowPulse {
+      0%, 100% { box-shadow: 0 0 12px rgba(99,102,241,0.3), 0 0 24px rgba(99,102,241,0.1); }
+      50% { box-shadow: 0 0 20px rgba(99,102,241,0.5), 0 0 40px rgba(99,102,241,0.2); }
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-3px); }
+    }
+
+    @keyframes staggerIn {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .glow-icon {
+      animation: glowPulse 3s ease-in-out infinite;
+    }
+    .float-anim {
+      animation: float 4s ease-in-out infinite;
+    }
+    .module-card {
+      animation: fadeScale 0.4s ease-out backwards;
+    }
+    .module-card:nth-child(1) { animation-delay: 0.05s; }
+    .module-card:nth-child(2) { animation-delay: 0.1s; }
+    .module-card:nth-child(3) { animation-delay: 0.15s; }
+    .module-card:nth-child(4) { animation-delay: 0.2s; }
+    .module-card:nth-child(5) { animation-delay: 0.25s; }
+    .module-card:nth-child(6) { animation-delay: 0.3s; }
+    .module-card:nth-child(7) { animation-delay: 0.35s; }
 
     .page-container { max-width: 800px; margin: 0 auto; padding: 20px; padding-bottom: 110px; }
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
@@ -113,30 +150,38 @@
 
     /* Bottom nav */
     .bottom-nav {
-      position: fixed; bottom: 12px; left: 16px; right: 16px;
-      background: var(--bg-secondary);
-      border: 1px solid var(--border);
+      position: fixed;
+      bottom: calc(14px + var(--safe-bottom));
+      left: 20px; right: 20px;
+      background: rgba(20,20,22,0.92);
+      border: 1px solid rgba(255,255,255,0.08);
       display: flex; justify-content: space-around; align-items: center;
-      padding: 8px 4px; padding-bottom: calc(8px + var(--safe-bottom));
+      padding: 6px 8px;
       z-index: 100;
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border-radius: 22px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      backdrop-filter: blur(20px) saturate(1.4);
+      -webkit-backdrop-filter: blur(20px) saturate(1.4);
+      border-radius: 24px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05) inset;
+      animation: slideUp 0.5s ease-out;
+    }
+    [data-theme="light"] .bottom-nav {
+      background: rgba(255,255,255,0.88);
+      border-color: rgba(0,0,0,0.08);
+      box-shadow: 0 8px 40px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.04) inset;
     }
     .bottom-nav button {
       display: flex; flex-direction: column; align-items: center; gap: 3px;
       background: none; border: none; cursor: pointer;
       color: var(--text-muted); font-family: inherit; font-size: 11px;
-      padding: 8px 16px; border-radius: 16px; transition: all 0.2s;
+      padding: 10px 18px; border-radius: 18px; transition: all 0.25s ease;
       min-width: 64px; font-weight: 500;
     }
     .bottom-nav button.active {
       color: var(--accent-indigo);
-      background: rgba(99,102,241,0.1);
+      background: rgba(99,102,241,0.12);
     }
     .bottom-nav button.active svg {
-      filter: drop-shadow(0 0 6px rgba(99,102,241,0.5));
+      filter: drop-shadow(0 0 8px rgba(99,102,241,0.6));
     }
 
     /* Page header */
@@ -374,10 +419,18 @@
       const [senha, setSenha] = useState("");
       const [erro, setErro] = useState(false);
       const [shake, setShake] = useState(false);
+      const [lembrar, setLembrar] = useState(() => localStorage.getItem("nossoap_lembrar") === "1");
 
       const handleSubmit = (e) => {
         e.preventDefault();
         if (senha === "m3u1PZ3=A&M37") {
+          if (lembrar) {
+            localStorage.setItem("nossoap_auth_persist", "1");
+            localStorage.setItem("nossoap_lembrar", "1");
+          } else {
+            localStorage.removeItem("nossoap_auth_persist");
+            localStorage.removeItem("nossoap_lembrar");
+          }
           sessionStorage.setItem("nossoap_auth", "1");
           onLogin();
         } else {
@@ -398,16 +451,16 @@
             textAlign: "center", boxShadow: "var(--shadow-lg)",
             animation: shake ? "shake 0.5s ease" : undefined,
           }}>
-            <div style={{
-              width: 60, height: 60, borderRadius: "16px",
+            <div className="glow-icon float-anim" style={{
+              width: 68, height: 68, borderRadius: "20px",
               background: "linear-gradient(135deg, var(--accent-indigo), var(--accent-amber))",
               display: "flex", alignItems: "center", justifyContent: "center",
-              margin: "0 auto 20px", boxShadow: "0 4px 16px rgba(99,102,241,0.3)",
+              margin: "0 auto 24px",
             }}>
               <Icons.Building />
             </div>
-            <h1 style={{ fontSize: "22px", fontWeight: 700, marginBottom: 6 }}>Nosso AP</h1>
-            <p style={{ color: "var(--text-muted)", marginBottom: 28, fontSize: 13 }}>
+            <h1 style={{ fontSize: "24px", fontWeight: 700, marginBottom: 6 }}>Nosso AP</h1>
+            <p style={{ color: "var(--text-muted)", marginBottom: 30, fontSize: 14 }}>
               Planejamento financeiro imobiliario
             </p>
             <form onSubmit={handleSubmit}>
@@ -416,19 +469,30 @@
                 onChange={(e) => { setSenha(e.target.value); setErro(false); }}
                 placeholder="Digite a senha"
                 style={{
-                  width: "100%", padding: "14px 16px", marginBottom: 12,
+                  width: "100%", padding: "16px 18px", marginBottom: 14,
                   background: "var(--bg-tertiary)",
                   border: `1px solid ${erro ? "var(--accent-red)" : "var(--border)"}`,
                   borderRadius: "var(--radius)", color: "var(--text-primary)",
                   fontSize: 16, outline: "none", fontFamily: "inherit",
+                  transition: "border-color 0.2s",
                 }}
                 autoFocus
               />
               {erro && <p style={{ color: "var(--accent-red)", fontSize: 12, marginBottom: 8 }}>Senha incorreta.</p>}
+              <label style={{
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                marginBottom: 16, fontSize: 13, color: "var(--text-secondary)", cursor: "pointer",
+              }}>
+                <input type="checkbox" checked={lembrar} onChange={e => setLembrar(e.target.checked)}
+                  style={{ width: 16, height: 16, accentColor: "var(--accent-indigo)", cursor: "pointer" }} />
+                Lembrar de mim
+              </label>
               <button type="submit" style={{
-                width: "100%", padding: "14px", background: "var(--accent-indigo)", color: "#fff",
+                width: "100%", padding: "16px", background: "var(--accent-indigo)", color: "#fff",
                 border: "none", borderRadius: "var(--radius)", fontSize: 16, fontWeight: 600,
                 cursor: "pointer", fontFamily: "inherit",
+                boxShadow: "0 4px 16px rgba(99,102,241,0.3)",
+                transition: "transform 0.15s, box-shadow 0.15s",
               }}>Entrar</button>
             </form>
           </div>
@@ -786,11 +850,10 @@
             padding: "20px 0 16px",
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <div style={{
-                width: 44, height: 44, borderRadius: 14,
+              <div className="glow-icon" style={{
+                width: 46, height: 46, borderRadius: 15,
                 background: "linear-gradient(135deg, var(--accent-indigo), var(--accent-amber))",
                 display: "flex", alignItems: "center", justifyContent: "center",
-                boxShadow: "0 4px 14px rgba(99,102,241,0.3)",
               }}><Icons.Building /></div>
               <div>
                 <h1 style={{ fontSize: 20, fontWeight: 700, lineHeight: 1.2 }}>Nosso AP</h1>
@@ -818,30 +881,6 @@
 
           {/* Install banner */}
           <InstallBanner />
-
-          {/* Decisao rapida */}
-          <div style={{
-            background: "var(--bg-secondary)", border: "1px solid var(--border)",
-            borderRadius: "var(--radius)", padding: "18px", marginBottom: 16,
-            boxShadow: "var(--shadow)",
-          }}>
-            <p style={{ fontSize: 13, fontWeight: 600, marginBottom: 10, color: "var(--text-secondary)" }}>Nossa Decisao</p>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              {[
-                { id: "ambos", label: "Decidindo...", cor: "var(--accent-green)" },
-                { id: "pl", label: "Palestra Life", cor: "var(--accent-indigo)" },
-                { id: "up", label: "Unique", cor: "var(--accent-amber)" },
-              ].map(o => (
-                <button key={o.id} onClick={() => setDecisao(o.id)} style={{
-                  padding: "10px 18px", fontSize: 13, fontWeight: 600,
-                  background: decisao === o.id ? o.cor : "var(--bg-tertiary)",
-                  color: decisao === o.id ? "#fff" : "var(--text-secondary)",
-                  border: `1px solid ${decisao === o.id ? o.cor : "var(--border)"}`,
-                  borderRadius: "var(--radius-sm)", cursor: "pointer", fontFamily: "inherit",
-                }}>{o.label}</button>
-              ))}
-            </div>
-          </div>
 
           {/* Custo mensal atual - REDESIGNED as separate stacked cards */}
           <div style={{
@@ -959,6 +998,35 @@
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* Nossa Decisao - embaixo, discreto */}
+          <div style={{
+            marginTop: 24, background: "var(--bg-secondary)", border: "1px solid var(--border)",
+            borderRadius: "var(--radius)", padding: "16px", boxShadow: "var(--shadow)",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+              <p style={{ fontSize: 13, fontWeight: 600, color: "var(--text-muted)" }}>Nossa decisao</p>
+              <p style={{ fontSize: 11, color: "var(--text-muted)" }}>
+                {decisao === "ambos" ? "Ainda decidindo" : decisao === "pl" ? "Palestra Life" : "Unique"}
+              </p>
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              {[
+                { id: "ambos", label: "Decidindo...", cor: "var(--accent-green)" },
+                { id: "pl", label: "Palestra Life", cor: "var(--accent-indigo)" },
+                { id: "up", label: "Unique", cor: "var(--accent-amber)" },
+              ].map(o => (
+                <button key={o.id} onClick={() => setDecisao(o.id)} style={{
+                  flex: 1, padding: "10px 8px", fontSize: 12, fontWeight: 600,
+                  background: decisao === o.id ? o.cor : "var(--bg-tertiary)",
+                  color: decisao === o.id ? "#fff" : "var(--text-muted)",
+                  border: `1px solid ${decisao === o.id ? o.cor : "var(--border)"}`,
+                  borderRadius: "var(--radius-sm)", cursor: "pointer", fontFamily: "inherit",
+                  transition: "all 0.2s",
+                }}>{o.label}</button>
+              ))}
+            </div>
           </div>
         </div>
       );
@@ -1932,7 +2000,9 @@
     // APP PRINCIPAL
     // ========================
     function App() {
-      const [loggedIn, setLoggedIn] = useState(() => sessionStorage.getItem("nossoap_auth") === "1");
+      const [loggedIn, setLoggedIn] = useState(() =>
+        sessionStorage.getItem("nossoap_auth") === "1" || localStorage.getItem("nossoap_auth_persist") === "1"
+      );
       const [page, setPage] = useState("home");
       const [theme, setTheme] = useState(() => localStorage.getItem("nossoap_theme") || "dark");
       const [decisao, setDecisao] = useState(() => localStorage.getItem("nossoap_decisao") || "ambos");
@@ -1961,7 +2031,7 @@
       }, [loggedIn]);
 
       const toggleTheme = () => setTheme(t => t === "dark" ? "light" : "dark");
-      const handleLogout = () => { sessionStorage.removeItem("nossoap_auth"); setLoggedIn(false); };
+      const handleLogout = () => { sessionStorage.removeItem("nossoap_auth"); localStorage.removeItem("nossoap_auth_persist"); setLoggedIn(false); };
       const goHome = () => setPage("home");
 
       if (!loggedIn) return <LoginScreen onLogin={() => setLoggedIn(true)} />;
