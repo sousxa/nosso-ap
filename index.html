@@ -128,6 +128,7 @@
         parcelaPosChave: 1978,
         entrega: new Date(2027, 7, 1),
         mesesObra: 17,
+        percentualObra: 50,
         documentacao: "Gratis",
         fgts: 0,
         cor: "indigo",
@@ -142,6 +143,7 @@
         parcelaPosChave: 958,
         entrega: new Date(2028, 8, 1),
         mesesObra: 30,
+        percentualObra: 30,
         documentacao: "Gratis",
         fgts: 5000,
         cor: "amber",
@@ -153,7 +155,6 @@
       prazoAnos: 30,
       incc: 6,
       tr: 0.1,
-      seguroObraAnual: 0.4,
     };
 
     // ========================
@@ -180,8 +181,37 @@
       return (parcela * prazoMeses) - saldo;
     }
 
-    function calcSeguroObraMensal(valorTotal, taxaAnual) {
-      return valorTotal * (taxaAnual / 100) / 12;
+    // Evolucao de obra: juros sobre o valor ja liberado ao construtor.
+    // O banco libera $ proporcionalmente ao avanco da obra.
+    // Buyer paga juros mensais sobre o valor liberado -> cresce todo mes.
+    // percentualAtual = % da obra ja feito (ex: 50 = metade construida)
+    // Retorna array mes a mes com: mes, percentual liberado, juros do mes, saldo corrigido
+    function gerarEvolucaoObra(financiamento, taxaJurosAnual, inccAnual, mesesRestantes, percentualAtual) {
+      const jurosMensal = Math.pow(1 + taxaJurosAnual / 100, 1 / 12) - 1;
+      const inccMensal = Math.pow(1 + inccAnual / 100, 1 / 12) - 1;
+      const percAtual = percentualAtual / 100;
+      const meses = [];
+      let saldo = financiamento;
+      // Calcula saldo ja corrigido ate agora (obra ja andou)
+      const mesesJaPassados = Math.round((percAtual) * (mesesRestantes / (1 - percAtual + 0.001)));
+
+      for (let m = 0; m < mesesRestantes; m++) {
+        // % liberado cresce linearmente de percAtual ate 100%
+        const perc = percAtual + ((1 - percAtual) * ((m + 1) / mesesRestantes));
+        const valorLiberado = financiamento * perc;
+        const jurosMes = valorLiberado * jurosMensal;
+        // Saldo cresce pelo INCC
+        saldo *= (1 + inccMensal);
+
+        meses.push({
+          mes: m + 1,
+          percentual: Math.round(perc * 100),
+          valorLiberado,
+          jurosMes,
+          saldo,
+        });
+      }
+      return meses;
     }
 
     function gerarEvolucaoSaldo(saldo, inccAnual, meses) {
@@ -391,9 +421,11 @@
     // ========================
     function ApartmentCard({ ap, params }) {
       const saldoEntrega = calcSaldoEntrega(ap.financiamento, params.incc, ap.mesesObra);
-      const seguroMes = calcSeguroObraMensal(ap.valorTotal, params.seguroObraAnual);
       const mesesRest = diffMeses(new Date(), ap.entrega);
-      const seguroTotal = seguroMes * mesesRest;
+      const evolObra = gerarEvolucaoObra(ap.financiamento, params.taxaJuros, params.incc, mesesRest, ap.percentualObra);
+      const obraHoje = evolObra.length > 0 ? evolObra[0].jurosMes : 0;
+      const obraUltimo = evolObra.length > 0 ? evolObra[evolObra.length - 1].jurosMes : 0;
+      const obraTotal = evolObra.reduce((s, m) => s + m.jurosMes, 0);
       const dias = diffDias(ap.entrega);
       const prog = progresso(ap.entrega, ap.mesesObra);
       const corVar = ap.cor === "indigo" ? "var(--accent-indigo)" : "var(--accent-amber)";
@@ -416,7 +448,19 @@
             <StatCard label="Valor Total" value={fmt(ap.valorTotal)} />
             <StatCard label="Parcela Pos-Chave" value={fmt(ap.parcelaPosChave)} />
             <StatCard label="Saldo na Entrega" value={fmt(saldoEntrega)} color="var(--accent-red)" sub={`+${fmt(saldoEntrega - ap.financiamento)} INCC`} />
-            <StatCard label="Seguro Obra/Mes" value={fmt(seguroMes)} color="var(--accent-amber)" sub={`Total est.: ${fmt(seguroTotal)}`} />
+            <StatCard label="Evol. Obra Hoje" value={fmt(obraHoje)} color="var(--accent-amber)" sub={`Ultimo mes: ${fmt(obraUltimo)}`} />
+          </div>
+          <div style={{
+            background: "var(--bg-tertiary)", borderRadius: "var(--radius-sm)",
+            padding: "10px 12px", marginBottom: 12, borderLeft: "3px solid var(--accent-amber)",
+          }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <p style={{ color: "var(--text-muted)", fontSize: 10, textTransform: "uppercase" }}>Total Evol. Obra Estimado</p>
+                <p style={{ fontSize: 11, color: "var(--text-muted)" }}>({mesesRest} meses, obra ~{ap.percentualObra}% hoje)</p>
+              </div>
+              <p className="mono" style={{ fontSize: 15, fontWeight: 700, color: "var(--accent-red)" }}>{fmt(obraTotal)}</p>
+            </div>
           </div>
 
           {/* Progress bar */}
@@ -462,17 +506,20 @@
       const pl = APARTAMENTOS.palestraLife;
       const up = APARTAMENTOS.uniquePalestra;
       const prazoM = params.prazoAnos * 12;
-      const taxa = params.taxaJuros + params.tr * 12;
 
       const mesesRestPL = diffMeses(new Date(), pl.entrega);
       const mesesRestUP = diffMeses(new Date(), up.entrega);
-      const seguroPL = calcSeguroObraMensal(pl.valorTotal, params.seguroObraAnual) * mesesRestPL;
-      const seguroUP = calcSeguroObraMensal(up.valorTotal, params.seguroObraAnual) * mesesRestUP;
+      const evolPL = gerarEvolucaoObra(pl.financiamento, params.taxaJuros, params.incc, mesesRestPL, pl.percentualObra);
+      const evolUP = gerarEvolucaoObra(up.financiamento, params.taxaJuros, params.incc, mesesRestUP, up.percentualObra);
+      const obraPL = evolPL.reduce((s, m) => s + m.jurosMes, 0);
+      const obraUP = evolUP.reduce((s, m) => s + m.jurosMes, 0);
+      const obraHojePL = evolPL.length > 0 ? evolPL[0].jurosMes : 0;
+      const obraHojeUP = evolUP.length > 0 ? evolUP[0].jurosMes : 0;
 
       const totalParcelasPL = pl.parcelaPosChave * prazoM;
       const totalParcelasUP = up.parcelaPosChave * prazoM;
-      const totalPL = totalParcelasPL + seguroPL;
-      const totalUP = totalParcelasUP + seguroUP;
+      const totalPL = totalParcelasPL + obraPL;
+      const totalUP = totalParcelasUP + obraUP;
       const maisBarato = totalPL < totalUP ? "Palestra Life" : "Unique Palestra";
 
       return (
@@ -509,9 +556,9 @@
               <p style={{ fontSize: 13, fontWeight: 600 }}>O que voce paga AGORA</p>
             </div>
             <p style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.6 }}>
-              Ate receber as chaves, voce paga <strong>somente o seguro obra</strong> (confirmado pelo corretor).
-              Sao ~{fmt(calcSeguroObraMensal(pl.valorTotal, params.seguroObraAnual) + calcSeguroObraMensal(up.valorTotal, params.seguroObraAnual))}/mes
-              pelos dois apartamentos. As parcelas de financiamento so comecam depois da entrega das chaves.
+              Ate receber as chaves, voce paga a <strong>evolucao de obra</strong> (juros sobre o valor ja liberado ao construtor).
+              Hoje: ~{fmt(obraHojePL)}/mes (PL) + ~{fmt(obraHojeUP)}/mes (UP) = ~{fmt(obraHojePL + obraHojeUP)}/mes.
+              Esse valor <strong>cresce todo mes</strong> conforme a obra avanca. Parcelas do financiamento so apos as chaves.
             </p>
           </div>
 
@@ -535,7 +582,7 @@
                 <p style={{ color: "var(--text-muted)", fontSize: 11, marginBottom: 3 }}>Palestra Life</p>
                 <p className="mono" style={{ fontSize: 18, fontWeight: 700 }}>{fmt(totalPL)}</p>
                 <p className="mono" style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 3 }}>
-                  Parcelas: {fmt(totalParcelasPL)} | Seguro obra: {fmt(seguroPL)}
+                  Parcelas: {fmt(totalParcelasPL)} | Evol. obra: {fmt(obraPL)}
                 </p>
               </div>
               <div style={{
@@ -545,7 +592,7 @@
                 <p style={{ color: "var(--text-muted)", fontSize: 11, marginBottom: 3 }}>Unique Palestra</p>
                 <p className="mono" style={{ fontSize: 18, fontWeight: 700 }}>{fmt(totalUP)}</p>
                 <p className="mono" style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 3 }}>
-                  Parcelas: {fmt(totalParcelasUP)} | Seguro obra: {fmt(seguroUP)}
+                  Parcelas: {fmt(totalParcelasUP)} | Evol. obra: {fmt(obraUP)}
                 </p>
               </div>
             </div>
@@ -623,73 +670,31 @@
     // TELA: PROJECAO DE GASTOS
     // ========================
     function Projecao() {
+      const [view, setView] = useState("combinado");
       const pl = APARTAMENTOS.palestraLife;
       const up = APARTAMENTOS.uniquePalestra;
       const params = DEFAULTS;
       const prazoM = params.prazoAnos * 12;
 
-      const seguroPLMes = calcSeguroObraMensal(pl.valorTotal, params.seguroObraAnual);
-      const seguroUPMes = calcSeguroObraMensal(up.valorTotal, params.seguroObraAnual);
-
       const mesesRestPL = diffMeses(new Date(), pl.entrega);
       const mesesRestUP = diffMeses(new Date(), up.entrega);
       const mesesFase2 = Math.max(0, mesesRestUP - mesesRestPL);
 
+      const evolObraPL = gerarEvolucaoObra(pl.financiamento, params.taxaJuros, params.incc, mesesRestPL, pl.percentualObra);
+      const evolObraUP = gerarEvolucaoObra(up.financiamento, params.taxaJuros, params.incc, mesesRestUP, up.percentualObra);
+      const obraTotalPL = evolObraPL.reduce((s, m) => s + m.jurosMes, 0);
+      const obraTotalUP = evolObraUP.reduce((s, m) => s + m.jurosMes, 0);
+
       const saldoPL = calcSaldoEntrega(pl.financiamento, params.incc, pl.mesesObra);
       const saldoUP = calcSaldoEntrega(up.financiamento, params.incc, up.mesesObra);
+      const evolSaldoPL = gerarEvolucaoSaldo(pl.financiamento, params.incc, pl.mesesObra);
+      const evolSaldoUP = gerarEvolucaoSaldo(up.financiamento, params.incc, up.mesesObra);
 
-      const evolPL = gerarEvolucaoSaldo(pl.financiamento, params.incc, pl.mesesObra);
-      const evolUP = gerarEvolucaoSaldo(up.financiamento, params.incc, up.mesesObra);
-
-      const fases = [
-        {
-          nome: "Fase 1: Somente Seguro Obra",
-          periodo: `Agora ate ${fmtMesAno(pl.entrega)}`,
-          meses: mesesRestPL,
-          custoMes: seguroPLMes + seguroUPMes,
-          custoTotal: (seguroPLMes + seguroUPMes) * mesesRestPL,
-          detalhes: [
-            `Palestra Life: ${fmt(seguroPLMes)}/mes`,
-            `Unique Palestra: ${fmt(seguroUPMes)}/mes`,
-          ],
-          cor: "var(--accent-green)",
-          desc: "Voce paga apenas o seguro de obra dos dois apartamentos. Sem parcelas de financiamento.",
-        },
-        {
-          nome: "Fase 2: Parcela PL + Seguro UP",
-          periodo: `${fmtMesAno(pl.entrega)} ate ${fmtMesAno(up.entrega)}`,
-          meses: mesesFase2,
-          custoMes: pl.parcelaPosChave + seguroUPMes,
-          custoTotal: (pl.parcelaPosChave + seguroUPMes) * mesesFase2,
-          detalhes: [
-            `Palestra Life parcela: ${fmt(pl.parcelaPosChave)}/mes`,
-            `Unique Palestra seguro: ${fmt(seguroUPMes)}/mes`,
-          ],
-          cor: "var(--accent-amber)",
-          desc: "Voce recebe a chave do Palestra Life e comeca a pagar o financiamento. Unique ainda em obra.",
-        },
-        {
-          nome: "Fase 3: Ambas Parcelas",
-          periodo: `${fmtMesAno(up.entrega)} em diante`,
-          meses: prazoM,
-          custoMes: pl.parcelaPosChave + up.parcelaPosChave,
-          custoTotal: (pl.parcelaPosChave + up.parcelaPosChave) * prazoM,
-          detalhes: [
-            `Palestra Life: ${fmt(pl.parcelaPosChave)}/mes (PRICE fixa)`,
-            `Unique Palestra: ${fmt(up.parcelaPosChave)}/mes (PRICE fixa)`,
-          ],
-          cor: "var(--accent-indigo)",
-          desc: "Ambos financiamentos ativos. Parcelas fixas (Tabela PRICE). Studio pode gerar renda no Airbnb.",
-        },
-      ];
-
-      const seguroTotalPL = seguroPLMes * mesesRestPL;
-      const seguroTotalUP = seguroUPMes * mesesRestUP;
       const totalFinPL = pl.parcelaPosChave * prazoM;
       const totalFinUP = up.parcelaPosChave * prazoM;
-      const grandTotal = seguroTotalPL + seguroTotalUP + totalFinPL + totalFinUP;
+      const grandTotal = obraTotalPL + obraTotalUP + totalFinPL + totalFinUP;
 
-      // Gerar timeline mes a mes (proximos meses ate 6 meses pos UP)
+      // Timeline mes a mes com evolucao de obra crescente
       const gerarTimeline = () => {
         const meses = [];
         const now = new Date();
@@ -699,193 +704,307 @@
           let custoPL = 0, custoUP = 0, descPL = "", descUP = "";
 
           if (data < pl.entrega) {
-            custoPL = seguroPLMes; descPL = "Seguro";
+            const idx = Math.min(m, evolObraPL.length - 1);
+            custoPL = idx >= 0 && evolObraPL[idx] ? evolObraPL[idx].jurosMes : 0;
+            descPL = `Evol. obra (${evolObraPL[idx] ? evolObraPL[idx].percentual : 0}%)`;
           } else {
-            custoPL = pl.parcelaPosChave; descPL = "Parcela";
+            custoPL = pl.parcelaPosChave;
+            descPL = "Parcela PRICE";
           }
 
           if (data < up.entrega) {
-            custoUP = seguroUPMes; descUP = "Seguro";
+            const idx = Math.min(m, evolObraUP.length - 1);
+            custoUP = idx >= 0 && evolObraUP[idx] ? evolObraUP[idx].jurosMes : 0;
+            descUP = `Evol. obra (${evolObraUP[idx] ? evolObraUP[idx].percentual : 0}%)`;
           } else {
-            custoUP = up.parcelaPosChave; descUP = "Parcela";
+            custoUP = up.parcelaPosChave;
+            descUP = "Parcela PRICE";
           }
 
           meses.push({
-            data,
-            label: fmtMesAno(data),
+            data, label: fmtMesAno(data),
             custoPL, custoUP, descPL, descUP,
             total: custoPL + custoUP,
-            marco: data.getTime() === pl.entrega.getTime() ? "Chave PL" :
-                   data.getTime() === up.entrega.getTime() ? "Chave UP" : null,
+            marco: data.getTime() === pl.entrega.getTime() ? "Chave Palestra Life" :
+                   data.getTime() === up.entrega.getTime() ? "Chave Unique Palestra" : null,
           });
         }
         return meses;
       };
 
       const timeline = gerarTimeline();
-      const maxTimeline = Math.max(...timeline.map(t => t.total));
+      const maxTimeline = Math.max(...timeline.map(t => Math.max(t.total, t.custoPL, t.custoUP)));
 
-      return (
-        <div className="fade-in page-container">
-          <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 6 }}>Projecao de Gastos</h2>
-          <p style={{ color: "var(--text-muted)", fontSize: 13, marginBottom: 20 }}>
-            Visao completa de quanto voce gasta em cada fase
-          </p>
+      const viewButtons = [
+        { id: "combinado", label: "Combinado" },
+        { id: "palestraLife", label: "Palestra Life" },
+        { id: "unique", label: "Unique" },
+      ];
 
-          {/* Fases */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 24 }}>
-            {fases.map((f, i) => (
-              <div key={i} style={{
-                background: "var(--bg-secondary)", border: "1px solid var(--border)",
-                borderRadius: "var(--radius)", padding: "16px", boxShadow: "var(--shadow)",
-                borderLeft: `3px solid ${f.cor}`,
-              }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 8 }}>
-                  <div style={{ flex: 1, minWidth: 200 }}>
-                    <h4 style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>{f.nome}</h4>
-                    <p className="mono" style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 8 }}>{f.periodo} ({f.meses} meses)</p>
-                    <p style={{ fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.5, marginBottom: 8 }}>{f.desc}</p>
-                    <ul style={{ listStyle: "none", padding: 0 }}>
-                      {f.detalhes.map((d, j) => (
-                        <li key={j} style={{ fontSize: 12, color: "var(--text-secondary)", marginBottom: 2, display: "flex", alignItems: "center", gap: 4 }}>
-                          <span style={{ color: f.cor }}>&#8226;</span> {d}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div style={{ textAlign: "right", minWidth: 120 }}>
-                    <p style={{ fontSize: 10, color: "var(--text-muted)", marginBottom: 2 }}>CUSTO/MES</p>
-                    <p className="mono" style={{ fontSize: 18, fontWeight: 700, color: f.cor }}>{fmt(f.custoMes)}</p>
-                    <p style={{ fontSize: 10, color: "var(--text-muted)", marginTop: 6, marginBottom: 2 }}>TOTAL DA FASE</p>
-                    <p className="mono" style={{ fontSize: 14, fontWeight: 600 }}>{fmt(f.custoTotal)}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Grafico de custo mensal por fase */}
-          <div style={{
-            background: "var(--bg-secondary)", border: "1px solid var(--border)",
-            borderRadius: "var(--radius)", padding: "16px", marginBottom: 24, boxShadow: "var(--shadow)",
-          }}>
-            <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 14 }}>Custo Mensal Combinado por Fase</h3>
-            <BarChart dados={fases.map(f => ({ label: f.nome.split(":")[0], valor: f.custoMes, cor: f.cor, sub: `${f.meses} meses` }))} />
-          </div>
-
-          {/* Timeline mes a mes */}
-          <div style={{
-            background: "var(--bg-secondary)", border: "1px solid var(--border)",
-            borderRadius: "var(--radius)", padding: "16px", marginBottom: 24, boxShadow: "var(--shadow)",
-          }}>
-            <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>Linha do Tempo - Mes a Mes</h3>
-            <p style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 14 }}>O que voce paga cada mes ate 6 meses apos a ultima entrega</p>
-            <div style={{ maxHeight: 400, overflowY: "auto", overflowX: "hidden" }}>
-              {timeline.map((t, i) => (
-                <div key={i}>
-                  {t.marco && (
-                    <div style={{
-                      padding: "6px 10px", marginBottom: 4, marginTop: i > 0 ? 4 : 0,
-                      background: "rgba(99,102,241,0.1)", borderRadius: 6,
-                      display: "flex", alignItems: "center", gap: 6,
-                    }}>
-                      <Icons.Check />
-                      <span style={{ fontSize: 12, fontWeight: 600, color: "var(--accent-indigo)" }}>{t.marco}</span>
-                      <span style={{ fontSize: 11, color: "var(--text-muted)" }}>- {t.label}</span>
-                    </div>
-                  )}
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 0", borderBottom: "1px solid var(--border)" }}>
-                    <span className="mono" style={{ fontSize: 11, color: "var(--text-muted)", width: 70, flexShrink: 0 }}>{t.label}</span>
-                    <div style={{ flex: 1, display: "flex", gap: 2, height: 16 }}>
-                      <div style={{
-                        height: "100%", width: `${(t.custoPL / maxTimeline) * 100}%`,
-                        background: "var(--accent-indigo)", borderRadius: "3px 0 0 3px",
-                        minWidth: t.custoPL > 0 ? 2 : 0,
-                      }} title={`PL: ${fmt(t.custoPL)} (${t.descPL})`} />
-                      <div style={{
-                        height: "100%", width: `${(t.custoUP / maxTimeline) * 100}%`,
-                        background: "var(--accent-amber)", borderRadius: "0 3px 3px 0",
-                        minWidth: t.custoUP > 0 ? 2 : 0,
-                      }} title={`UP: ${fmt(t.custoUP)} (${t.descUP})`} />
-                    </div>
-                    <span className="mono" style={{ fontSize: 11, fontWeight: 600, width: 80, textAlign: "right", flexShrink: 0 }}>{fmt(t.total)}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div style={{ display: "flex", gap: 16, marginTop: 10 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                <div style={{ width: 10, height: 10, borderRadius: 2, background: "var(--accent-indigo)" }} />
-                <span style={{ fontSize: 11, color: "var(--text-muted)" }}>Palestra Life</span>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                <div style={{ width: 10, height: 10, borderRadius: 2, background: "var(--accent-amber)" }} />
-                <span style={{ fontSize: 11, color: "var(--text-muted)" }}>Unique Palestra</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Evolucao do saldo devedor INCC */}
-          <div style={{
-            background: "var(--bg-secondary)", border: "1px solid var(--border)",
-            borderRadius: "var(--radius)", padding: "16px", marginBottom: 24, boxShadow: "var(--shadow)",
-          }}>
-            <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>Evolucao do Saldo Devedor (INCC {params.incc}% a.a.)</h3>
-            <p style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 14 }}>O saldo cresce pelo INCC durante a obra. Na entrega, esse e o valor financiado pelo banco.</p>
-            <div className="grid-2-lg">
-              <div>
-                <p style={{ fontSize: 12, fontWeight: 500, marginBottom: 6, color: "var(--accent-indigo)" }}>Palestra Life ({pl.mesesObra} meses)</p>
-                <SaldoEvolutionChart pontos={evolPL} cor="#6366f1" width={400} height={100} />
-                <p className="mono" style={{ fontSize: 12, marginTop: 4 }}>
-                  {fmt(pl.financiamento)} <span style={{ color: "var(--accent-red)" }}>+{fmt(saldoPL - pl.financiamento)}</span> = {fmt(saldoPL)}
-                </p>
-              </div>
-              <div>
-                <p style={{ fontSize: 12, fontWeight: 500, marginBottom: 6, color: "var(--accent-amber)" }}>Unique Palestra ({up.mesesObra} meses)</p>
-                <SaldoEvolutionChart pontos={evolUP} cor="#f59e0b" width={400} height={100} />
-                <p className="mono" style={{ fontSize: 12, marginTop: 4 }}>
-                  {fmt(up.financiamento)} <span style={{ color: "var(--accent-red)" }}>+{fmt(saldoUP - up.financiamento)}</span> = {fmt(saldoUP)}
-                </p>
-              </div>
-            </div>
-            <div style={{
-              marginTop: 12, padding: "10px 12px", background: "var(--bg-tertiary)",
-              borderRadius: "var(--radius-sm)", fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.5,
-            }}>
-              <strong>Atencao:</strong> As parcelas informadas ({fmt(pl.parcelaPosChave)} e {fmt(up.parcelaPosChave)}) foram calculadas pelo banco
-              com base no saldo atual. Na entrega, o saldo sera maior por causa do INCC, e a parcela real pode ser um pouco diferente.
-              Use esses valores como referencia.
-            </div>
-          </div>
-
-          {/* Resumo total */}
+      // Bloco individual de apartamento
+      const ApartmentDetail = ({ ap, evolObra, evolSaldo, saldoEntrega, obraTotal, totalFin, cor, corHex }) => (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          {/* Evolucao da taxa mes a mes */}
           <div style={{
             background: "var(--bg-secondary)", border: "1px solid var(--border)",
             borderRadius: "var(--radius)", padding: "16px", boxShadow: "var(--shadow)",
           }}>
-            <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 14 }}>Custo Total Estimado - Tudo Somado</h3>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 10 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid var(--border)" }}>
-                <span style={{ fontSize: 13 }}>Seguro obra Palestra Life ({mesesRestPL} meses)</span>
-                <span className="mono" style={{ fontSize: 13, fontWeight: 600 }}>{fmt(seguroTotalPL)}</span>
+            <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>Evolucao de Obra - Mes a Mes</h3>
+            <p style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 12 }}>
+              Juros sobre o valor liberado ao construtor. Cresce conforme a obra avanca.
+            </p>
+            <div style={{ maxHeight: 350, overflowY: "auto" }}>
+              {evolObra.map((m, i) => {
+                const maxJ = evolObra[evolObra.length - 1].jurosMes;
+                return (
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "3px 0", borderBottom: "1px solid var(--border)" }}>
+                    <span className="mono" style={{ fontSize: 10, color: "var(--text-muted)", width: 50, flexShrink: 0 }}>Mes {m.mes}</span>
+                    <span className="mono" style={{ fontSize: 10, color: "var(--text-muted)", width: 35, flexShrink: 0 }}>{m.percentual}%</span>
+                    <div style={{ flex: 1, height: 12, background: "var(--border)", borderRadius: 3, overflow: "hidden" }}>
+                      <div style={{
+                        height: "100%", width: `${(m.jurosMes / maxJ) * 100}%`,
+                        background: cor, borderRadius: 3,
+                      }} />
+                    </div>
+                    <span className="mono" style={{ fontSize: 11, fontWeight: 600, width: 75, textAlign: "right", flexShrink: 0 }}>{fmt(m.jurosMes)}</span>
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{
+              marginTop: 10, padding: "8px 10px", background: "var(--bg-tertiary)",
+              borderRadius: "var(--radius-sm)", display: "flex", justifyContent: "space-between",
+            }}>
+              <span style={{ fontSize: 12, fontWeight: 600 }}>Total estimado evol. obra</span>
+              <span className="mono" style={{ fontSize: 14, fontWeight: 700, color: "var(--accent-red)" }}>{fmt(obraTotal)}</span>
+            </div>
+          </div>
+
+          {/* Saldo devedor INCC */}
+          <div style={{
+            background: "var(--bg-secondary)", border: "1px solid var(--border)",
+            borderRadius: "var(--radius)", padding: "16px", boxShadow: "var(--shadow)",
+          }}>
+            <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>Saldo Devedor (INCC {params.incc}% a.a.)</h3>
+            <p style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 10 }}>O valor que sera financiado pelo banco na entrega das chaves.</p>
+            <SaldoEvolutionChart pontos={evolSaldo} cor={corHex} width={500} height={110} />
+            <p className="mono" style={{ fontSize: 13, marginTop: 6 }}>
+              {fmt(ap.financiamento)} <span style={{ color: "var(--accent-red)" }}>+{fmt(saldoEntrega - ap.financiamento)}</span> = <strong>{fmt(saldoEntrega)}</strong>
+            </p>
+          </div>
+
+          {/* Resumo custo total */}
+          <div style={{
+            background: "var(--bg-secondary)", border: "1px solid var(--border)",
+            borderRadius: "var(--radius)", padding: "16px", boxShadow: "var(--shadow)",
+          }}>
+            <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>Custo Total - {ap.nome}</h3>
+            {[
+              { label: "Evolucao de obra (estimada)", valor: obraTotal },
+              { label: `Financiamento PRICE (${params.prazoAnos} anos x ${fmt(ap.parcelaPosChave)})`, valor: totalFin },
+            ].map((item, i) => (
+              <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid var(--border)" }}>
+                <span style={{ fontSize: 12 }}>{item.label}</span>
+                <span className="mono" style={{ fontSize: 12, fontWeight: 600 }}>{fmt(item.valor)}</span>
               </div>
-              <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid var(--border)" }}>
-                <span style={{ fontSize: 13 }}>Seguro obra Unique ({mesesRestUP} meses)</span>
-                <span className="mono" style={{ fontSize: 13, fontWeight: 600 }}>{fmt(seguroTotalUP)}</span>
+            ))}
+            <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", marginTop: 4 }}>
+              <span style={{ fontSize: 14, fontWeight: 700 }}>TOTAL</span>
+              <span className="mono" style={{ fontSize: 16, fontWeight: 700, color: cor }}>{fmt(obraTotal + totalFin)}</span>
+            </div>
+          </div>
+        </div>
+      );
+
+      return (
+        <div className="fade-in page-container">
+          <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 6 }}>Projecao de Gastos</h2>
+          <p style={{ color: "var(--text-muted)", fontSize: 13, marginBottom: 16 }}>
+            Visao completa de quanto voce gasta em cada fase, por apartamento ou combinado
+          </p>
+
+          {/* View toggle */}
+          <div style={{ display: "flex", gap: 6, marginBottom: 20, flexWrap: "wrap" }}>
+            {viewButtons.map(v => (
+              <button key={v.id} onClick={() => setView(v.id)} style={{
+                padding: "8px 16px",
+                background: view === v.id ? "var(--accent-indigo)" : "var(--bg-secondary)",
+                color: view === v.id ? "#fff" : "var(--text-secondary)",
+                border: `1px solid ${view === v.id ? "var(--accent-indigo)" : "var(--border)"}`,
+                borderRadius: "var(--radius-sm)", cursor: "pointer",
+                fontFamily: "inherit", fontSize: 13, fontWeight: 600,
+              }}>{v.label}</button>
+            ))}
+          </div>
+
+          {/* VISAO COMBINADA */}
+          {view === "combinado" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              {/* Fases */}
+              {[
+                {
+                  nome: "Fase 1: Evolucao de Obra (ambos)",
+                  periodo: `Agora ate ${fmtMesAno(pl.entrega)}`,
+                  meses: mesesRestPL,
+                  custoInicio: (evolObraPL[0]?.jurosMes || 0) + (evolObraUP[0]?.jurosMes || 0),
+                  custoFim: (evolObraPL[mesesRestPL - 1]?.jurosMes || 0) + (evolObraUP[mesesRestPL - 1]?.jurosMes || 0),
+                  cor: "var(--accent-green)",
+                  desc: "Juros de evolucao de obra dos dois APs. O valor CRESCE todo mes.",
+                },
+                {
+                  nome: "Fase 2: Parcela PL + Evol. Obra UP",
+                  periodo: `${fmtMesAno(pl.entrega)} ate ${fmtMesAno(up.entrega)}`,
+                  meses: mesesFase2,
+                  custoInicio: pl.parcelaPosChave + (evolObraUP[mesesRestPL]?.jurosMes || 0),
+                  custoFim: pl.parcelaPosChave + (evolObraUP[mesesRestUP - 1]?.jurosMes || 0),
+                  cor: "var(--accent-amber)",
+                  desc: "Parcela fixa do PL + evolucao de obra crescente do Unique.",
+                },
+                {
+                  nome: "Fase 3: Ambas Parcelas PRICE",
+                  periodo: `${fmtMesAno(up.entrega)} em diante`,
+                  meses: prazoM,
+                  custoInicio: pl.parcelaPosChave + up.parcelaPosChave,
+                  custoFim: pl.parcelaPosChave + up.parcelaPosChave,
+                  cor: "var(--accent-indigo)",
+                  desc: "Parcelas fixas (PRICE). Studio pode gerar renda no Airbnb pra cobrir.",
+                },
+              ].map((f, i) => (
+                <div key={i} style={{
+                  background: "var(--bg-secondary)", border: "1px solid var(--border)",
+                  borderRadius: "var(--radius)", padding: "16px", boxShadow: "var(--shadow)",
+                  borderLeft: `3px solid ${f.cor}`,
+                }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
+                    <div style={{ flex: 1, minWidth: 200 }}>
+                      <h4 style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>{f.nome}</h4>
+                      <p className="mono" style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 6 }}>{f.periodo} ({f.meses} meses)</p>
+                      <p style={{ fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.5 }}>{f.desc}</p>
+                    </div>
+                    <div style={{ textAlign: "right", minWidth: 140 }}>
+                      {f.custoInicio !== f.custoFim ? (
+                        <>
+                          <p style={{ fontSize: 10, color: "var(--text-muted)" }}>INICIO → FIM</p>
+                          <p className="mono" style={{ fontSize: 14, fontWeight: 700, color: f.cor }}>
+                            {fmt(f.custoInicio)}
+                          </p>
+                          <p className="mono" style={{ fontSize: 14, fontWeight: 700, color: "var(--accent-red)" }}>
+                            → {fmt(f.custoFim)}
+                          </p>
+                        </>
+                      ) : (
+                        <>
+                          <p style={{ fontSize: 10, color: "var(--text-muted)" }}>CUSTO/MES (FIXO)</p>
+                          <p className="mono" style={{ fontSize: 18, fontWeight: 700, color: f.cor }}>{fmt(f.custoInicio)}</p>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {/* Timeline combinada */}
+              <div style={{
+                background: "var(--bg-secondary)", border: "1px solid var(--border)",
+                borderRadius: "var(--radius)", padding: "16px", boxShadow: "var(--shadow)",
+              }}>
+                <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>Linha do Tempo - Mes a Mes</h3>
+                <p style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 12 }}>Veja como o custo mensal muda ao longo do tempo</p>
+                <div style={{ maxHeight: 400, overflowY: "auto" }}>
+                  {timeline.map((t, i) => (
+                    <div key={i}>
+                      {t.marco && (
+                        <div style={{
+                          padding: "6px 10px", marginBottom: 4, marginTop: i > 0 ? 4 : 0,
+                          background: "rgba(99,102,241,0.1)", borderRadius: 6,
+                          display: "flex", alignItems: "center", gap: 6,
+                        }}>
+                          <Icons.Check />
+                          <span style={{ fontSize: 12, fontWeight: 600, color: "var(--accent-indigo)" }}>{t.marco}</span>
+                        </div>
+                      )}
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "3px 0", borderBottom: "1px solid var(--border)" }}>
+                        <span className="mono" style={{ fontSize: 10, color: "var(--text-muted)", width: 62, flexShrink: 0 }}>{t.label}</span>
+                        <div style={{ flex: 1, display: "flex", gap: 1, height: 14 }}>
+                          <div style={{
+                            height: "100%", width: `${(t.custoPL / maxTimeline) * 100}%`,
+                            background: "var(--accent-indigo)", borderRadius: "3px 0 0 3px",
+                            minWidth: t.custoPL > 0 ? 2 : 0,
+                          }} />
+                          <div style={{
+                            height: "100%", width: `${(t.custoUP / maxTimeline) * 100}%`,
+                            background: "var(--accent-amber)", borderRadius: "0 3px 3px 0",
+                            minWidth: t.custoUP > 0 ? 2 : 0,
+                          }} />
+                        </div>
+                        <span className="mono" style={{ fontSize: 10, fontWeight: 600, width: 72, textAlign: "right", flexShrink: 0 }}>{fmt(t.total)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ display: "flex", gap: 14, marginTop: 8 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                    <div style={{ width: 10, height: 10, borderRadius: 2, background: "var(--accent-indigo)" }} />
+                    <span style={{ fontSize: 11, color: "var(--text-muted)" }}>Palestra Life</span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                    <div style={{ width: 10, height: 10, borderRadius: 2, background: "var(--accent-amber)" }} />
+                    <span style={{ fontSize: 11, color: "var(--text-muted)" }}>Unique Palestra</span>
+                  </div>
+                </div>
               </div>
-              <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid var(--border)" }}>
-                <span style={{ fontSize: 13 }}>Financiamento PL ({params.prazoAnos} anos x {fmt(pl.parcelaPosChave)})</span>
-                <span className="mono" style={{ fontSize: 13, fontWeight: 600 }}>{fmt(totalFinPL)}</span>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid var(--border)" }}>
-                <span style={{ fontSize: 13 }}>Financiamento UP ({params.prazoAnos} anos x {fmt(up.parcelaPosChave)})</span>
-                <span className="mono" style={{ fontSize: 13, fontWeight: 600 }}>{fmt(totalFinUP)}</span>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", marginTop: 4 }}>
-                <span style={{ fontSize: 15, fontWeight: 700 }}>TOTAL GERAL</span>
-                <span className="mono" style={{ fontSize: 18, fontWeight: 700, color: "var(--accent-indigo)" }}>{fmt(grandTotal)}</span>
+
+              {/* Resumo total */}
+              <div style={{
+                background: "var(--bg-secondary)", border: "1px solid var(--border)",
+                borderRadius: "var(--radius)", padding: "16px", boxShadow: "var(--shadow)",
+              }}>
+                <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>Custo Total - Tudo Somado</h3>
+                {[
+                  { label: `Evol. obra PL (${mesesRestPL} meses)`, valor: obraTotalPL },
+                  { label: `Evol. obra UP (${mesesRestUP} meses)`, valor: obraTotalUP },
+                  { label: `Financiamento PL (${params.prazoAnos} anos x ${fmt(pl.parcelaPosChave)})`, valor: totalFinPL },
+                  { label: `Financiamento UP (${params.prazoAnos} anos x ${fmt(up.parcelaPosChave)})`, valor: totalFinUP },
+                ].map((item, i) => (
+                  <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid var(--border)", flexWrap: "wrap" }}>
+                    <span style={{ fontSize: 12 }}>{item.label}</span>
+                    <span className="mono" style={{ fontSize: 12, fontWeight: 600 }}>{fmt(item.valor)}</span>
+                  </div>
+                ))}
+                <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", marginTop: 4 }}>
+                  <span style={{ fontSize: 15, fontWeight: 700 }}>TOTAL GERAL</span>
+                  <span className="mono" style={{ fontSize: 18, fontWeight: 700, color: "var(--accent-indigo)" }}>{fmt(grandTotal)}</span>
+                </div>
               </div>
             </div>
+          )}
+
+          {/* VISAO PALESTRA LIFE */}
+          {view === "palestraLife" && (
+            <ApartmentDetail
+              ap={pl} evolObra={evolObraPL} evolSaldo={evolSaldoPL}
+              saldoEntrega={saldoPL} obraTotal={obraTotalPL} totalFin={totalFinPL}
+              cor="var(--accent-indigo)" corHex="#6366f1"
+            />
+          )}
+
+          {/* VISAO UNIQUE */}
+          {view === "unique" && (
+            <ApartmentDetail
+              ap={up} evolObra={evolObraUP} evolSaldo={evolSaldoUP}
+              saldoEntrega={saldoUP} obraTotal={obraTotalUP} totalFin={totalFinUP}
+              cor="var(--accent-amber)" corHex="#f59e0b"
+            />
+          )}
+
+          {/* Nota importante */}
+          <div style={{
+            marginTop: 16, padding: "10px 12px", background: "var(--bg-tertiary)",
+            borderRadius: "var(--radius-sm)", fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.5,
+          }}>
+            <strong>Nota:</strong> Os valores de evolucao de obra sao estimativas baseadas em juros de {params.taxaJuros}% a.a.
+            sobre o valor proporcionalmente liberado. As parcelas ({fmt(pl.parcelaPosChave)} e {fmt(up.parcelaPosChave)})
+            foram informadas pelo banco e podem mudar na entrega devido ao INCC. Confirme os valores exatos com o corretor.
           </div>
         </div>
       );
@@ -1109,7 +1228,7 @@
 
       const perguntas = [
         {
-          q: "O que e INCC e como afeta meu financiamento?",
+          q: "O que e INCC e como afeta nosso financiamento?",
           a: "O INCC (Indice Nacional de Custo da Construcao) reajusta seu saldo devedor durante a obra. Ele reflete o aumento dos custos de construcao civil. Na pratica, o valor que voce vai financiar na entrega das chaves sera maior que o valor original do contrato. A media recente fica em torno de 6% ao ano. Por isso as parcelas informadas agora podem mudar um pouco."
         },
         {
@@ -1117,8 +1236,8 @@
           a: "Na Tabela PRICE, as parcelas sao fixas durante todo o financiamento. No inicio, a maior parte da parcela vai para juros e pouco para amortizacao. Com o tempo, essa proporcao se inverte. A vantagem e a previsibilidade: voce sabe exatamente quanto vai pagar todo mes. O seu financiamento foi feito nesse sistema."
         },
         {
-          q: "O que e seguro de obra e por que pago isso?",
-          a: "O seguro de obra e um custo mensal que voce paga durante a construcao. Ele cobre riscos como danos a obra, acidentes e morte/invalidez do comprador. E o UNICO custo que voce tem ate receber as chaves (confirmado pelo corretor). O valor gira em torno de 0,3% a 0,5% do valor do imovel por ano, dividido em 12 meses."
+          q: "O que e evolucao de obra e por que pago isso?",
+          a: "Durante a construcao, o banco libera dinheiro para a construtora conforme a obra avanca. Voce paga juros mensais sobre o valor ja liberado — isso e a 'evolucao de obra'. No inicio da obra, o valor e menor (pouco liberado). Conforme a obra progride, mais dinheiro e liberado e o custo mensal AUMENTA. Na entrega das chaves, esse custo acaba e comeca o financiamento normal."
         },
         {
           q: "Como funciona o FGTS na amortizacao?",
