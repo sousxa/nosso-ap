@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Meu AP</title>
+  <title>Nosso AP</title>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -249,7 +249,7 @@
       const handleSubmit = (e) => {
         e.preventDefault();
         if (senha === "m3u1PZ3=A&M37") {
-          sessionStorage.setItem("meuap_auth", "1");
+          sessionStorage.setItem("nossoap_auth", "1");
           onLogin();
         } else {
           setErro(true);
@@ -277,7 +277,7 @@
             }}>
               <Icons.Building />
             </div>
-            <h1 style={{ fontSize: "24px", fontWeight: 700, marginBottom: 6 }}>Meu AP</h1>
+            <h1 style={{ fontSize: "24px", fontWeight: 700, marginBottom: 6 }}>Nosso AP</h1>
             <p style={{ color: "var(--text-muted)", marginBottom: 28, fontSize: 13 }}>
               Planejamento financeiro imobiliario
             </p>
@@ -335,7 +335,7 @@
                 background: "linear-gradient(135deg, var(--accent-indigo), var(--accent-amber))",
                 display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12,
               }}><Icons.Building /></div>
-              <span style={{ fontWeight: 700, fontSize: 16 }}>Meu AP</span>
+              <span style={{ fontWeight: 700, fontSize: 16 }}>Nosso AP</span>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <button onClick={toggleTheme} style={{
@@ -1011,7 +1011,7 @@
     // ========================
     function Anotacoes() {
       const [notas, setNotas] = useState(() => {
-        try { return JSON.parse(localStorage.getItem("meuap_notas") || "[]"); } catch { return []; }
+        try { return JSON.parse(localStorage.getItem("nossoap_notas") || "[]"); } catch { return []; }
       });
       const [texto, setTexto] = useState("");
       const [categoria, setCategoria] = useState("Lembrete");
@@ -1019,7 +1019,7 @@
       const categorias = ["Duvida", "Lembrete", "Decisao", "Contato"];
       const catCores = { Duvida: "var(--accent-amber)", Lembrete: "var(--accent-indigo)", Decisao: "var(--accent-green)", Contato: "var(--text-muted)" };
 
-      useEffect(() => { localStorage.setItem("meuap_notas", JSON.stringify(notas)); }, [notas]);
+      useEffect(() => { localStorage.setItem("nossoap_notas", JSON.stringify(notas)); }, [notas]);
 
       const addNota = () => {
         if (!texto.trim()) return;
@@ -1198,17 +1198,17 @@
     // APP PRINCIPAL
     // ========================
     function App() {
-      const [loggedIn, setLoggedIn] = useState(() => sessionStorage.getItem("meuap_auth") === "1");
+      const [loggedIn, setLoggedIn] = useState(() => sessionStorage.getItem("nossoap_auth") === "1");
       const [page, setPage] = useState("dashboard");
-      const [theme, setTheme] = useState(() => localStorage.getItem("meuap_theme") || "dark");
+      const [theme, setTheme] = useState(() => localStorage.getItem("nossoap_theme") || "dark");
 
       useEffect(() => {
         document.documentElement.setAttribute("data-theme", theme);
-        localStorage.setItem("meuap_theme", theme);
+        localStorage.setItem("nossoap_theme", theme);
       }, [theme]);
 
       const toggleTheme = () => setTheme(t => t === "dark" ? "light" : "dark");
-      const handleLogout = () => { sessionStorage.removeItem("meuap_auth"); setLoggedIn(false); };
+      const handleLogout = () => { sessionStorage.removeItem("nossoap_auth"); setLoggedIn(false); };
 
       if (!loggedIn) return <LoginScreen onLogin={() => setLoggedIn(true)} />;
 
@@ -1222,7 +1222,7 @@
           <footer style={{
             textAlign: "center", padding: "16px", color: "var(--text-muted)", fontSize: 11,
             borderTop: "1px solid var(--border)",
-          }}>Meu AP &mdash; Planejamento Financeiro Imobiliario &mdash; 2026</footer>
+          }}>Nosso AP &mdash; Planejamento Financeiro Imobiliario &mdash; 2026</footer>
         </div>
       );
     }
