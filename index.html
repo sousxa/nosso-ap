@@ -63,32 +63,20 @@
 
     .mono { font-family: 'JetBrains Mono', monospace; }
 
-    /* Scrollbar */
-    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: var(--bg-primary); }
     ::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; }
 
-    /* Slider */
     input[type="range"] {
-      -webkit-appearance: none;
-      width: 100%;
-      height: 6px;
-      border-radius: 3px;
-      background: var(--border);
-      outline: none;
+      -webkit-appearance: none; width: 100%; height: 6px;
+      border-radius: 3px; background: var(--border); outline: none;
     }
     input[type="range"]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      background: var(--accent-indigo);
-      cursor: pointer;
-      border: 2px solid var(--bg-secondary);
-      box-shadow: var(--shadow);
+      -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%;
+      background: var(--accent-indigo); cursor: pointer;
+      border: 2px solid var(--bg-secondary); box-shadow: var(--shadow);
     }
 
-    /* Animations */
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(10px); }
       to { opacity: 1; transform: translateY(0); }
@@ -98,6 +86,26 @@
     @keyframes pulse {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.6; }
+    }
+
+    /* Mobile responsive */
+    .cards-row { display: flex; gap: 20px; flex-wrap: wrap; }
+    .cards-row > * { flex: 1; min-width: 300px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .grid-2-lg { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .page-container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+
+    @media (max-width: 680px) {
+      .cards-row > * { min-width: 100%; }
+      .grid-2 { grid-template-columns: 1fr; }
+      .grid-2-lg { grid-template-columns: 1fr; }
+      .page-container { padding: 12px; }
+      .hide-mobile { display: none !important; }
+      .nav-label { font-size: 12px !important; }
+    }
+
+    @media (max-width: 400px) {
+      .nav-label { display: none; }
     }
   </style>
 </head>
@@ -115,11 +123,11 @@
         tipo: "2 dorm, 1 suite, varanda, 18o andar",
         valorTotal: 264000,
         financiamento: 264000,
+        valorAvaliacao: 350000,
         entrada: 0,
         parcelaPosChave: 1978,
-        entrega: new Date(2027, 7, 1), // Agosto 2027
+        entrega: new Date(2027, 7, 1),
         mesesObra: 17,
-        percentualObra: 50, // estimativa: obra pela metade
         documentacao: "Gratis",
         fgts: 0,
         cor: "indigo",
@@ -129,11 +137,11 @@
         tipo: "Studio/1 dorm, 33m2",
         valorTotal: 189900,
         financiamento: 184900,
+        valorAvaliacao: 189900,
         entrada: 0,
         parcelaPosChave: 958,
-        entrega: new Date(2028, 8, 1), // Setembro 2028
+        entrega: new Date(2028, 8, 1),
         mesesObra: 30,
-        percentualObra: 30, // estimativa: obra ~30% (entrega mais distante)
         documentacao: "Gratis",
         fgts: 5000,
         cor: "amber",
@@ -145,6 +153,7 @@
       prazoAnos: 30,
       incc: 6,
       tr: 0.1,
+      seguroObraAnual: 0.4,
     };
 
     // ========================
@@ -152,13 +161,13 @@
     // ========================
     const fmt = (v) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
     const fmtNum = (v, d = 0) => v.toLocaleString("pt-BR", { minimumFractionDigits: d, maximumFractionDigits: d });
+    const fmtMesAno = (d) => d.toLocaleDateString("pt-BR", { month: "short", year: "numeric" });
 
     function calcSaldoEntrega(saldo, inccAnual, meses) {
       const mensal = Math.pow(1 + inccAnual / 100, 1 / 12) - 1;
       return saldo * Math.pow(1 + mensal, meses);
     }
 
-    // PRICE: parcela fixa = saldo * [i*(1+i)^n] / [(1+i)^n - 1]
     function calcParcelaPRICE(saldo, taxaAnual, prazoMeses) {
       const i = Math.pow(1 + taxaAnual / 100, 1 / 12) - 1;
       if (i === 0) return saldo / prazoMeses;
@@ -171,25 +180,19 @@
       return (parcela * prazoMeses) - saldo;
     }
 
-    // Taxa de obra (juros de interveniencia)
-    // O banco libera $ pra construtora conforme obra avanca.
-    // Comprador paga juros sobre o valor ja liberado.
-    // Modelo simplificado: progressao linear do % liberado.
-    function calcTaxaObraTotal(saldo, taxaAnual, mesesRestantes, percentualAtual) {
-      const iMensal = Math.pow(1 + taxaAnual / 100, 1 / 12) - 1;
-      let total = 0;
-      const percAtual = percentualAtual / 100;
-      for (let m = 0; m < mesesRestantes; m++) {
-        // % liberado cresce linearmente de percAtual ate 100%
-        const percMes = percAtual + ((1 - percAtual) * (m / Math.max(mesesRestantes, 1)));
-        total += saldo * percMes * iMensal;
-      }
-      return total;
+    function calcSeguroObraMensal(valorTotal, taxaAnual) {
+      return valorTotal * (taxaAnual / 100) / 12;
     }
 
-    function calcTaxaObraMensal(saldo, taxaAnual, percentualObra) {
-      const iMensal = Math.pow(1 + taxaAnual / 100, 1 / 12) - 1;
-      return saldo * (percentualObra / 100) * iMensal;
+    function gerarEvolucaoSaldo(saldo, inccAnual, meses) {
+      const mensal = Math.pow(1 + inccAnual / 100, 1 / 12) - 1;
+      const pontos = [{ mes: 0, saldo }];
+      let s = saldo;
+      for (let m = 1; m <= meses; m++) {
+        s *= (1 + mensal);
+        pontos.push({ mes: m, saldo: s });
+      }
+      return pontos;
     }
 
     function diffMeses(from, to) {
@@ -200,8 +203,7 @@
 
     function diffDias(to) {
       const now = new Date();
-      const diff = to - now;
-      return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+      return Math.max(0, Math.ceil((to - now) / (1000 * 60 * 60 * 24)));
     }
 
     function progresso(entrega, mesesObra) {
@@ -220,7 +222,7 @@
       Lock: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>,
       Home: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
       Calendar: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>,
-      Sliders: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>,
+      DollarSign: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>,
       FileText: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>,
       HelpCircle: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
       Sun: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>,
@@ -233,6 +235,7 @@
       Check: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
       Building: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></svg>,
       TrendingUp: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>,
+      AlertCircle: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>,
     };
 
     // ========================
@@ -245,7 +248,7 @@
 
       const handleSubmit = (e) => {
         e.preventDefault();
-        if (senha === "joao2026") {
+        if (senha === "m3u1PZ3=A&M37") {
           sessionStorage.setItem("meuap_auth", "1");
           onLogin();
         } else {
@@ -257,168 +260,112 @@
 
       return (
         <div style={{
-          minHeight: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          background: "var(--bg-primary)",
-          padding: "20px",
+          minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
+          background: "var(--bg-primary)", padding: "20px",
         }}>
           <div className="fade-in" style={{
-            background: "var(--bg-secondary)",
-            border: "1px solid var(--border)",
-            borderRadius: "16px",
-            padding: "48px 40px",
-            maxWidth: "400px",
-            width: "100%",
-            textAlign: "center",
-            boxShadow: "var(--shadow-lg)",
+            background: "var(--bg-secondary)", border: "1px solid var(--border)",
+            borderRadius: "16px", padding: "40px 32px", maxWidth: "380px", width: "100%",
+            textAlign: "center", boxShadow: "var(--shadow-lg)",
             animation: shake ? "shake 0.5s ease" : undefined,
           }}>
             <div style={{
-              width: 64, height: 64, borderRadius: "16px",
+              width: 56, height: 56, borderRadius: "14px",
               background: "linear-gradient(135deg, var(--accent-indigo), var(--accent-amber))",
               display: "flex", alignItems: "center", justifyContent: "center",
-              margin: "0 auto 24px",
+              margin: "0 auto 20px",
             }}>
               <Icons.Building />
             </div>
-            <h1 style={{ fontSize: "28px", fontWeight: 700, marginBottom: 8 }}>Meu AP</h1>
-            <p style={{ color: "var(--text-muted)", marginBottom: 32, fontSize: 14 }}>
+            <h1 style={{ fontSize: "24px", fontWeight: 700, marginBottom: 6 }}>Meu AP</h1>
+            <p style={{ color: "var(--text-muted)", marginBottom: 28, fontSize: 13 }}>
               Planejamento financeiro imobiliario
             </p>
             <form onSubmit={handleSubmit}>
-              <div style={{ position: "relative", marginBottom: 16 }}>
-                <input
-                  type="password"
-                  value={senha}
-                  onChange={(e) => { setSenha(e.target.value); setErro(false); }}
-                  placeholder="Digite a senha"
-                  style={{
-                    width: "100%",
-                    padding: "14px 16px",
-                    background: "var(--bg-tertiary)",
-                    border: `1px solid ${erro ? "var(--accent-red)" : "var(--border)"}`,
-                    borderRadius: "var(--radius-sm)",
-                    color: "var(--text-primary)",
-                    fontSize: 16,
-                    outline: "none",
-                    fontFamily: "inherit",
-                    transition: "border 0.2s",
-                  }}
-                  autoFocus
-                />
-              </div>
-              {erro && (
-                <p style={{ color: "var(--accent-red)", fontSize: 13, marginBottom: 12 }}>
-                  Senha incorreta. Tente novamente.
-                </p>
-              )}
+              <input
+                type="password" value={senha}
+                onChange={(e) => { setSenha(e.target.value); setErro(false); }}
+                placeholder="Digite a senha"
+                style={{
+                  width: "100%", padding: "12px 14px", marginBottom: 12,
+                  background: "var(--bg-tertiary)",
+                  border: `1px solid ${erro ? "var(--accent-red)" : "var(--border)"}`,
+                  borderRadius: "var(--radius-sm)", color: "var(--text-primary)",
+                  fontSize: 15, outline: "none", fontFamily: "inherit",
+                }}
+                autoFocus
+              />
+              {erro && <p style={{ color: "var(--accent-red)", fontSize: 12, marginBottom: 8 }}>Senha incorreta.</p>}
               <button type="submit" style={{
-                width: "100%",
-                padding: "14px",
-                background: "var(--accent-indigo)",
-                color: "#fff",
-                border: "none",
-                borderRadius: "var(--radius-sm)",
-                fontSize: 16,
-                fontWeight: 600,
-                cursor: "pointer",
-                fontFamily: "inherit",
-                transition: "opacity 0.2s",
-              }}
-              onMouseOver={(e) => e.target.style.opacity = "0.9"}
-              onMouseOut={(e) => e.target.style.opacity = "1"}
-              >
-                Entrar
-              </button>
+                width: "100%", padding: "12px", background: "var(--accent-indigo)", color: "#fff",
+                border: "none", borderRadius: "var(--radius-sm)", fontSize: 15, fontWeight: 600,
+                cursor: "pointer", fontFamily: "inherit",
+              }}>Entrar</button>
             </form>
           </div>
-          <style>{`
-            @keyframes shake {
-              0%, 100% { transform: translateX(0); }
-              25% { transform: translateX(-8px); }
-              75% { transform: translateX(8px); }
-            }
-          `}</style>
+          <style>{`@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)} }`}</style>
         </div>
       );
     }
 
     // ========================
-    // COMPONENTE: HEADER + NAV
+    // HEADER + NAV
     // ========================
     function Header({ page, setPage, theme, toggleTheme, onLogout }) {
       const navItems = [
         { id: "dashboard", label: "Dashboard", icon: Icons.Home },
+        { id: "projecao", label: "Gastos", icon: Icons.DollarSign },
         { id: "cronograma", label: "Cronograma", icon: Icons.Calendar },
-        { id: "simulador", label: "Simulador", icon: Icons.Sliders },
-        { id: "anotacoes", label: "Anotacoes", icon: Icons.FileText },
+        { id: "anotacoes", label: "Notas", icon: Icons.FileText },
         { id: "faq", label: "FAQ", icon: Icons.HelpCircle },
       ];
 
       return (
         <header style={{
-          background: "var(--bg-secondary)",
-          borderBottom: "1px solid var(--border)",
-          position: "sticky",
-          top: 0,
-          zIndex: 100,
+          background: "var(--bg-secondary)", borderBottom: "1px solid var(--border)",
+          position: "sticky", top: 0, zIndex: 100,
         }}>
           <div style={{
-            maxWidth: 1200, margin: "0 auto", padding: "12px 20px",
+            maxWidth: 1200, margin: "0 auto", padding: "10px 16px",
             display: "flex", alignItems: "center", justifyContent: "space-between",
           }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{
-                width: 32, height: 32, borderRadius: 8,
-                background: "linear-gradient(135deg, var(--accent-indigo), var(--accent-amber))",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 14,
-              }}>
-                <Icons.Building />
-              </div>
-              <span style={{ fontWeight: 700, fontSize: 18 }}>Meu AP</span>
-            </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{
+                width: 28, height: 28, borderRadius: 7,
+                background: "linear-gradient(135deg, var(--accent-indigo), var(--accent-amber))",
+                display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12,
+              }}><Icons.Building /></div>
+              <span style={{ fontWeight: 700, fontSize: 16 }}>Meu AP</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <button onClick={toggleTheme} style={{
                 background: "var(--bg-tertiary)", border: "1px solid var(--border)",
-                borderRadius: 8, padding: "8px", cursor: "pointer", color: "var(--text-primary)",
+                borderRadius: 7, padding: "6px", cursor: "pointer", color: "var(--text-primary)",
                 display: "flex", alignItems: "center",
-              }}>
-                {theme === "dark" ? <Icons.Sun /> : <Icons.Moon />}
-              </button>
+              }}>{theme === "dark" ? <Icons.Sun /> : <Icons.Moon />}</button>
               <button onClick={onLogout} style={{
                 background: "var(--bg-tertiary)", border: "1px solid var(--border)",
-                borderRadius: 8, padding: "8px", cursor: "pointer", color: "var(--text-muted)",
+                borderRadius: 7, padding: "6px", cursor: "pointer", color: "var(--text-muted)",
                 display: "flex", alignItems: "center",
-              }}>
-                <Icons.LogOut />
-              </button>
+              }}><Icons.LogOut /></button>
             </div>
           </div>
           <nav style={{
-            maxWidth: 1200, margin: "0 auto", padding: "0 20px 0",
-            display: "flex", gap: 4, overflowX: "auto",
+            maxWidth: 1200, margin: "0 auto", padding: "0 16px",
+            display: "flex", gap: 2, overflowX: "auto", WebkitOverflowScrolling: "touch",
           }}>
             {navItems.map(item => (
               <button key={item.id} onClick={() => setPage(item.id)} style={{
-                display: "flex", alignItems: "center", gap: 6,
-                padding: "10px 16px",
-                background: page === item.id ? "var(--bg-tertiary)" : "transparent",
-                border: "none",
-                borderBottom: page === item.id ? "2px solid var(--accent-indigo)" : "2px solid transparent",
+                display: "flex", alignItems: "center", gap: 5,
+                padding: "8px 12px", background: page === item.id ? "var(--bg-tertiary)" : "transparent",
+                border: "none", borderBottom: page === item.id ? "2px solid var(--accent-indigo)" : "2px solid transparent",
                 color: page === item.id ? "var(--text-primary)" : "var(--text-muted)",
-                cursor: "pointer",
-                fontFamily: "inherit",
-                fontSize: 14,
-                fontWeight: page === item.id ? 600 : 400,
-                whiteSpace: "nowrap",
-                borderRadius: "8px 8px 0 0",
-                transition: "all 0.2s",
+                cursor: "pointer", fontFamily: "inherit", fontSize: 13,
+                fontWeight: page === item.id ? 600 : 400, whiteSpace: "nowrap",
+                borderRadius: "8px 8px 0 0", transition: "all 0.2s", flexShrink: 0,
               }}>
                 <item.icon />
-                <span style={{ display: "inline" }}>{item.label}</span>
+                <span className="nav-label">{item.label}</span>
               </button>
             ))}
           </nav>
@@ -427,112 +374,79 @@
     }
 
     // ========================
-    // COMPONENTE: CARD DO AP
+    // MINI CARD
+    // ========================
+    function StatCard({ label, value, sub, color, mono = true }) {
+      return (
+        <div style={{ background: "var(--bg-tertiary)", borderRadius: "var(--radius-sm)", padding: "10px 12px" }}>
+          <p style={{ color: "var(--text-muted)", fontSize: 10, marginBottom: 3, textTransform: "uppercase", letterSpacing: "0.5px" }}>{label}</p>
+          <p className={mono ? "mono" : ""} style={{ fontSize: 15, fontWeight: 600, color: color || "var(--text-primary)" }}>{value}</p>
+          {sub && <p style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>{sub}</p>}
+        </div>
+      );
+    }
+
+    // ========================
+    // CARD DO APARTAMENTO
     // ========================
     function ApartmentCard({ ap, params }) {
       const saldoEntrega = calcSaldoEntrega(ap.financiamento, params.incc, ap.mesesObra);
-      const prazoMeses = params.prazoAnos * 12;
-      const taxaTotal = params.taxaJuros + params.tr * 12;
-      const parcelaPRICE = calcParcelaPRICE(saldoEntrega, taxaTotal, prazoMeses);
-      const mesesRestantes = diffMeses(new Date(), ap.entrega);
-      const taxaObraMensal = calcTaxaObraMensal(ap.financiamento, params.taxaJuros, ap.percentualObra);
-      const taxaObraTotal = calcTaxaObraTotal(ap.financiamento, params.taxaJuros, mesesRestantes, ap.percentualObra);
+      const seguroMes = calcSeguroObraMensal(ap.valorTotal, params.seguroObraAnual);
+      const mesesRest = diffMeses(new Date(), ap.entrega);
+      const seguroTotal = seguroMes * mesesRest;
       const dias = diffDias(ap.entrega);
-      const meses = mesesRestantes;
       const prog = progresso(ap.entrega, ap.mesesObra);
       const corVar = ap.cor === "indigo" ? "var(--accent-indigo)" : "var(--accent-amber)";
 
       return (
         <div className="fade-in" style={{
-          background: "var(--bg-secondary)",
-          border: "1px solid var(--border)",
-          borderRadius: "var(--radius)",
-          padding: 24,
-          flex: 1,
-          minWidth: 300,
-          boxShadow: "var(--shadow)",
+          background: "var(--bg-secondary)", border: "1px solid var(--border)",
+          borderRadius: "var(--radius)", padding: "20px", boxShadow: "var(--shadow)",
         }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
             <div style={{
-              width: 10, height: 10, borderRadius: "50%",
-              background: corVar,
+              width: 8, height: 8, borderRadius: "50%", background: corVar,
               boxShadow: `0 0 8px ${corVar}`,
             }} />
-            <h3 style={{ fontSize: 18, fontWeight: 700 }}>{ap.nome}</h3>
+            <h3 style={{ fontSize: 16, fontWeight: 700 }}>{ap.nome}</h3>
+          </div>
+          <p style={{ color: "var(--text-muted)", fontSize: 12, marginBottom: 14 }}>{ap.tipo}</p>
+
+          <div className="grid-2" style={{ marginBottom: 16 }}>
+            <StatCard label="Valor Total" value={fmt(ap.valorTotal)} />
+            <StatCard label="Parcela Pos-Chave" value={fmt(ap.parcelaPosChave)} />
+            <StatCard label="Saldo na Entrega" value={fmt(saldoEntrega)} color="var(--accent-red)" sub={`+${fmt(saldoEntrega - ap.financiamento)} INCC`} />
+            <StatCard label="Seguro Obra/Mes" value={fmt(seguroMes)} color="var(--accent-amber)" sub={`Total est.: ${fmt(seguroTotal)}`} />
           </div>
 
-          <p style={{ color: "var(--text-muted)", fontSize: 13, marginBottom: 16 }}>{ap.tipo}</p>
-
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
-            <div style={{ background: "var(--bg-tertiary)", borderRadius: "var(--radius-sm)", padding: "12px" }}>
-              <p style={{ color: "var(--text-muted)", fontSize: 11, marginBottom: 4 }}>VALOR TOTAL</p>
-              <p className="mono" style={{ fontSize: 16, fontWeight: 600 }}>{fmt(ap.valorTotal)}</p>
-            </div>
-            <div style={{ background: "var(--bg-tertiary)", borderRadius: "var(--radius-sm)", padding: "12px" }}>
-              <p style={{ color: "var(--text-muted)", fontSize: 11, marginBottom: 4 }}>PARCELA POS-CHAVE</p>
-              <p className="mono" style={{ fontSize: 16, fontWeight: 600 }}>{fmt(ap.parcelaPosChave)}</p>
-            </div>
-            <div style={{ background: "var(--bg-tertiary)", borderRadius: "var(--radius-sm)", padding: "12px" }}>
-              <p style={{ color: "var(--text-muted)", fontSize: 11, marginBottom: 4 }}>SALDO NA ENTREGA</p>
-              <p className="mono" style={{ fontSize: 16, fontWeight: 600, color: "var(--accent-red)" }}>{fmt(saldoEntrega)}</p>
-            </div>
-            <div style={{ background: "var(--bg-tertiary)", borderRadius: "var(--radius-sm)", padding: "12px" }}>
-              <p style={{ color: "var(--text-muted)", fontSize: 11, marginBottom: 4 }}>TAXA OBRA/MES</p>
-              <p className="mono" style={{ fontSize: 16, fontWeight: 600, color: "var(--accent-amber)" }}>{fmt(taxaObraMensal)}</p>
-            </div>
-          </div>
-
-          {/* Taxa de Obra estimada */}
+          {/* Progress bar */}
           <div style={{
-            background: "var(--bg-tertiary)",
-            borderRadius: "var(--radius-sm)",
-            padding: "12px",
-            marginBottom: 12,
-            borderLeft: "3px solid var(--accent-amber)",
+            background: "var(--bg-tertiary)", borderRadius: "var(--radius-sm)",
+            padding: "12px", marginBottom: 10,
           }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div>
-                <p style={{ color: "var(--text-muted)", fontSize: 11, marginBottom: 2 }}>TAXA OBRA TOTAL ESTIMADA</p>
-                <p style={{ fontSize: 12, color: "var(--text-muted)" }}>({meses} meses restantes, obra ~{ap.percentualObra}%)</p>
-              </div>
-              <p className="mono" style={{ fontSize: 16, fontWeight: 700, color: "var(--accent-red)" }}>{fmt(taxaObraTotal)}</p>
-            </div>
-          </div>
-
-          {/* Countdown */}
-          <div style={{
-            background: "var(--bg-tertiary)",
-            borderRadius: "var(--radius-sm)",
-            padding: "16px",
-            marginBottom: 12,
-          }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-              <span style={{ color: "var(--text-muted)", fontSize: 12, display: "flex", alignItems: "center", gap: 4 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+              <span style={{ color: "var(--text-muted)", fontSize: 11, display: "flex", alignItems: "center", gap: 4 }}>
                 <Icons.Clock /> ENTREGA
               </span>
-              <span className="mono" style={{ fontSize: 13, fontWeight: 500 }}>
-                {dias > 0 ? `${dias} dias (${meses} meses)` : "Entregue!"}
+              <span className="mono" style={{ fontSize: 12, fontWeight: 500 }}>
+                {dias > 0 ? `${dias} dias (${mesesRest} meses)` : "Entregue!"}
               </span>
             </div>
-            <div style={{
-              height: 6, background: "var(--border)", borderRadius: 3, overflow: "hidden",
-            }}>
+            <div style={{ height: 5, background: "var(--border)", borderRadius: 3, overflow: "hidden" }}>
               <div style={{
-                height: "100%",
-                width: `${Math.min(prog, 100)}%`,
+                height: "100%", width: `${Math.min(prog, 100)}%`,
                 background: `linear-gradient(90deg, ${corVar}, ${ap.cor === "indigo" ? "var(--accent-indigo-light)" : "var(--accent-amber-light)"})`,
                 borderRadius: 3,
-                transition: "width 0.5s",
               }} />
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6 }}>
-              <span style={{ fontSize: 11, color: "var(--text-muted)" }}>Obra</span>
-              <span className="mono" style={{ fontSize: 11, color: "var(--text-muted)" }}>{fmtNum(prog, 1)}%</span>
+            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
+              <span style={{ fontSize: 10, color: "var(--text-muted)" }}>Obra</span>
+              <span className="mono" style={{ fontSize: 10, color: "var(--text-muted)" }}>{fmtNum(prog, 1)}%</span>
             </div>
           </div>
 
           {ap.fgts > 0 && (
-            <div style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--accent-green)", fontSize: 13 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 5, color: "var(--accent-green)", fontSize: 12 }}>
               <Icons.Check /> FGTS utilizado: {fmt(ap.fgts)}
             </div>
           )}
@@ -547,80 +461,429 @@
       const params = DEFAULTS;
       const pl = APARTAMENTOS.palestraLife;
       const up = APARTAMENTOS.uniquePalestra;
-
-      const saldoPL = calcSaldoEntrega(pl.financiamento, params.incc, pl.mesesObra);
-      const saldoUP = calcSaldoEntrega(up.financiamento, params.incc, up.mesesObra);
       const prazoM = params.prazoAnos * 12;
       const taxa = params.taxaJuros + params.tr * 12;
+
       const mesesRestPL = diffMeses(new Date(), pl.entrega);
       const mesesRestUP = diffMeses(new Date(), up.entrega);
-      const taxaObraPL = calcTaxaObraTotal(pl.financiamento, params.taxaJuros, mesesRestPL, pl.percentualObra);
-      const taxaObraUP = calcTaxaObraTotal(up.financiamento, params.taxaJuros, mesesRestUP, up.percentualObra);
-      const jurosPL = calcTotalJurosPRICE(saldoPL, taxa, prazoM);
-      const jurosUP = calcTotalJurosPRICE(saldoUP, taxa, prazoM);
-      const totalPL = saldoPL + jurosPL + taxaObraPL;
-      const totalUP = saldoUP + jurosUP + taxaObraUP;
+      const seguroPL = calcSeguroObraMensal(pl.valorTotal, params.seguroObraAnual) * mesesRestPL;
+      const seguroUP = calcSeguroObraMensal(up.valorTotal, params.seguroObraAnual) * mesesRestUP;
+
+      const totalParcelasPL = pl.parcelaPosChave * prazoM;
+      const totalParcelasUP = up.parcelaPosChave * prazoM;
+      const totalPL = totalParcelasPL + seguroPL;
+      const totalUP = totalParcelasUP + seguroUP;
       const maisBarato = totalPL < totalUP ? "Palestra Life" : "Unique Palestra";
 
       return (
-        <div className="fade-in" style={{ maxWidth: 1200, margin: "0 auto", padding: 20 }}>
+        <div className="fade-in page-container">
           {/* Indicator */}
           <div style={{
             background: "var(--bg-secondary)", border: "1px solid var(--border)",
-            borderRadius: "var(--radius)", padding: "16px 24px", marginBottom: 24,
-            display: "flex", alignItems: "center", gap: 12, boxShadow: "var(--shadow)",
+            borderRadius: "var(--radius)", padding: "14px 18px", marginBottom: 20,
+            display: "flex", alignItems: "center", gap: 10, boxShadow: "var(--shadow)",
+            flexWrap: "wrap",
           }}>
             <div style={{
-              width: 40, height: 40, borderRadius: 10,
-              background: "rgba(34,197,94,0.15)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              color: "var(--accent-green)",
-            }}>
-              <Icons.TrendingUp />
+              width: 36, height: 36, borderRadius: 9, background: "rgba(34,197,94,0.15)",
+              display: "flex", alignItems: "center", justifyContent: "center", color: "var(--accent-green)",
+            }}><Icons.TrendingUp /></div>
+            <div style={{ flex: 1, minWidth: 150 }}>
+              <p style={{ fontSize: 12, color: "var(--text-muted)" }}>Mais barato no total (estimativa)</p>
+              <p style={{ fontSize: 16, fontWeight: 700, color: "var(--accent-green)" }}>{maisBarato}</p>
             </div>
-            <div>
-              <p style={{ fontSize: 13, color: "var(--text-muted)" }}>Mais barato no total (estimativa)</p>
-              <p style={{ fontSize: 18, fontWeight: 700, color: "var(--accent-green)" }}>{maisBarato}</p>
-            </div>
-            <div style={{ marginLeft: "auto", textAlign: "right" }}>
-              <p className="mono" style={{ fontSize: 13, color: "var(--text-muted)" }}>Diferenca</p>
-              <p className="mono" style={{ fontSize: 16, fontWeight: 600 }}>{fmt(Math.abs(totalPL - totalUP))}</p>
+            <div style={{ textAlign: "right" }}>
+              <p className="mono" style={{ fontSize: 12, color: "var(--text-muted)" }}>Diferenca</p>
+              <p className="mono" style={{ fontSize: 15, fontWeight: 600 }}>{fmt(Math.abs(totalPL - totalUP))}</p>
             </div>
           </div>
 
+          {/* Info sobre o que paga agora */}
+          <div style={{
+            background: "var(--bg-secondary)", border: "1px solid var(--border)",
+            borderRadius: "var(--radius)", padding: "14px 18px", marginBottom: 20,
+            boxShadow: "var(--shadow)",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+              <Icons.AlertCircle />
+              <p style={{ fontSize: 13, fontWeight: 600 }}>O que voce paga AGORA</p>
+            </div>
+            <p style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.6 }}>
+              Ate receber as chaves, voce paga <strong>somente o seguro obra</strong> (confirmado pelo corretor).
+              Sao ~{fmt(calcSeguroObraMensal(pl.valorTotal, params.seguroObraAnual) + calcSeguroObraMensal(up.valorTotal, params.seguroObraAnual))}/mes
+              pelos dois apartamentos. As parcelas de financiamento so comecam depois da entrega das chaves.
+            </p>
+          </div>
+
           {/* Cards */}
-          <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
+          <div className="cards-row">
             <ApartmentCard ap={pl} params={params} />
             <ApartmentCard ap={up} params={params} />
           </div>
 
-          {/* Resumo Custo Total */}
+          {/* Custo Total */}
           <div style={{
-            marginTop: 24,
-            background: "var(--bg-secondary)", border: "1px solid var(--border)",
-            borderRadius: "var(--radius)", padding: 24, boxShadow: "var(--shadow)",
+            marginTop: 20, background: "var(--bg-secondary)", border: "1px solid var(--border)",
+            borderRadius: "var(--radius)", padding: "18px", boxShadow: "var(--shadow)",
           }}>
-            <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 16 }}>Custo Total Estimado (PRICE {params.prazoAnos} anos)</h3>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+            <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 14 }}>Custo Total Estimado (PRICE {params.prazoAnos} anos)</h3>
+            <div className="grid-2-lg">
               <div style={{
                 background: "var(--bg-tertiary)", borderRadius: "var(--radius-sm)",
-                padding: 16, borderLeft: "3px solid var(--accent-indigo)",
+                padding: 14, borderLeft: "3px solid var(--accent-indigo)",
               }}>
-                <p style={{ color: "var(--text-muted)", fontSize: 12, marginBottom: 4 }}>Palestra Life</p>
-                <p className="mono" style={{ fontSize: 20, fontWeight: 700 }}>{fmt(totalPL)}</p>
-                <p className="mono" style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4 }}>
-                  Juros: {fmt(jurosPL)} | Taxa obra: {fmt(taxaObraPL)}
+                <p style={{ color: "var(--text-muted)", fontSize: 11, marginBottom: 3 }}>Palestra Life</p>
+                <p className="mono" style={{ fontSize: 18, fontWeight: 700 }}>{fmt(totalPL)}</p>
+                <p className="mono" style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 3 }}>
+                  Parcelas: {fmt(totalParcelasPL)} | Seguro obra: {fmt(seguroPL)}
                 </p>
               </div>
               <div style={{
                 background: "var(--bg-tertiary)", borderRadius: "var(--radius-sm)",
-                padding: 16, borderLeft: "3px solid var(--accent-amber)",
+                padding: 14, borderLeft: "3px solid var(--accent-amber)",
               }}>
-                <p style={{ color: "var(--text-muted)", fontSize: 12, marginBottom: 4 }}>Unique Palestra</p>
-                <p className="mono" style={{ fontSize: 20, fontWeight: 700 }}>{fmt(totalUP)}</p>
-                <p className="mono" style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4 }}>
-                  Juros: {fmt(jurosUP)} | Taxa obra: {fmt(taxaObraUP)}
+                <p style={{ color: "var(--text-muted)", fontSize: 11, marginBottom: 3 }}>Unique Palestra</p>
+                <p className="mono" style={{ fontSize: 18, fontWeight: 700 }}>{fmt(totalUP)}</p>
+                <p className="mono" style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 3 }}>
+                  Parcelas: {fmt(totalParcelasUP)} | Seguro obra: {fmt(seguroUP)}
                 </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ========================
+    // GRAFICO SVG SIMPLES
+    // ========================
+    function BarChart({ dados, maxVal }) {
+      const max = maxVal || Math.max(...dados.map(d => d.valor));
+      return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {dados.map((d, i) => (
+            <div key={i}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                <span style={{ fontSize: 12, fontWeight: 500 }}>{d.label}</span>
+                <span className="mono" style={{ fontSize: 12, fontWeight: 600, color: d.cor }}>{fmt(d.valor)}/mes</span>
+              </div>
+              <div style={{ height: 20, background: "var(--border)", borderRadius: 4, overflow: "hidden", position: "relative" }}>
+                <div style={{
+                  height: "100%", width: `${Math.max(2, (d.valor / max) * 100)}%`,
+                  background: d.cor, borderRadius: 4, transition: "width 0.5s",
+                }} />
+              </div>
+              {d.sub && <p style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>{d.sub}</p>}
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    function SaldoEvolutionChart({ pontos, cor, width, height }) {
+      if (!pontos.length) return null;
+      const w = width || 300;
+      const h = height || 120;
+      const pad = { top: 10, right: 10, bottom: 25, left: 10 };
+      const chartW = w - pad.left - pad.right;
+      const chartH = h - pad.top - pad.bottom;
+
+      const minVal = pontos[0].saldo * 0.99;
+      const maxVal = pontos[pontos.length - 1].saldo * 1.01;
+      const range = maxVal - minVal || 1;
+
+      const pathPoints = pontos.map((p, i) => {
+        const x = pad.left + (i / (pontos.length - 1)) * chartW;
+        const y = pad.top + chartH - ((p.saldo - minVal) / range) * chartH;
+        return `${x},${y}`;
+      });
+
+      const areaPath = `M${pathPoints[0]} ${pathPoints.map(p => `L${p}`).join(' ')} L${pad.left + chartW},${pad.top + chartH} L${pad.left},${pad.top + chartH} Z`;
+      const linePath = `M${pathPoints.join(' L')}`;
+
+      return (
+        <svg width="100%" viewBox={`0 0 ${w} ${h}`} style={{ display: "block" }}>
+          <defs>
+            <linearGradient id={`grad-${cor}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={cor} stopOpacity="0.3" />
+              <stop offset="100%" stopColor={cor} stopOpacity="0.02" />
+            </linearGradient>
+          </defs>
+          <path d={areaPath} fill={`url(#grad-${cor})`} />
+          <path d={linePath} fill="none" stroke={cor} strokeWidth="2" />
+          {/* Labels */}
+          <text x={pad.left} y={h - 4} fill="var(--text-muted)" fontSize="9" fontFamily="JetBrains Mono">{fmt(pontos[0].saldo)}</text>
+          <text x={w - pad.right} y={h - 4} fill={cor} fontSize="9" fontFamily="JetBrains Mono" textAnchor="end">{fmt(pontos[pontos.length - 1].saldo)}</text>
+          <text x={w / 2} y={h - 4} fill="var(--text-muted)" fontSize="9" fontFamily="DM Sans" textAnchor="middle">{pontos.length - 1} meses</text>
+        </svg>
+      );
+    }
+
+    // ========================
+    // TELA: PROJECAO DE GASTOS
+    // ========================
+    function Projecao() {
+      const pl = APARTAMENTOS.palestraLife;
+      const up = APARTAMENTOS.uniquePalestra;
+      const params = DEFAULTS;
+      const prazoM = params.prazoAnos * 12;
+
+      const seguroPLMes = calcSeguroObraMensal(pl.valorTotal, params.seguroObraAnual);
+      const seguroUPMes = calcSeguroObraMensal(up.valorTotal, params.seguroObraAnual);
+
+      const mesesRestPL = diffMeses(new Date(), pl.entrega);
+      const mesesRestUP = diffMeses(new Date(), up.entrega);
+      const mesesFase2 = Math.max(0, mesesRestUP - mesesRestPL);
+
+      const saldoPL = calcSaldoEntrega(pl.financiamento, params.incc, pl.mesesObra);
+      const saldoUP = calcSaldoEntrega(up.financiamento, params.incc, up.mesesObra);
+
+      const evolPL = gerarEvolucaoSaldo(pl.financiamento, params.incc, pl.mesesObra);
+      const evolUP = gerarEvolucaoSaldo(up.financiamento, params.incc, up.mesesObra);
+
+      const fases = [
+        {
+          nome: "Fase 1: Somente Seguro Obra",
+          periodo: `Agora ate ${fmtMesAno(pl.entrega)}`,
+          meses: mesesRestPL,
+          custoMes: seguroPLMes + seguroUPMes,
+          custoTotal: (seguroPLMes + seguroUPMes) * mesesRestPL,
+          detalhes: [
+            `Palestra Life: ${fmt(seguroPLMes)}/mes`,
+            `Unique Palestra: ${fmt(seguroUPMes)}/mes`,
+          ],
+          cor: "var(--accent-green)",
+          desc: "Voce paga apenas o seguro de obra dos dois apartamentos. Sem parcelas de financiamento.",
+        },
+        {
+          nome: "Fase 2: Parcela PL + Seguro UP",
+          periodo: `${fmtMesAno(pl.entrega)} ate ${fmtMesAno(up.entrega)}`,
+          meses: mesesFase2,
+          custoMes: pl.parcelaPosChave + seguroUPMes,
+          custoTotal: (pl.parcelaPosChave + seguroUPMes) * mesesFase2,
+          detalhes: [
+            `Palestra Life parcela: ${fmt(pl.parcelaPosChave)}/mes`,
+            `Unique Palestra seguro: ${fmt(seguroUPMes)}/mes`,
+          ],
+          cor: "var(--accent-amber)",
+          desc: "Voce recebe a chave do Palestra Life e comeca a pagar o financiamento. Unique ainda em obra.",
+        },
+        {
+          nome: "Fase 3: Ambas Parcelas",
+          periodo: `${fmtMesAno(up.entrega)} em diante`,
+          meses: prazoM,
+          custoMes: pl.parcelaPosChave + up.parcelaPosChave,
+          custoTotal: (pl.parcelaPosChave + up.parcelaPosChave) * prazoM,
+          detalhes: [
+            `Palestra Life: ${fmt(pl.parcelaPosChave)}/mes (PRICE fixa)`,
+            `Unique Palestra: ${fmt(up.parcelaPosChave)}/mes (PRICE fixa)`,
+          ],
+          cor: "var(--accent-indigo)",
+          desc: "Ambos financiamentos ativos. Parcelas fixas (Tabela PRICE). Studio pode gerar renda no Airbnb.",
+        },
+      ];
+
+      const seguroTotalPL = seguroPLMes * mesesRestPL;
+      const seguroTotalUP = seguroUPMes * mesesRestUP;
+      const totalFinPL = pl.parcelaPosChave * prazoM;
+      const totalFinUP = up.parcelaPosChave * prazoM;
+      const grandTotal = seguroTotalPL + seguroTotalUP + totalFinPL + totalFinUP;
+
+      // Gerar timeline mes a mes (proximos meses ate 6 meses pos UP)
+      const gerarTimeline = () => {
+        const meses = [];
+        const now = new Date();
+        const totalMeses = mesesRestUP + 6;
+        for (let m = 0; m < Math.min(totalMeses, 42); m++) {
+          const data = new Date(now.getFullYear(), now.getMonth() + m, 1);
+          let custoPL = 0, custoUP = 0, descPL = "", descUP = "";
+
+          if (data < pl.entrega) {
+            custoPL = seguroPLMes; descPL = "Seguro";
+          } else {
+            custoPL = pl.parcelaPosChave; descPL = "Parcela";
+          }
+
+          if (data < up.entrega) {
+            custoUP = seguroUPMes; descUP = "Seguro";
+          } else {
+            custoUP = up.parcelaPosChave; descUP = "Parcela";
+          }
+
+          meses.push({
+            data,
+            label: fmtMesAno(data),
+            custoPL, custoUP, descPL, descUP,
+            total: custoPL + custoUP,
+            marco: data.getTime() === pl.entrega.getTime() ? "Chave PL" :
+                   data.getTime() === up.entrega.getTime() ? "Chave UP" : null,
+          });
+        }
+        return meses;
+      };
+
+      const timeline = gerarTimeline();
+      const maxTimeline = Math.max(...timeline.map(t => t.total));
+
+      return (
+        <div className="fade-in page-container">
+          <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 6 }}>Projecao de Gastos</h2>
+          <p style={{ color: "var(--text-muted)", fontSize: 13, marginBottom: 20 }}>
+            Visao completa de quanto voce gasta em cada fase
+          </p>
+
+          {/* Fases */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 24 }}>
+            {fases.map((f, i) => (
+              <div key={i} style={{
+                background: "var(--bg-secondary)", border: "1px solid var(--border)",
+                borderRadius: "var(--radius)", padding: "16px", boxShadow: "var(--shadow)",
+                borderLeft: `3px solid ${f.cor}`,
+              }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 8 }}>
+                  <div style={{ flex: 1, minWidth: 200 }}>
+                    <h4 style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>{f.nome}</h4>
+                    <p className="mono" style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 8 }}>{f.periodo} ({f.meses} meses)</p>
+                    <p style={{ fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.5, marginBottom: 8 }}>{f.desc}</p>
+                    <ul style={{ listStyle: "none", padding: 0 }}>
+                      {f.detalhes.map((d, j) => (
+                        <li key={j} style={{ fontSize: 12, color: "var(--text-secondary)", marginBottom: 2, display: "flex", alignItems: "center", gap: 4 }}>
+                          <span style={{ color: f.cor }}>&#8226;</span> {d}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div style={{ textAlign: "right", minWidth: 120 }}>
+                    <p style={{ fontSize: 10, color: "var(--text-muted)", marginBottom: 2 }}>CUSTO/MES</p>
+                    <p className="mono" style={{ fontSize: 18, fontWeight: 700, color: f.cor }}>{fmt(f.custoMes)}</p>
+                    <p style={{ fontSize: 10, color: "var(--text-muted)", marginTop: 6, marginBottom: 2 }}>TOTAL DA FASE</p>
+                    <p className="mono" style={{ fontSize: 14, fontWeight: 600 }}>{fmt(f.custoTotal)}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Grafico de custo mensal por fase */}
+          <div style={{
+            background: "var(--bg-secondary)", border: "1px solid var(--border)",
+            borderRadius: "var(--radius)", padding: "16px", marginBottom: 24, boxShadow: "var(--shadow)",
+          }}>
+            <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 14 }}>Custo Mensal Combinado por Fase</h3>
+            <BarChart dados={fases.map(f => ({ label: f.nome.split(":")[0], valor: f.custoMes, cor: f.cor, sub: `${f.meses} meses` }))} />
+          </div>
+
+          {/* Timeline mes a mes */}
+          <div style={{
+            background: "var(--bg-secondary)", border: "1px solid var(--border)",
+            borderRadius: "var(--radius)", padding: "16px", marginBottom: 24, boxShadow: "var(--shadow)",
+          }}>
+            <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>Linha do Tempo - Mes a Mes</h3>
+            <p style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 14 }}>O que voce paga cada mes ate 6 meses apos a ultima entrega</p>
+            <div style={{ maxHeight: 400, overflowY: "auto", overflowX: "hidden" }}>
+              {timeline.map((t, i) => (
+                <div key={i}>
+                  {t.marco && (
+                    <div style={{
+                      padding: "6px 10px", marginBottom: 4, marginTop: i > 0 ? 4 : 0,
+                      background: "rgba(99,102,241,0.1)", borderRadius: 6,
+                      display: "flex", alignItems: "center", gap: 6,
+                    }}>
+                      <Icons.Check />
+                      <span style={{ fontSize: 12, fontWeight: 600, color: "var(--accent-indigo)" }}>{t.marco}</span>
+                      <span style={{ fontSize: 11, color: "var(--text-muted)" }}>- {t.label}</span>
+                    </div>
+                  )}
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 0", borderBottom: "1px solid var(--border)" }}>
+                    <span className="mono" style={{ fontSize: 11, color: "var(--text-muted)", width: 70, flexShrink: 0 }}>{t.label}</span>
+                    <div style={{ flex: 1, display: "flex", gap: 2, height: 16 }}>
+                      <div style={{
+                        height: "100%", width: `${(t.custoPL / maxTimeline) * 100}%`,
+                        background: "var(--accent-indigo)", borderRadius: "3px 0 0 3px",
+                        minWidth: t.custoPL > 0 ? 2 : 0,
+                      }} title={`PL: ${fmt(t.custoPL)} (${t.descPL})`} />
+                      <div style={{
+                        height: "100%", width: `${(t.custoUP / maxTimeline) * 100}%`,
+                        background: "var(--accent-amber)", borderRadius: "0 3px 3px 0",
+                        minWidth: t.custoUP > 0 ? 2 : 0,
+                      }} title={`UP: ${fmt(t.custoUP)} (${t.descUP})`} />
+                    </div>
+                    <span className="mono" style={{ fontSize: 11, fontWeight: 600, width: 80, textAlign: "right", flexShrink: 0 }}>{fmt(t.total)}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{ display: "flex", gap: 16, marginTop: 10 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <div style={{ width: 10, height: 10, borderRadius: 2, background: "var(--accent-indigo)" }} />
+                <span style={{ fontSize: 11, color: "var(--text-muted)" }}>Palestra Life</span>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <div style={{ width: 10, height: 10, borderRadius: 2, background: "var(--accent-amber)" }} />
+                <span style={{ fontSize: 11, color: "var(--text-muted)" }}>Unique Palestra</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Evolucao do saldo devedor INCC */}
+          <div style={{
+            background: "var(--bg-secondary)", border: "1px solid var(--border)",
+            borderRadius: "var(--radius)", padding: "16px", marginBottom: 24, boxShadow: "var(--shadow)",
+          }}>
+            <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>Evolucao do Saldo Devedor (INCC {params.incc}% a.a.)</h3>
+            <p style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 14 }}>O saldo cresce pelo INCC durante a obra. Na entrega, esse e o valor financiado pelo banco.</p>
+            <div className="grid-2-lg">
+              <div>
+                <p style={{ fontSize: 12, fontWeight: 500, marginBottom: 6, color: "var(--accent-indigo)" }}>Palestra Life ({pl.mesesObra} meses)</p>
+                <SaldoEvolutionChart pontos={evolPL} cor="#6366f1" width={400} height={100} />
+                <p className="mono" style={{ fontSize: 12, marginTop: 4 }}>
+                  {fmt(pl.financiamento)} <span style={{ color: "var(--accent-red)" }}>+{fmt(saldoPL - pl.financiamento)}</span> = {fmt(saldoPL)}
+                </p>
+              </div>
+              <div>
+                <p style={{ fontSize: 12, fontWeight: 500, marginBottom: 6, color: "var(--accent-amber)" }}>Unique Palestra ({up.mesesObra} meses)</p>
+                <SaldoEvolutionChart pontos={evolUP} cor="#f59e0b" width={400} height={100} />
+                <p className="mono" style={{ fontSize: 12, marginTop: 4 }}>
+                  {fmt(up.financiamento)} <span style={{ color: "var(--accent-red)" }}>+{fmt(saldoUP - up.financiamento)}</span> = {fmt(saldoUP)}
+                </p>
+              </div>
+            </div>
+            <div style={{
+              marginTop: 12, padding: "10px 12px", background: "var(--bg-tertiary)",
+              borderRadius: "var(--radius-sm)", fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.5,
+            }}>
+              <strong>Atencao:</strong> As parcelas informadas ({fmt(pl.parcelaPosChave)} e {fmt(up.parcelaPosChave)}) foram calculadas pelo banco
+              com base no saldo atual. Na entrega, o saldo sera maior por causa do INCC, e a parcela real pode ser um pouco diferente.
+              Use esses valores como referencia.
+            </div>
+          </div>
+
+          {/* Resumo total */}
+          <div style={{
+            background: "var(--bg-secondary)", border: "1px solid var(--border)",
+            borderRadius: "var(--radius)", padding: "16px", boxShadow: "var(--shadow)",
+          }}>
+            <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 14 }}>Custo Total Estimado - Tudo Somado</h3>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 10 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid var(--border)" }}>
+                <span style={{ fontSize: 13 }}>Seguro obra Palestra Life ({mesesRestPL} meses)</span>
+                <span className="mono" style={{ fontSize: 13, fontWeight: 600 }}>{fmt(seguroTotalPL)}</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid var(--border)" }}>
+                <span style={{ fontSize: 13 }}>Seguro obra Unique ({mesesRestUP} meses)</span>
+                <span className="mono" style={{ fontSize: 13, fontWeight: 600 }}>{fmt(seguroTotalUP)}</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid var(--border)" }}>
+                <span style={{ fontSize: 13 }}>Financiamento PL ({params.prazoAnos} anos x {fmt(pl.parcelaPosChave)})</span>
+                <span className="mono" style={{ fontSize: 13, fontWeight: 600 }}>{fmt(totalFinPL)}</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid var(--border)" }}>
+                <span style={{ fontSize: 13 }}>Financiamento UP ({params.prazoAnos} anos x {fmt(up.parcelaPosChave)})</span>
+                <span className="mono" style={{ fontSize: 13, fontWeight: 600 }}>{fmt(totalFinUP)}</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", marginTop: 4 }}>
+                <span style={{ fontSize: 15, fontWeight: 700 }}>TOTAL GERAL</span>
+                <span className="mono" style={{ fontSize: 18, fontWeight: 700, color: "var(--accent-indigo)" }}>{fmt(grandTotal)}</span>
               </div>
             </div>
           </div>
@@ -644,11 +907,11 @@
       const fases = [
         {
           titulo: "Fase 1: Obra",
-          descricao: "Acompanhamento do andamento, reajuste pelo INCC",
+          descricao: "Acompanhamento do andamento. Voce paga somente seguro obra.",
           itens: [
-            "Parcelas de obra (se houver interveniencia)",
-            "Saldo devedor corrigido mensalmente pelo INCC",
-            "Seguro de obra (~0.3-0.5% ao ano)",
+            "Seguro obra mensal (unico custo ate a chave)",
+            "Saldo devedor corrigido pelo INCC",
+            "Acompanhar andamento com a construtora",
           ],
         },
         {
@@ -662,55 +925,47 @@
         },
         {
           titulo: "Fase 3: Chave + Financiamento",
-          descricao: "Inicio do financiamento bancario",
+          descricao: "Inicio do financiamento bancario (Tabela PRICE)",
           itens: [
             "Assinatura do contrato com o banco",
-            "Primeira parcela do financiamento (PRICE)",
+            "Primeira parcela do financiamento (PRICE fixa)",
             "Registro do imovel em cartorio",
           ],
         },
       ];
 
       return (
-        <div className="fade-in" style={{ maxWidth: 1200, margin: "0 auto", padding: 20 }}>
-          <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 24 }}>Cronograma</h2>
+        <div className="fade-in page-container">
+          <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 20 }}>Cronograma</h2>
 
-          {/* Timeline */}
           <div style={{
             background: "var(--bg-secondary)", border: "1px solid var(--border)",
-            borderRadius: "var(--radius)", padding: 24, marginBottom: 24,
-            boxShadow: "var(--shadow)",
+            borderRadius: "var(--radius)", padding: "18px", marginBottom: 20, boxShadow: "var(--shadow)",
           }}>
-            <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 20 }}>Marcos Importantes</h3>
-            <div style={{ position: "relative", paddingLeft: 32 }}>
+            <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 16 }}>Marcos Importantes</h3>
+            <div style={{ position: "relative", paddingLeft: 28 }}>
               <div style={{
-                position: "absolute", left: 11, top: 8, bottom: 8, width: 2,
-                background: "var(--border)",
+                position: "absolute", left: 9, top: 8, bottom: 8, width: 2, background: "var(--border)",
               }} />
               {marcos.map((m, i) => (
                 <div key={i} style={{
-                  display: "flex", alignItems: "flex-start", gap: 16,
-                  marginBottom: i < marcos.length - 1 ? 24 : 0,
-                  position: "relative",
+                  display: "flex", alignItems: "flex-start", gap: 12,
+                  marginBottom: i < marcos.length - 1 ? 20 : 0, position: "relative",
                 }}>
                   <div style={{
-                    position: "absolute", left: -26,
-                    width: 12, height: 12, borderRadius: "50%",
+                    position: "absolute", left: -22,
+                    width: 10, height: 10, borderRadius: "50%",
                     background: m.status === "done" ? m.cor : "var(--bg-tertiary)",
-                    border: `2px solid ${m.cor}`,
-                    marginTop: 4,
+                    border: `2px solid ${m.cor}`, marginTop: 4,
                   }} />
-                  <div>
-                    <p className="mono" style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 2 }}>{m.data}</p>
-                    <p style={{ fontSize: 15, fontWeight: 500 }}>{m.label}</p>
+                  <div style={{ flex: 1 }}>
+                    <p className="mono" style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 1 }}>{m.data}</p>
+                    <p style={{ fontSize: 14, fontWeight: 500 }}>{m.label}</p>
                   </div>
                   {m.status === "done" && (
                     <span style={{
-                      marginLeft: "auto",
-                      fontSize: 11, fontWeight: 600,
-                      color: "var(--accent-green)",
-                      background: "rgba(34,197,94,0.1)",
-                      padding: "2px 8px", borderRadius: 4,
+                      fontSize: 10, fontWeight: 600, color: "var(--accent-green)",
+                      background: "rgba(34,197,94,0.1)", padding: "2px 6px", borderRadius: 4,
                     }}>Concluido</span>
                   )}
                 </div>
@@ -718,228 +973,34 @@
             </div>
           </div>
 
-          {/* Fases */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 14 }}>
             {fases.map((f, i) => (
               <div key={i} style={{
                 background: "var(--bg-secondary)", border: "1px solid var(--border)",
-                borderRadius: "var(--radius)", padding: 20, boxShadow: "var(--shadow)",
+                borderRadius: "var(--radius)", padding: "16px", boxShadow: "var(--shadow)",
               }}>
-                <div style={{
-                  display: "flex", alignItems: "center", gap: 8, marginBottom: 8,
-                }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
                   <span style={{
-                    width: 24, height: 24, borderRadius: 6,
-                    background: "var(--accent-indigo)", color: "#fff",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 12, fontWeight: 700,
+                    width: 22, height: 22, borderRadius: 5, background: "var(--accent-indigo)",
+                    color: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 11, fontWeight: 700,
                   }}>{i + 1}</span>
-                  <h4 style={{ fontSize: 15, fontWeight: 600 }}>{f.titulo}</h4>
+                  <h4 style={{ fontSize: 14, fontWeight: 600 }}>{f.titulo}</h4>
                 </div>
-                <p style={{ color: "var(--text-muted)", fontSize: 13, marginBottom: 12 }}>{f.descricao}</p>
+                <p style={{ color: "var(--text-muted)", fontSize: 12, marginBottom: 10 }}>{f.descricao}</p>
                 <ul style={{ listStyle: "none", paddingLeft: 0 }}>
                   {f.itens.map((item, j) => (
                     <li key={j} style={{
-                      display: "flex", alignItems: "flex-start", gap: 8,
-                      fontSize: 13, color: "var(--text-secondary)", marginBottom: 6,
+                      display: "flex", alignItems: "flex-start", gap: 6,
+                      fontSize: 12, color: "var(--text-secondary)", marginBottom: 5,
                     }}>
-                      <span style={{ color: "var(--text-muted)", marginTop: 2 }}>&#8226;</span>
+                      <span style={{ color: "var(--text-muted)", marginTop: 1 }}>&#8226;</span>
                       {item}
                     </li>
                   ))}
                 </ul>
               </div>
             ))}
-          </div>
-        </div>
-      );
-    }
-
-    // ========================
-    // TELA: SIMULADOR
-    // ========================
-    function Simulador() {
-      const [incc, setIncc] = useState(DEFAULTS.incc);
-      const [taxaJuros, setTaxaJuros] = useState(DEFAULTS.taxaJuros);
-      const [prazoAnos, setPrazoAnos] = useState(DEFAULTS.prazoAnos);
-      const [fgtsExtra, setFgtsExtra] = useState(0);
-      const pl = APARTAMENTOS.palestraLife;
-      const up = APARTAMENTOS.uniquePalestra;
-      const tr = DEFAULTS.tr;
-      const taxaTotal = taxaJuros + tr * 12;
-      const prazoM = prazoAnos * 12;
-
-      const saldoPL = calcSaldoEntrega(pl.financiamento, incc, pl.mesesObra) - fgtsExtra;
-      const saldoUP = calcSaldoEntrega(up.financiamento, incc, up.mesesObra) - fgtsExtra;
-
-      const parcelaPL = calcParcelaPRICE(Math.max(0, saldoPL), taxaTotal, prazoM);
-      const parcelaUP = calcParcelaPRICE(Math.max(0, saldoUP), taxaTotal, prazoM);
-      const jurosPL = calcTotalJurosPRICE(Math.max(0, saldoPL), taxaTotal, prazoM);
-      const jurosUP = calcTotalJurosPRICE(Math.max(0, saldoUP), taxaTotal, prazoM);
-
-      const mesesRestPL = diffMeses(new Date(), pl.entrega);
-      const mesesRestUP = diffMeses(new Date(), up.entrega);
-      const taxaObraPL = calcTaxaObraTotal(pl.financiamento, taxaJuros, mesesRestPL, pl.percentualObra);
-      const taxaObraUP = calcTaxaObraTotal(up.financiamento, taxaJuros, mesesRestUP, up.percentualObra);
-      const taxaObraMesPL = calcTaxaObraMensal(pl.financiamento, taxaJuros, pl.percentualObra);
-      const taxaObraMesUP = calcTaxaObraMensal(up.financiamento, taxaJuros, up.percentualObra);
-
-      const totalPL = Math.max(0, saldoPL) + jurosPL + taxaObraPL;
-      const totalUP = Math.max(0, saldoUP) + jurosUP + taxaObraUP;
-
-      const SliderRow = ({ label, value, setValue, min, max, step, unit }) => (
-        <div style={{ marginBottom: 20 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-            <span style={{ fontSize: 14, fontWeight: 500 }}>{label}</span>
-            <span className="mono" style={{ fontSize: 14, fontWeight: 600, color: "var(--accent-indigo)" }}>
-              {typeof value === "number" && unit === "R$" ? fmt(value) : `${fmtNum(value, step < 1 ? 1 : 0)}${unit}`}
-            </span>
-          </div>
-          <input
-            type="range" min={min} max={max} step={step}
-            value={value}
-            onChange={(e) => setValue(Number(e.target.value))}
-          />
-          <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
-            <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{min}{unit}</span>
-            <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{max}{unit}</span>
-          </div>
-        </div>
-      );
-
-      const ResultBlock = ({ nome, cor, parcela, juros, total, saldo, taxaObraMes, taxaObraTotal }) => (
-        <div style={{
-          background: "var(--bg-tertiary)", borderRadius: "var(--radius-sm)",
-          padding: 20, borderLeft: `3px solid ${cor}`, flex: 1, minWidth: 260,
-        }}>
-          <h4 style={{ fontSize: 15, fontWeight: 600, marginBottom: 16 }}>{nome}</h4>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <div>
-              <p style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 2 }}>SALDO ENTREGA</p>
-              <p className="mono" style={{ fontSize: 15, fontWeight: 600 }}>{fmt(saldo)}</p>
-            </div>
-            <div>
-              <p style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 2 }}>PARCELA PRICE</p>
-              <p className="mono" style={{ fontSize: 15, fontWeight: 600 }}>{fmt(parcela)}</p>
-            </div>
-            <div>
-              <p style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 2 }}>TAXA OBRA/MES</p>
-              <p className="mono" style={{ fontSize: 15, fontWeight: 600, color: "var(--accent-amber)" }}>{fmt(taxaObraMes)}</p>
-            </div>
-            <div>
-              <p style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 2 }}>TAXA OBRA TOTAL</p>
-              <p className="mono" style={{ fontSize: 15, fontWeight: 600, color: "var(--accent-amber)" }}>{fmt(taxaObraTotal)}</p>
-            </div>
-            <div style={{ gridColumn: "1 / -1" }}>
-              <p style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 2 }}>TOTAL JUROS FINANCIAMENTO</p>
-              <p className="mono" style={{ fontSize: 15, fontWeight: 600, color: "var(--accent-red)" }}>{fmt(juros)}</p>
-            </div>
-          </div>
-          <div style={{
-            marginTop: 16, paddingTop: 16,
-            borderTop: "1px solid var(--border)",
-          }}>
-            <p style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 2 }}>CUSTO TOTAL DO IMOVEL</p>
-            <p className="mono" style={{ fontSize: 22, fontWeight: 700 }}>{fmt(total)}</p>
-            <p style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4 }}>(financiamento + juros + taxa obra)</p>
-          </div>
-        </div>
-      );
-
-      return (
-        <div className="fade-in" style={{ maxWidth: 1200, margin: "0 auto", padding: 20 }}>
-          <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 24 }}>Simulador de Cenarios</h2>
-
-          <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
-            {/* Controls */}
-            <div style={{
-              background: "var(--bg-secondary)", border: "1px solid var(--border)",
-              borderRadius: "var(--radius)", padding: 24, flex: "1 1 320px",
-              boxShadow: "var(--shadow)",
-            }}>
-              <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 20 }}>Parametros</h3>
-              <SliderRow label="INCC (a.a.)" value={incc} setValue={setIncc} min={3} max={15} step={0.5} unit="%" />
-              <SliderRow label="Taxa de Juros (a.a.)" value={taxaJuros} setValue={setTaxaJuros} min={7} max={14} step={0.5} unit="%" />
-              <SliderRow label="Prazo" value={prazoAnos} setValue={setPrazoAnos} min={15} max={35} step={1} unit=" anos" />
-              <SliderRow label="FGTS Extra (amort.)" value={fgtsExtra} setValue={setFgtsExtra} min={0} max={50000} step={1000} unit="R$" />
-
-              <div style={{
-                marginTop: 16, padding: 12,
-                background: "var(--bg-tertiary)", borderRadius: "var(--radius-sm)",
-                border: "1px solid var(--border)",
-              }}>
-                <p style={{ fontSize: 13, fontWeight: 600, color: "var(--accent-indigo)", marginBottom: 4 }}>Sistema: Tabela PRICE</p>
-                <p style={{ fontSize: 12, color: "var(--text-muted)" }}>Parcelas fixas durante todo o financiamento</p>
-              </div>
-            </div>
-
-            {/* Results */}
-            <div style={{ flex: "2 1 500px", display: "flex", flexDirection: "column", gap: 16 }}>
-              <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-                <ResultBlock
-                  nome="Palestra Life"
-                  cor="var(--accent-indigo)"
-                  parcela={parcelaPL}
-                  juros={jurosPL} total={totalPL}
-                  saldo={Math.max(0, saldoPL)}
-                  taxaObraMes={taxaObraMesPL}
-                  taxaObraTotal={taxaObraPL}
-                />
-                <ResultBlock
-                  nome="Unique Palestra"
-                  cor="var(--accent-amber)"
-                  parcela={parcelaUP}
-                  juros={jurosUP} total={totalUP}
-                  saldo={Math.max(0, saldoUP)}
-                  taxaObraMes={taxaObraMesUP}
-                  taxaObraTotal={taxaObraUP}
-                />
-              </div>
-
-              {/* Comparison bar */}
-              <div style={{
-                background: "var(--bg-secondary)", border: "1px solid var(--border)",
-                borderRadius: "var(--radius)", padding: 20, boxShadow: "var(--shadow)",
-              }}>
-                <h4 style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>Comparativo Visual - Custo Total</h4>
-                <div style={{ marginBottom: 12 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                    <span style={{ fontSize: 13 }}>Palestra Life</span>
-                    <span className="mono" style={{ fontSize: 13 }}>{fmt(totalPL)}</span>
-                  </div>
-                  <div style={{ height: 12, background: "var(--border)", borderRadius: 6, overflow: "hidden" }}>
-                    <div style={{
-                      height: "100%",
-                      width: `${(totalPL / Math.max(totalPL, totalUP)) * 100}%`,
-                      background: "linear-gradient(90deg, var(--accent-indigo), var(--accent-indigo-light))",
-                      borderRadius: 6,
-                      transition: "width 0.5s",
-                    }} />
-                  </div>
-                </div>
-                <div>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                    <span style={{ fontSize: 13 }}>Unique Palestra</span>
-                    <span className="mono" style={{ fontSize: 13 }}>{fmt(totalUP)}</span>
-                  </div>
-                  <div style={{ height: 12, background: "var(--border)", borderRadius: 6, overflow: "hidden" }}>
-                    <div style={{
-                      height: "100%",
-                      width: `${(totalUP / Math.max(totalPL, totalUP)) * 100}%`,
-                      background: "linear-gradient(90deg, var(--accent-amber), var(--accent-amber-light))",
-                      borderRadius: 6,
-                      transition: "width 0.5s",
-                    }} />
-                  </div>
-                </div>
-                <p style={{
-                  textAlign: "center", marginTop: 12,
-                  fontSize: 13, color: "var(--accent-green)", fontWeight: 600,
-                }}>
-                  Economia: {fmt(Math.abs(totalPL - totalUP))} com {totalPL < totalUP ? "Palestra Life" : "Unique Palestra"}
-                </p>
-              </div>
-            </div>
           </div>
         </div>
       );
@@ -958,114 +1019,80 @@
       const categorias = ["Duvida", "Lembrete", "Decisao", "Contato"];
       const catCores = { Duvida: "var(--accent-amber)", Lembrete: "var(--accent-indigo)", Decisao: "var(--accent-green)", Contato: "var(--text-muted)" };
 
-      useEffect(() => {
-        localStorage.setItem("meuap_notas", JSON.stringify(notas));
-      }, [notas]);
+      useEffect(() => { localStorage.setItem("meuap_notas", JSON.stringify(notas)); }, [notas]);
 
       const addNota = () => {
         if (!texto.trim()) return;
-        const nova = {
-          id: Date.now(),
-          texto: texto.trim(),
-          categoria,
-          data: new Date().toLocaleString("pt-BR"),
-        };
-        setNotas([nova, ...notas]);
+        setNotas([{ id: Date.now(), texto: texto.trim(), categoria, data: new Date().toLocaleString("pt-BR") }, ...notas]);
         setTexto("");
       };
 
-      const delNota = (id) => {
-        setNotas(notas.filter(n => n.id !== id));
-      };
-
       return (
-        <div className="fade-in" style={{ maxWidth: 800, margin: "0 auto", padding: 20 }}>
-          <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 24 }}>Anotacoes</h2>
+        <div className="fade-in page-container" style={{ maxWidth: 800 }}>
+          <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 20 }}>Anotacoes</h2>
 
-          {/* Add note */}
           <div style={{
             background: "var(--bg-secondary)", border: "1px solid var(--border)",
-            borderRadius: "var(--radius)", padding: 20, marginBottom: 24,
-            boxShadow: "var(--shadow)",
+            borderRadius: "var(--radius)", padding: "16px", marginBottom: 20, boxShadow: "var(--shadow)",
           }}>
             <textarea
-              value={texto}
-              onChange={(e) => setTexto(e.target.value)}
+              value={texto} onChange={(e) => setTexto(e.target.value)}
               placeholder="Escreva uma nota..."
               rows={3}
               style={{
-                width: "100%", padding: 14,
-                background: "var(--bg-tertiary)", border: "1px solid var(--border)",
-                borderRadius: "var(--radius-sm)", color: "var(--text-primary)",
-                fontSize: 14, fontFamily: "inherit", resize: "vertical", outline: "none",
+                width: "100%", padding: 12, background: "var(--bg-tertiary)",
+                border: "1px solid var(--border)", borderRadius: "var(--radius-sm)",
+                color: "var(--text-primary)", fontSize: 14, fontFamily: "inherit",
+                resize: "vertical", outline: "none",
               }}
             />
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 10, flexWrap: "wrap" }}>
               {categorias.map(c => (
                 <button key={c} onClick={() => setCategoria(c)} style={{
-                  padding: "6px 14px",
+                  padding: "5px 12px",
                   background: categoria === c ? catCores[c] : "var(--bg-tertiary)",
                   color: categoria === c ? "#fff" : "var(--text-secondary)",
                   border: `1px solid ${categoria === c ? catCores[c] : "var(--border)"}`,
-                  borderRadius: 6, cursor: "pointer", fontSize: 13,
-                  fontFamily: "inherit", fontWeight: 500,
+                  borderRadius: 5, cursor: "pointer", fontSize: 12, fontFamily: "inherit", fontWeight: 500,
                 }}>{c}</button>
               ))}
               <button onClick={addNota} style={{
-                marginLeft: "auto",
-                padding: "8px 20px",
+                marginLeft: "auto", padding: "6px 16px",
                 background: "var(--accent-indigo)", color: "#fff",
                 border: "none", borderRadius: "var(--radius-sm)",
-                cursor: "pointer", fontSize: 14, fontWeight: 600,
-                fontFamily: "inherit",
-                display: "flex", alignItems: "center", gap: 6,
+                cursor: "pointer", fontSize: 13, fontWeight: 600, fontFamily: "inherit",
+                display: "flex", alignItems: "center", gap: 4,
                 opacity: texto.trim() ? 1 : 0.5,
-              }}>
-                <Icons.Plus /> Adicionar
-              </button>
+              }}><Icons.Plus /> Adicionar</button>
             </div>
           </div>
 
-          {/* Notes list */}
           {notas.length === 0 ? (
-            <div style={{
-              textAlign: "center", padding: 40,
-              color: "var(--text-muted)", fontSize: 14,
-            }}>
+            <div style={{ textAlign: "center", padding: 32, color: "var(--text-muted)", fontSize: 13 }}>
               Nenhuma anotacao ainda. Comece escrevendo acima!
             </div>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {notas.map(n => (
                 <div key={n.id} style={{
                   background: "var(--bg-secondary)", border: "1px solid var(--border)",
-                  borderRadius: "var(--radius)", padding: "16px 20px",
-                  boxShadow: "var(--shadow)",
+                  borderRadius: "var(--radius)", padding: "12px 16px", boxShadow: "var(--shadow)",
                   borderLeft: `3px solid ${catCores[n.categoria] || "var(--border)"}`,
                 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6, flexWrap: "wrap" }}>
                     <span style={{
-                      fontSize: 11, fontWeight: 600,
-                      color: catCores[n.categoria] || "var(--text-muted)",
-                      background: "var(--bg-tertiary)",
-                      padding: "2px 8px", borderRadius: 4,
+                      fontSize: 10, fontWeight: 600, color: catCores[n.categoria] || "var(--text-muted)",
+                      background: "var(--bg-tertiary)", padding: "2px 6px", borderRadius: 3,
                     }}>{n.categoria}</span>
-                    <span style={{ fontSize: 12, color: "var(--text-muted)", display: "flex", alignItems: "center", gap: 4 }}>
+                    <span style={{ fontSize: 11, color: "var(--text-muted)", display: "flex", alignItems: "center", gap: 3 }}>
                       <Icons.Clock /> {n.data}
                     </span>
-                    <button onClick={() => delNota(n.id)} style={{
-                      marginLeft: "auto",
-                      background: "none", border: "none", cursor: "pointer",
-                      color: "var(--text-muted)", padding: 4,
-                      display: "flex", alignItems: "center",
-                    }}
-                    onMouseOver={(e) => e.currentTarget.style.color = "var(--accent-red)"}
-                    onMouseOut={(e) => e.currentTarget.style.color = "var(--text-muted)"}
-                    >
-                      <Icons.Trash />
-                    </button>
+                    <button onClick={() => setNotas(notas.filter(x => x.id !== n.id))} style={{
+                      marginLeft: "auto", background: "none", border: "none",
+                      cursor: "pointer", color: "var(--text-muted)", padding: 3, display: "flex", alignItems: "center",
+                    }}><Icons.Trash /></button>
                   </div>
-                  <p style={{ fontSize: 14, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{n.texto}</p>
+                  <p style={{ fontSize: 13, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{n.texto}</p>
                 </div>
               ))}
             </div>
@@ -1082,94 +1109,81 @@
 
       const perguntas = [
         {
-          q: "O que e INCC e como afeta minha parcela?",
-          a: "O INCC (Indice Nacional de Custo da Construcao) e o indice usado para reajustar o saldo devedor durante a obra. Ele reflete o aumento dos custos de construcao civil. Na pratica, seu saldo devedor sobe todo mes de acordo com o INCC ate a entrega das chaves. Por isso, o valor financiado na entrega sera maior que o valor original do contrato. A media recente fica em torno de 6% ao ano."
+          q: "O que e INCC e como afeta meu financiamento?",
+          a: "O INCC (Indice Nacional de Custo da Construcao) reajusta seu saldo devedor durante a obra. Ele reflete o aumento dos custos de construcao civil. Na pratica, o valor que voce vai financiar na entrega das chaves sera maior que o valor original do contrato. A media recente fica em torno de 6% ao ano. Por isso as parcelas informadas agora podem mudar um pouco."
         },
         {
           q: "O que e a Tabela PRICE?",
           a: "Na Tabela PRICE, as parcelas sao fixas durante todo o financiamento. No inicio, a maior parte da parcela vai para juros e pouco para amortizacao. Com o tempo, essa proporcao se inverte. A vantagem e a previsibilidade: voce sabe exatamente quanto vai pagar todo mes. O seu financiamento foi feito nesse sistema."
         },
         {
-          q: "O que e taxa de obra (juros de interveniencia)?",
-          a: "Durante a construcao, o banco libera dinheiro para a construtora conforme a obra avanca. Voce paga juros mensais sobre o valor ja liberado — isso e a 'taxa de obra' ou 'juros de obra'. Conforme a obra progride e mais dinheiro e liberado, essa taxa mensal aumenta. So para quando voce recebe a chave e comeca o financiamento normal. E um custo importante de considerar no planejamento."
+          q: "O que e seguro de obra e por que pago isso?",
+          a: "O seguro de obra e um custo mensal que voce paga durante a construcao. Ele cobre riscos como danos a obra, acidentes e morte/invalidez do comprador. E o UNICO custo que voce tem ate receber as chaves (confirmado pelo corretor). O valor gira em torno de 0,3% a 0,5% do valor do imovel por ano, dividido em 12 meses."
         },
         {
           q: "Como funciona o FGTS na amortizacao?",
-          a: "Voce pode usar o FGTS a cada 2 anos para amortizar (reduzir) o saldo devedor do financiamento. Isso pode diminuir o prazo ou o valor das parcelas. Tambem pode ser usado na entrada. Requisitos: ter pelo menos 3 anos de trabalho com carteira assinada (nao precisa ser consecutivo), nao ter outro financiamento ativo no SFH, e o imovel deve estar na cidade onde voce mora ou trabalha."
+          a: "Voce pode usar o FGTS a cada 2 anos para amortizar (reduzir) o saldo devedor do financiamento. Isso pode diminuir o prazo ou o valor das parcelas. No caso do Unique Palestra, ja foram usados R$ 5.000 de FGTS. Requisitos: ter pelo menos 3 anos de trabalho com carteira assinada, nao ter outro financiamento ativo no SFH, e o imovel deve estar na cidade onde voce mora ou trabalha."
         },
         {
           q: "O que e TR e como afeta o financiamento?",
-          a: "A TR (Taxa Referencial) e um indice calculado pelo Banco Central que incide sobre o saldo devedor do financiamento imobiliario apos a entrega das chaves. Junto com a taxa de juros do banco, ela compoe o custo total do financiamento. Atualmente gira em torno de 0,1% ao mes. Quando o banco diz '9,5% + TR', significa que a taxa efetiva sera um pouco maior que 9,5%."
+          a: "A TR (Taxa Referencial) e um indice do Banco Central que incide sobre o saldo devedor apos a entrega das chaves. Quando o banco diz '9,5% + TR', significa que a taxa efetiva sera um pouco maior que 9,5%. Atualmente gira em torno de 0,1% ao mes."
         },
         {
           q: "O que significa 'entrada zerada'?",
-          a: "Significa que voce nao precisa pagar nenhum valor de entrada no ato da compra. O valor total do imovel sera financiado. No caso do Unique Palestra, os R$ 5.000 de FGTS funcionam como uma especie de sinal, mas o restante e 100% financiado. Isso e possivel em programas como o Minha Casa Minha Vida ou condicoes especiais da construtora."
+          a: "Significa que voce nao precisa pagar nenhum valor de entrada. O valor total e financiado. No Palestra Life, isso foi possivel porque o valor de avaliacao (R$ 350.000) e maior que o valor de compra (R$ 264.000), permitindo 100% de financiamento. No Unique, os R$ 5.000 de FGTS cobriram a diferenca."
         },
         {
           q: "O que e documentacao gratis?",
-          a: "Normalmente, ao comprar um imovel, voce paga custos de documentacao como: escritura publica, registro em cartorio, ITBI (Imposto de Transmissao de Bens Imoveis - geralmente 2-3% do valor). Quando a construtora oferece 'documentacao gratis', ela arca com esses custos, o que pode representar uma economia de R$ 5.000 a R$ 15.000."
+          a: "Normalmente voce paga escritura, registro em cartorio, ITBI (2-3% do valor). Quando a construtora oferece 'documentacao gratis', ela arca com esses custos. Pode representar economia de R$ 5.000 a R$ 15.000."
         },
         {
           q: "Como funciona a vistoria?",
-          a: "A vistoria e feita antes de receber as chaves. Voce (ou um engenheiro contratado) vai ao imovel verificar: acabamentos, pinturas, pisos, instalacoes eletricas e hidraulicas, portas, janelas, medidas dos comodos. Se encontrar problemas, a construtora deve corrigir antes da entrega. E seu direito e muito importante fazer com cuidado."
+          a: "A vistoria e feita antes de receber as chaves. Voce verifica acabamentos, pinturas, pisos, instalacoes eletricas e hidraulicas, portas, janelas e medidas. Se encontrar problemas, a construtora deve corrigir antes da entrega."
         },
         {
           q: "Posso vender o apartamento na planta?",
-          a: "Sim, e possivel fazer a cessao de direitos do contrato para outra pessoa (venda na planta). Voce vende seu 'lugar' no contrato. Geralmente a construtora cobra uma taxa de cessao (2-5% do valor). E importante verificar o contrato para saber as regras especificas. Se o imovel valorizar durante a obra, voce pode lucrar com a venda."
-        },
-        {
-          q: "O que e taxa de seguro da obra?",
-          a: "Durante a construcao, existe um seguro obrigatorio que cobre riscos como danos a obra, acidentes e morte/invalidez do comprador. O custo gira em torno de 0,3% a 0,5% do valor do imovel por ano. Em geral, ja esta embutido nas parcelas durante a obra ou e cobrado separadamente pela construtora."
+          a: "Sim, via cessao de direitos. A construtora geralmente cobra uma taxa de cessao (2-5% do valor). Se o imovel valorizar durante a obra, voce pode lucrar com a venda."
         },
         {
           q: "O que acontece quando pego a chave?",
-          a: "Ao receber a chave, encerra a fase de obra (e a taxa de obra) e comeca o financiamento bancario. O saldo devedor (ja corrigido pelo INCC) e transferido para o banco, que aplica a taxa de juros contratada. Voce passa a pagar as parcelas fixas do financiamento (Tabela PRICE). Tambem e nesse momento que voce pode comecar a morar no imovel ou aluga-lo."
+          a: "Encerra a fase de obra (e o seguro obra) e comeca o financiamento bancario. O saldo devedor (ja corrigido pelo INCC) e transferido para o banco. Voce passa a pagar as parcelas fixas (Tabela PRICE). Pode morar no imovel ou aluga-lo — no caso do studio, a ideia e colocar no Airbnb pra ele se pagar."
+        },
+        {
+          q: "O studio pode se pagar com Airbnb?",
+          a: "Essa e a ideia mencionada pelo corretor. Quando o Unique Palestra for entregue, voce pode coloca-lo no Airbnb. Studios bem localizados em Palhoça/Florianopolis costumam ter boa demanda. A parcela e de R$ 958/mes — se o aluguel cobrir esse valor, o apartamento 'se paga sozinho'."
         },
       ];
 
       return (
-        <div className="fade-in" style={{ maxWidth: 800, margin: "0 auto", padding: 20 }}>
-          <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 8 }}>Perguntas Frequentes</h2>
-          <p style={{ color: "var(--text-muted)", fontSize: 14, marginBottom: 24 }}>
-            Tudo que voce precisa saber sobre financiamento imobiliario
+        <div className="fade-in page-container" style={{ maxWidth: 800 }}>
+          <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 6 }}>Perguntas Frequentes</h2>
+          <p style={{ color: "var(--text-muted)", fontSize: 13, marginBottom: 20 }}>
+            Tudo sobre financiamento imobiliario
           </p>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {perguntas.map((p, i) => (
               <div key={i} style={{
                 background: "var(--bg-secondary)", border: "1px solid var(--border)",
-                borderRadius: "var(--radius)",
-                boxShadow: "var(--shadow)",
-                overflow: "hidden",
+                borderRadius: "var(--radius)", boxShadow: "var(--shadow)", overflow: "hidden",
               }}>
                 <button
                   onClick={() => setOpen(open === i ? null : i)}
                   style={{
-                    width: "100%", padding: "16px 20px",
-                    background: "none", border: "none",
-                    color: "var(--text-primary)", cursor: "pointer",
-                    fontFamily: "inherit", fontSize: 15, fontWeight: 500,
-                    display: "flex", alignItems: "center", justifyContent: "space-between",
-                    textAlign: "left",
+                    width: "100%", padding: "14px 16px", background: "none", border: "none",
+                    color: "var(--text-primary)", cursor: "pointer", fontFamily: "inherit",
+                    fontSize: 14, fontWeight: 500, display: "flex", alignItems: "center",
+                    justifyContent: "space-between", textAlign: "left",
                   }}
                 >
                   <span>{p.q}</span>
                   <span style={{
                     transform: open === i ? "rotate(180deg)" : "rotate(0)",
-                    transition: "transform 0.2s",
-                    flexShrink: 0,
-                    marginLeft: 12,
-                  }}>
-                    <Icons.ChevronDown />
-                  </span>
+                    transition: "transform 0.2s", flexShrink: 0, marginLeft: 10,
+                  }}><Icons.ChevronDown /></span>
                 </button>
                 {open === i && (
-                  <div style={{
-                    padding: "0 20px 16px",
-                    color: "var(--text-secondary)",
-                    fontSize: 14,
-                    lineHeight: 1.7,
-                  }}>
+                  <div style={{ padding: "0 16px 14px", color: "var(--text-secondary)", fontSize: 13, lineHeight: 1.7 }}>
                     {p.a}
                   </div>
                 )}
@@ -1194,44 +1208,25 @@
       }, [theme]);
 
       const toggleTheme = () => setTheme(t => t === "dark" ? "light" : "dark");
-
-      const handleLogout = () => {
-        sessionStorage.removeItem("meuap_auth");
-        setLoggedIn(false);
-      };
+      const handleLogout = () => { sessionStorage.removeItem("meuap_auth"); setLoggedIn(false); };
 
       if (!loggedIn) return <LoginScreen onLogin={() => setLoggedIn(true)} />;
 
-      const pages = {
-        dashboard: Dashboard,
-        cronograma: Cronograma,
-        simulador: Simulador,
-        anotacoes: Anotacoes,
-        faq: FAQ,
-      };
-
+      const pages = { dashboard: Dashboard, projecao: Projecao, cronograma: Cronograma, anotacoes: Anotacoes, faq: FAQ };
       const PageComponent = pages[page] || Dashboard;
 
       return (
         <div style={{ minHeight: "100vh", background: "var(--bg-primary)" }}>
           <Header page={page} setPage={setPage} theme={theme} toggleTheme={toggleTheme} onLogout={handleLogout} />
-          <main style={{ paddingBottom: 40 }}>
-            <PageComponent />
-          </main>
+          <main style={{ paddingBottom: 32 }}><PageComponent /></main>
           <footer style={{
-            textAlign: "center", padding: "20px",
-            color: "var(--text-muted)", fontSize: 12,
+            textAlign: "center", padding: "16px", color: "var(--text-muted)", fontSize: 11,
             borderTop: "1px solid var(--border)",
-          }}>
-            Meu AP &mdash; Planejamento Financeiro Imobiliario &mdash; 2026
-          </footer>
+          }}>Meu AP &mdash; Planejamento Financeiro Imobiliario &mdash; 2026</footer>
         </div>
       );
     }
 
-    // ========================
-    // RENDER
-    // ========================
     const root = ReactDOM.createRoot(document.getElementById("root"));
     root.render(<App />);
   </script>
