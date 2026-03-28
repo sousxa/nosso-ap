@@ -9,9 +9,7 @@
   <title>Nosso AP</title>
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='url(%23g)'/><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0%25' stop-color='%236366f1'/><stop offset='100%25' stop-color='%23f59e0b'/></linearGradient></defs><text x='50' y='68' text-anchor='middle' font-size='50' font-family='sans-serif' fill='white' font-weight='bold'>AP</text></svg>">
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://unpkg.com/htm@3/preact/standalone.umd.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
@@ -266,8 +264,8 @@
 </head>
 <body>
   <div id="root"></div>
-  <script type="text/babel">
-    const { useState, useEffect, useCallback, useMemo, useRef } = React;
+  <script>
+    const { html, render, useState, useEffect, useCallback, useMemo, useRef } = htmPreact;
 
     // ========================
     // DADOS DOS APARTAMENTOS
@@ -385,39 +383,39 @@
     // ICONES SVG
     // ========================
     const Icons = {
-      Lock: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>,
-      Home: () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
-      Calendar: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>,
-      DollarSign: () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>,
-      FileText: () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>,
-      HelpCircle: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
-      Sun: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>,
-      Moon: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>,
-      LogOut: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>,
-      Trash: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>,
-      ChevronDown: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>,
-      Plus: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
-      Clock: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
-      Check: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
-      Building: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></svg>,
-      TrendingUp: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>,
-      AlertCircle: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>,
-      Book: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>,
-      Download: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>,
-      ExternalLink: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>,
-      Columns: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg>,
-      Camera: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>,
-      ChevronLeft: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>,
-      ChevronRight: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>,
-      Image: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>,
-      X: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
-      Grid: () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>,
-      Share: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>,
-      Smartphone: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>,
-      Settings: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
-      Search: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
-      Minus: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>,
-      Maximize: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>,
+      Lock: () => html`<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`,
+      Home: () => html`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
+      Calendar: () => html`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,
+      DollarSign: () => html`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>`,
+      FileText: () => html`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>`,
+      HelpCircle: () => html`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+      Sun: () => html`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`,
+      Moon: () => html`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`,
+      LogOut: () => html`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>`,
+      Trash: () => html`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`,
+      ChevronDown: () => html`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>`,
+      Plus: () => html`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
+      Clock: () => html`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
+      Check: () => html`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+      Building: () => html`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></svg>`,
+      TrendingUp: () => html`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>`,
+      AlertCircle: () => html`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
+      Book: () => html`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>`,
+      Download: () => html`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`,
+      ExternalLink: () => html`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>`,
+      Columns: () => html`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg>`,
+      Camera: () => html`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>`,
+      ChevronLeft: () => html`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>`,
+      ChevronRight: () => html`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>`,
+      Image: () => html`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`,
+      X: () => html`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
+      Grid: () => html`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>`,
+      Share: () => html`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>`,
+      Smartphone: () => html`<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>`,
+      Settings: () => html`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`,
+      Search: () => html`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`,
+      Minus: () => html`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
+      Maximize: () => html`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>`,
     };
 
     // ========================
@@ -448,35 +446,35 @@
         }
       };
 
-      return (
-        <div style={{
+      return html`
+        <div style=${{
           minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
           background: "var(--bg-primary)", padding: "20px",
         }}>
-          <div className="fade-in" style={{
+          <div class="fade-in" style=${{
             background: "var(--bg-secondary)", border: "1px solid var(--border)",
             borderRadius: "28px", padding: "44px 30px", maxWidth: "360px", width: "100%",
             textAlign: "center", boxShadow: "var(--shadow-lg)",
             animation: shake ? "shake 0.5s ease" : undefined,
           }}>
-            <div className="glow-icon float-anim" style={{
+            <div class="glow-icon float-anim" style=${{
               width: 68, height: 68, borderRadius: "20px",
               background: "linear-gradient(135deg, var(--accent-indigo), var(--accent-amber))",
               display: "flex", alignItems: "center", justifyContent: "center",
               margin: "0 auto 24px",
             }}>
-              <Icons.Building />
+              <${Icons.Building} />
             </div>
-            <h1 style={{ fontSize: "24px", fontWeight: 700, marginBottom: 6 }}>Nosso AP</h1>
-            <p style={{ color: "var(--text-muted)", marginBottom: 30, fontSize: 14 }}>
+            <h1 style=${{ fontSize: "24px", fontWeight: 700, marginBottom: 6 }}>Nosso AP</h1>
+            <p style=${{ color: "var(--text-muted)", marginBottom: 30, fontSize: 14 }}>
               Planejamento financeiro imobiliario
             </p>
-            <form onSubmit={handleSubmit}>
+            <form onSubmit=${handleSubmit}>
               <input
-                type="password" value={senha}
-                onChange={(e) => { setSenha(e.target.value); setErro(false); }}
+                type="password" value=${senha}
+                onChange=${(e) => { setSenha(e.target.value); setErro(false); }}
                 placeholder="Digite a senha"
-                style={{
+                style=${{
                   width: "100%", padding: "16px 18px", marginBottom: 14,
                   background: "var(--bg-tertiary)",
                   border: `1px solid ${erro ? "var(--accent-red)" : "var(--border)"}`,
@@ -484,18 +482,18 @@
                   fontSize: 16, outline: "none", fontFamily: "inherit",
                   transition: "border-color 0.2s",
                 }}
-                autoFocus
+                autofocus
               />
-              {erro && <p style={{ color: "var(--accent-red)", fontSize: 12, marginBottom: 8 }}>Senha incorreta.</p>}
-              <label style={{
+              ${erro && html`<p style=${{ color: "var(--accent-red)", fontSize: 12, marginBottom: 8 }}>Senha incorreta.</p>`}
+              <label style=${{
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
                 marginBottom: 16, fontSize: 13, color: "var(--text-secondary)", cursor: "pointer",
               }}>
-                <input type="checkbox" checked={lembrar} onChange={e => setLembrar(e.target.checked)}
-                  style={{ width: 16, height: 16, accentColor: "var(--accent-indigo)", cursor: "pointer" }} />
+                <input type="checkbox" checked=${lembrar} onChange=${e => setLembrar(e.target.checked)}
+                  style=${{ width: 16, height: 16, accentColor: "var(--accent-indigo)", cursor: "pointer" }} />
                 Lembrar de mim
               </label>
-              <button type="submit" style={{
+              <button type="submit" style=${{
                 width: "100%", padding: "16px", background: "var(--accent-indigo)", color: "#fff",
                 border: "none", borderRadius: "var(--radius)", fontSize: 16, fontWeight: 600,
                 cursor: "pointer", fontFamily: "inherit",
@@ -505,7 +503,7 @@
             </form>
           </div>
         </div>
-      );
+      `;
     }
 
     // ========================
@@ -517,19 +515,19 @@
 
       const steps = [
         {
-          icon: <Icons.Building />,
+          icon: html`<${Icons.Building} />`,
           title: "Bem-vindos ao Nosso AP",
           desc: "Seu app de planejamento financeiro imobiliario. Acompanhe tudo sobre a compra dos apartamentos em um so lugar.",
           gradient: "linear-gradient(135deg, #6366f1, #f59e0b)",
         },
         {
-          icon: <Icons.DollarSign />,
+          icon: html`<${Icons.DollarSign} />`,
           title: "Projecoes e Gastos",
           desc: "Veja a evolucao de obra, parcelas, saldo devedor e custo total estimado. Tudo calculado automaticamente.",
           gradient: "linear-gradient(135deg, #6366f1, #22c55e)",
         },
         {
-          icon: <Icons.FileText />,
+          icon: html`<${Icons.FileText} />`,
           title: "Documentos e Notas",
           desc: "Acesse os books dos empreendimentos, faca anotacoes e acompanhe o checklist de documentacao.",
           gradient: "linear-gradient(135deg, #f59e0b, #ef4444)",
@@ -544,65 +542,65 @@
       const s = steps[step];
       const isLast = step === steps.length - 1;
 
-      return (
-        <div className="onboarding-overlay">
-          <div className="onboarding-card">
-            <div style={{
+      return html`
+        <div class="onboarding-overlay">
+          <div class="onboarding-card">
+            <div style=${{
               width: 64, height: 64, borderRadius: 16,
               background: s.gradient,
               display: "flex", alignItems: "center", justifyContent: "center",
               margin: "0 auto 20px", boxShadow: "0 4px 20px rgba(99,102,241,0.3)",
-            }}>{s.icon}</div>
-            <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 10 }}>{s.title}</h2>
-            <p style={{ color: "var(--text-secondary)", fontSize: 14, lineHeight: 1.6, marginBottom: 24 }}>{s.desc}</p>
+            }}>${s.icon}</div>
+            <h2 style=${{ fontSize: 20, fontWeight: 700, marginBottom: 10 }}>${s.title}</h2>
+            <p style=${{ color: "var(--text-secondary)", fontSize: 14, lineHeight: 1.6, marginBottom: 24 }}>${s.desc}</p>
 
-            {/* Dots */}
-            <div style={{ display: "flex", justifyContent: "center", gap: 6, marginBottom: 20 }}>
-              {steps.map((_, i) => (
-                <div key={i} style={{
+            ${/* Dots */null}
+            <div style=${{ display: "flex", justifyContent: "center", gap: 6, marginBottom: 20 }}>
+              ${steps.map((_, i) => html`
+                <div key=${i} style=${{
                   width: i === step ? 20 : 6, height: 6, borderRadius: 3,
                   background: i === step ? "var(--accent-indigo)" : "var(--border)",
                   transition: "all 0.3s",
                 }} />
-              ))}
+              `)}
             </div>
 
-            <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
-              {!isLast ? (
+            <div style=${{ display: "flex", gap: 10, justifyContent: "center" }}>
+              ${!isLast ? html`
                 <>
-                  <button onClick={handleDone} style={{
+                  <button onClick=${handleDone} style=${{
                     padding: "10px 20px", background: "var(--bg-tertiary)",
                     border: "1px solid var(--border)", borderRadius: "var(--radius-sm)",
                     color: "var(--text-muted)", cursor: "pointer", fontFamily: "inherit", fontSize: 14,
                   }}>Pular</button>
-                  <button onClick={() => setStep(step + 1)} style={{
+                  <button onClick=${() => setStep(step + 1)} style=${{
                     padding: "10px 24px", background: "var(--accent-indigo)", color: "#fff",
                     border: "none", borderRadius: "var(--radius-sm)",
                     cursor: "pointer", fontFamily: "inherit", fontSize: 14, fontWeight: 600,
                   }}>Proximo</button>
                 </>
-              ) : (
-                <button onClick={handleDone} style={{
+              ` : html`
+                <button onClick=${handleDone} style=${{
                   padding: "12px 32px", background: "var(--accent-indigo)", color: "#fff",
                   border: "none", borderRadius: "var(--radius-sm)",
                   cursor: "pointer", fontFamily: "inherit", fontSize: 15, fontWeight: 600,
                 }}>Comecar</button>
-              )}
+              `}
             </div>
 
-            {isLast && (
-              <label style={{
+            ${isLast && html`
+              <label style=${{
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
                 marginTop: 16, fontSize: 12, color: "var(--text-muted)", cursor: "pointer",
               }}>
-                <input type="checkbox" checked={naoMostrar} onChange={e => setNaoMostrar(e.target.checked)}
-                  style={{ accentColor: "var(--accent-indigo)" }} />
+                <input type="checkbox" checked=${naoMostrar} onChange=${e => setNaoMostrar(e.target.checked)}
+                  style=${{ accentColor: "var(--accent-indigo)" }} />
                 Nao mostrar novamente
               </label>
-            )}
+            `}
           </div>
         </div>
-      );
+      `;
     }
 
     // ========================
@@ -639,67 +637,67 @@
         localStorage.setItem("nossoap_install_dismissed", "1");
       };
 
-      return (
-        <div style={{
+      return html`
+        <div style=${{
           background: "linear-gradient(135deg, rgba(99,102,241,0.15), rgba(245,158,11,0.15))",
           border: "1px solid var(--border)",
           borderRadius: "var(--radius)", padding: "16px 18px", marginBottom: 16,
           display: "flex", alignItems: "center", gap: 12,
         }}>
-          <div style={{
+          <div style=${{
             width: 40, height: 40, borderRadius: 10, flexShrink: 0,
             background: "linear-gradient(135deg, var(--accent-indigo), var(--accent-amber))",
             display: "flex", alignItems: "center", justifyContent: "center",
-          }}><Icons.Smartphone /></div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ fontSize: 13, fontWeight: 600, marginBottom: 2 }}>Instalar como app</p>
-            {isIOS && !deferredPrompt ? (
-              <p style={{ fontSize: 11, color: "var(--text-muted)", lineHeight: 1.4 }}>
-                Toque em <Icons.Share /> e depois "Adicionar a Tela de Inicio"
+          }}><${Icons.Smartphone} /></div>
+          <div style=${{ flex: 1, minWidth: 0 }}>
+            <p style=${{ fontSize: 13, fontWeight: 600, marginBottom: 2 }}>Instalar como app</p>
+            ${isIOS && !deferredPrompt ? html`
+              <p style=${{ fontSize: 11, color: "var(--text-muted)", lineHeight: 1.4 }}>
+                Toque em <${Icons.Share} /> e depois "Adicionar a Tela de Inicio"
               </p>
-            ) : (
-              <p style={{ fontSize: 11, color: "var(--text-muted)" }}>Acesse direto da tela inicial</p>
-            )}
+            ` : html`
+              <p style=${{ fontSize: 11, color: "var(--text-muted)" }}>Acesse direto da tela inicial</p>
+            `}
           </div>
-          {deferredPrompt && (
-            <button onClick={handleInstall} style={{
+          ${deferredPrompt && html`
+            <button onClick=${handleInstall} style=${{
               padding: "8px 14px", background: "var(--accent-indigo)", color: "#fff",
               border: "none", borderRadius: "var(--radius-sm)", fontSize: 12,
               fontWeight: 600, fontFamily: "inherit", cursor: "pointer", whiteSpace: "nowrap",
             }}>Instalar</button>
-          )}
-          <button onClick={handleDismiss} style={{
+          `}
+          <button onClick=${handleDismiss} style=${{
             background: "none", border: "none", color: "var(--text-muted)",
             cursor: "pointer", padding: 4, display: "flex", flexShrink: 0,
-          }}><Icons.X /></button>
+          }}><${Icons.X} /></button>
         </div>
-      );
+      `;
     }
 
     // ========================
     // MINI CARD
     // ========================
     function StatCard({ label, value, sub, color, mono = true }) {
-      return (
-        <div style={{ background: "var(--bg-tertiary)", borderRadius: "var(--radius-sm)", padding: "14px 16px" }}>
-          <p style={{ color: "var(--text-muted)", fontSize: 11, marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.5px" }}>{label}</p>
-          <p className={mono ? "mono" : ""} style={{ fontSize: 16, fontWeight: 600, color: color || "var(--text-primary)" }}>{value}</p>
-          {sub && <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 3 }}>{sub}</p>}
+      return html`
+        <div style=${{ background: "var(--bg-tertiary)", borderRadius: "var(--radius-sm)", padding: "14px 16px" }}>
+          <p style=${{ color: "var(--text-muted)", fontSize: 11, marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.5px" }}>${label}</p>
+          <p class=${mono ? "mono" : ""} style=${{ fontSize: 16, fontWeight: 600, color: color || "var(--text-primary)" }}>${value}</p>
+          ${sub && html`<p style=${{ fontSize: 12, color: "var(--text-muted)", marginTop: 3 }}>${sub}</p>`}
         </div>
-      );
+      `;
     }
 
     // ========================
     // PAGE HEADER COM BACK
     // ========================
     function PageHeader({ title, onBack, right }) {
-      return (
-        <div className="page-header">
-          <button className="back-btn" onClick={onBack}><Icons.ChevronLeft /></button>
-          <h2>{title}</h2>
-          {right && <div style={{ display: "flex", gap: 6 }}>{right}</div>}
+      return html`
+        <div class="page-header">
+          <button class="back-btn" onClick=${onBack}><${Icons.ChevronLeft} /></button>
+          <h2>${title}</h2>
+          ${right && html`<div style=${{ display: "flex", gap: 6 }}>${right}</div>`}
         </div>
-      );
+      `;
     }
 
     // ========================
@@ -713,16 +711,16 @@
         { id: "anotacoes", label: "Notas", icon: Icons.FileText },
       ];
 
-      return (
-        <nav className="bottom-nav">
-          {items.map(item => (
-            <button key={item.id} className={page === item.id ? "active" : ""} onClick={() => setPage(item.id)}>
-              <item.icon />
-              <span>{item.label}</span>
+      return html`
+        <nav class="bottom-nav">
+          ${items.map(item => html`
+            <button key=${item.id} class=${page === item.id ? "active" : ""} onClick=${() => setPage(item.id)}>
+              <${item.icon} />
+              <span>${item.label}</span>
             </button>
-          ))}
+          `)}
         </nav>
-      );
+      `;
     }
 
     // ========================
@@ -776,48 +774,48 @@
         item.tags.includes(q)
       ) : allItems.slice(0, 6);
 
-      return (
-        <div className="search-overlay" onClick={onClose}>
-          <div onClick={e => e.stopPropagation()} style={{ maxWidth: 500, margin: "0 auto", width: "100%" }}>
-            <div style={{ position: "relative", marginBottom: 16 }}>
-              <div style={{
+      return html`
+        <div class="search-overlay" onClick=${onClose}>
+          <div onClick=${e => e.stopPropagation()} style=${{ maxWidth: 500, margin: "0 auto", width: "100%" }}>
+            <div style=${{ position: "relative", marginBottom: 16 }}>
+              <div style=${{
                 position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)",
                 color: "var(--text-muted)", display: "flex",
-              }}><Icons.Search /></div>
+              }}><${Icons.Search} /></div>
               <input
-                ref={inputRef}
-                className="search-input"
-                type="text" value={query} onChange={e => setQuery(e.target.value)}
+                ref=${inputRef}
+                class="search-input"
+                type="text" value=${query} onChange=${e => setQuery(e.target.value)}
                 placeholder="Buscar... (parcela, valor, entrega...)"
               />
-              <button onClick={onClose} style={{
+              <button onClick=${onClose} style=${{
                 position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)",
                 background: "var(--bg-tertiary)", border: "none", borderRadius: 8,
                 color: "var(--text-muted)", cursor: "pointer", padding: "4px 10px",
                 fontSize: 12, fontFamily: "inherit",
               }}>ESC</button>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: "60vh", overflowY: "auto" }}>
-              {filtered.length === 0 && (
-                <p style={{ textAlign: "center", color: "var(--text-muted)", padding: 24, fontSize: 14 }}>
-                  Nenhum resultado para "{query}"
+            <div style=${{ display: "flex", flexDirection: "column", gap: 8, maxHeight: "60vh", overflowY: "auto" }}>
+              ${filtered.length === 0 && html`
+                <p style=${{ textAlign: "center", color: "var(--text-muted)", padding: 24, fontSize: 14 }}>
+                  Nenhum resultado para "${query}"
                 </p>
-              )}
-              {filtered.map((item, i) => (
-                <div key={i} className="search-result" onClick={() => { setPage(item.page); onClose(); }}>
-                  <div style={{ flex: 1 }}>
-                    <p style={{ fontSize: 14, fontWeight: 600, marginBottom: 2 }}>{item.label}</p>
-                    <p style={{ fontSize: 12, color: "var(--text-muted)" }}>{item.desc}</p>
+              `}
+              ${filtered.map((item, i) => html`
+                <div key=${i} class="search-result" onClick=${() => { setPage(item.page); onClose(); }}>
+                  <div style=${{ flex: 1 }}>
+                    <p style=${{ fontSize: 14, fontWeight: 600, marginBottom: 2 }}>${item.label}</p>
+                    <p style=${{ fontSize: 12, color: "var(--text-muted)" }}>${item.desc}</p>
                   </div>
-                  <div style={{ textAlign: "right" }}>
-                    <p className="mono" style={{ fontSize: 15, fontWeight: 700, color: "var(--accent-indigo)" }}>{item.value}</p>
+                  <div style=${{ textAlign: "right" }}>
+                    <p class="mono" style=${{ fontSize: 15, fontWeight: 700, color: "var(--accent-indigo)" }}>${item.value}</p>
                   </div>
                 </div>
-              ))}
+              `)}
             </div>
           </div>
         </div>
-      );
+      `;
     }
 
     // ========================
@@ -850,194 +848,194 @@
         { id: "faq", label: "FAQ", desc: "Duvidas frequentes", icon: Icons.HelpCircle, color: "#f97316" },
       ];
 
-      return (
-        <div className="fade-in page-container" style={{ paddingTop: "calc(var(--safe-top))" }}>
-          {/* Top bar */}
-          <div style={{
+      return html`
+        <div class="fade-in page-container" style=${{ paddingTop: "calc(var(--safe-top))" }}>
+          ${/* Top bar */null}
+          <div style=${{
             display: "flex", alignItems: "center", justifyContent: "space-between",
             padding: "20px 0 16px",
           }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <div className="glow-icon" style={{
+            <div style=${{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div class="glow-icon" style=${{
                 width: 46, height: 46, borderRadius: 15,
                 background: "linear-gradient(135deg, var(--accent-indigo), var(--accent-amber))",
                 display: "flex", alignItems: "center", justifyContent: "center",
-              }}><Icons.Building /></div>
+              }}><${Icons.Building} /></div>
               <div>
-                <h1 style={{ fontSize: 20, fontWeight: 700, lineHeight: 1.2 }}>Nosso AP</h1>
-                <p style={{ fontSize: 12, color: "var(--text-muted)" }}>Planejamento imobiliario</p>
+                <h1 style=${{ fontSize: 20, fontWeight: 700, lineHeight: 1.2 }}>Nosso AP</h1>
+                <p style=${{ fontSize: 12, color: "var(--text-muted)" }}>Planejamento imobiliario</p>
               </div>
             </div>
-            <div style={{ display: "flex", gap: 8 }}>
-              <button onClick={onSearch} style={{
+            <div style=${{ display: "flex", gap: 8 }}>
+              <button onClick=${onSearch} style=${{
                 background: "var(--bg-secondary)", border: "1px solid var(--border)",
                 borderRadius: 12, padding: 10, cursor: "pointer", color: "var(--text-primary)",
                 display: "flex", alignItems: "center",
-              }}><Icons.Search /></button>
-              <button onClick={toggleTheme} style={{
+              }}><${Icons.Search} /></button>
+              <button onClick=${toggleTheme} style=${{
                 background: "var(--bg-secondary)", border: "1px solid var(--border)",
                 borderRadius: 12, padding: 10, cursor: "pointer", color: "var(--text-primary)",
                 display: "flex", alignItems: "center",
-              }}>{theme === "dark" ? <Icons.Sun /> : <Icons.Moon />}</button>
-              <button onClick={onLogout} style={{
+              }}>${theme === "dark" ? html`<${Icons.Sun} />` : html`<${Icons.Moon} />`}</button>
+              <button onClick=${onLogout} style=${{
                 background: "var(--bg-secondary)", border: "1px solid var(--border)",
                 borderRadius: 12, padding: 10, cursor: "pointer", color: "var(--text-muted)",
                 display: "flex", alignItems: "center",
-              }}><Icons.LogOut /></button>
+              }}><${Icons.LogOut} /></button>
             </div>
           </div>
 
-          {/* Install banner */}
-          <InstallBanner />
+          ${/* Install banner */null}
+          <${InstallBanner} />
 
-          {/* Custo mensal atual - REDESIGNED as separate stacked cards */}
-          <div style={{
+          ${/* Custo mensal atual - REDESIGNED as separate stacked cards */null}
+          <div style=${{
             background: "var(--bg-secondary)", border: "1px solid var(--border)",
             borderRadius: "var(--radius)", padding: "18px", marginBottom: 16,
             boxShadow: "var(--shadow)",
           }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-              <div style={{
+            <div style=${{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+              <div style=${{
                 width: 32, height: 32, borderRadius: 10,
                 background: "rgba(239,68,68,0.12)", display: "flex",
                 alignItems: "center", justifyContent: "center", color: "var(--accent-red)",
-              }}><Icons.TrendingUp /></div>
+              }}><${Icons.TrendingUp} /></div>
               <div>
-                <p style={{ fontSize: 14, fontWeight: 600 }}>Custo mensal atual</p>
-                <p style={{ fontSize: 11, color: "var(--text-muted)" }}>Evolucao de obra (cresce todo mes)</p>
+                <p style=${{ fontSize: 14, fontWeight: 600 }}>Custo mensal atual</p>
+                <p style=${{ fontSize: 11, color: "var(--text-muted)" }}>Evolucao de obra (cresce todo mes)</p>
               </div>
             </div>
-            {/* Two apartment rows */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 12 }}>
-              <div style={{
+            ${/* Two apartment rows */null}
+            <div style=${{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 12 }}>
+              <div style=${{
                 display: "flex", alignItems: "center", justifyContent: "space-between",
                 background: "var(--bg-tertiary)", borderRadius: "var(--radius-sm)", padding: "14px 16px",
               }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--accent-indigo)", boxShadow: "0 0 8px var(--accent-indigo)" }} />
-                  <span style={{ fontSize: 13, fontWeight: 500 }}>Palestra Life</span>
+                <div style=${{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style=${{ width: 8, height: 8, borderRadius: "50%", background: "var(--accent-indigo)", boxShadow: "0 0 8px var(--accent-indigo)" }} />
+                  <span style=${{ fontSize: 13, fontWeight: 500 }}>Palestra Life</span>
                 </div>
-                <span className="mono" style={{ fontSize: 16, fontWeight: 700, color: "var(--accent-indigo)" }}>~{fmt(obraHojePL)}</span>
+                <span class="mono" style=${{ fontSize: 16, fontWeight: 700, color: "var(--accent-indigo)" }}>~${fmt(obraHojePL)}</span>
               </div>
-              <div style={{
+              <div style=${{
                 display: "flex", alignItems: "center", justifyContent: "space-between",
                 background: "var(--bg-tertiary)", borderRadius: "var(--radius-sm)", padding: "14px 16px",
               }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--accent-amber)", boxShadow: "0 0 8px var(--accent-amber)" }} />
-                  <span style={{ fontSize: 13, fontWeight: 500 }}>Unique</span>
+                <div style=${{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style=${{ width: 8, height: 8, borderRadius: "50%", background: "var(--accent-amber)", boxShadow: "0 0 8px var(--accent-amber)" }} />
+                  <span style=${{ fontSize: 13, fontWeight: 500 }}>Unique</span>
                 </div>
-                <span className="mono" style={{ fontSize: 16, fontWeight: 700, color: "var(--accent-amber)" }}>~{fmt(obraHojeUP)}</span>
+                <span class="mono" style=${{ fontSize: 16, fontWeight: 700, color: "var(--accent-amber)" }}>~${fmt(obraHojeUP)}</span>
               </div>
             </div>
-            {/* Total */}
-            <div style={{
+            ${/* Total */null}
+            <div style=${{
               display: "flex", alignItems: "center", justifyContent: "space-between",
               background: "linear-gradient(135deg, rgba(99,102,241,0.08), rgba(239,68,68,0.08))",
               borderRadius: "var(--radius-sm)", padding: "14px 16px",
               border: "1px solid var(--border)",
             }}>
-              <span style={{ fontSize: 14, fontWeight: 600 }}>Total por mes</span>
-              <span className="mono" style={{ fontSize: 18, fontWeight: 700, color: "var(--accent-red)" }}>~{fmt(obraHojePL + obraHojeUP)}</span>
+              <span style=${{ fontSize: 14, fontWeight: 600 }}>Total por mes</span>
+              <span class="mono" style=${{ fontSize: 18, fontWeight: 700, color: "var(--accent-red)" }}>~${fmt(obraHojePL + obraHojeUP)}</span>
             </div>
           </div>
 
-          {/* Progress cards */}
-          <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
-            {[
+          ${/* Progress cards */null}
+          <div style=${{ display: "flex", gap: 12, marginBottom: 16 }}>
+            ${[
               { ap: pl, dias: diasPL, prog: progPL, meses: mesesRestPL, cor: "var(--accent-indigo)", corLight: "var(--accent-indigo-light)" },
               { ap: up, dias: diasUP, prog: progUP, meses: mesesRestUP, cor: "var(--accent-amber)", corLight: "var(--accent-amber-light)" },
-            ].map((item, i) => (
-              <div key={i} style={{
+            ].map((item, i) => html`
+              <div key=${i} style=${{
                 flex: 1, background: "var(--bg-secondary)", border: "1px solid var(--border)",
                 borderRadius: "var(--radius)", padding: "16px", boxShadow: "var(--shadow)",
               }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
-                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: item.cor, boxShadow: `0 0 8px ${item.cor}` }} />
-                  <p style={{ fontSize: 13, fontWeight: 600 }}>{item.ap.nome}</p>
+                <div style=${{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+                  <div style=${{ width: 8, height: 8, borderRadius: "50%", background: item.cor, boxShadow: `0 0 8px ${item.cor}` }} />
+                  <p style=${{ fontSize: 13, fontWeight: 600 }}>${item.ap.nome}</p>
                 </div>
-                <p className="mono" style={{ fontSize: 20, fontWeight: 700, marginBottom: 4 }}>
-                  {item.dias > 0 ? `${item.dias}` : "0"}
+                <p class="mono" style=${{ fontSize: 20, fontWeight: 700, marginBottom: 4 }}>
+                  ${item.dias > 0 ? `${item.dias}` : "0"}
                 </p>
-                <p style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 10 }}>
-                  {item.dias > 0 ? `dias restantes (${item.meses} meses)` : "Entregue!"}
+                <p style=${{ fontSize: 11, color: "var(--text-muted)", marginBottom: 10 }}>
+                  ${item.dias > 0 ? `dias restantes (${item.meses} meses)` : "Entregue!"}
                 </p>
-                <div style={{ height: 6, background: "var(--border)", borderRadius: 4, overflow: "hidden" }}>
-                  <div style={{
+                <div style=${{ height: 6, background: "var(--border)", borderRadius: 4, overflow: "hidden" }}>
+                  <div style=${{
                     height: "100%", width: `${Math.min(item.prog, 100)}%`,
                     background: `linear-gradient(90deg, ${item.cor}, ${item.corLight})`,
                     borderRadius: 4,
                   }} />
                 </div>
-                <p className="mono" style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 6, textAlign: "right" }}>
-                  {fmtNum(item.prog, 1)}% concluido
+                <p class="mono" style=${{ fontSize: 11, color: "var(--text-muted)", marginTop: 6, textAlign: "right" }}>
+                  ${fmtNum(item.prog, 1)}% concluido
                 </p>
               </div>
-            ))}
+            `)}
           </div>
 
-          {/* Resumo financeiro rapido */}
-          <div className="grid-2" style={{ marginBottom: 24 }}>
-            <StatCard label="Parcela PL (pos-chave)" value={fmt(pl.parcelaPosChave)} color="var(--accent-indigo)" />
-            <StatCard label="Parcela UP (pos-chave)" value={fmt(up.parcelaPosChave)} color="var(--accent-amber)" />
-            <StatCard label="Entrega PL" value={fmtMesAno(pl.entrega)} mono={false} />
-            <StatCard label="Entrega UP" value={fmtMesAno(up.entrega)} mono={false} />
+          ${/* Resumo financeiro rapido */null}
+          <div class="grid-2" style=${{ marginBottom: 24 }}>
+            <${StatCard} label="Parcela PL (pos-chave)" value=${fmt(pl.parcelaPosChave)} color="var(--accent-indigo)" />
+            <${StatCard} label="Parcela UP (pos-chave)" value=${fmt(up.parcelaPosChave)} color="var(--accent-amber)" />
+            <${StatCard} label="Entrega PL" value=${fmtMesAno(pl.entrega)} mono=${false} />
+            <${StatCard} label="Entrega UP" value=${fmtMesAno(up.entrega)} mono=${false} />
           </div>
 
-          {/* Modules grid */}
-          <p style={{ fontSize: 14, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 12 }}>Modulos</p>
-          <div className="module-grid">
-            {modules.map(mod => (
-              <div key={mod.id} className="module-card" onClick={() => setPage(mod.id)}>
-                <div style={{
+          ${/* Modules grid */null}
+          <p style=${{ fontSize: 14, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 12 }}>Modulos</p>
+          <div class="module-grid">
+            ${modules.map(mod => html`
+              <div key=${mod.id} class="module-card" onClick=${() => setPage(mod.id)}>
+                <div style=${{
                   width: 44, height: 44, borderRadius: 14,
                   background: `${mod.color}15`,
                   display: "flex", alignItems: "center", justifyContent: "center",
                   color: mod.color,
                 }}>
-                  <mod.icon />
+                  <${mod.icon} />
                 </div>
                 <div>
-                  <p style={{ fontSize: 15, fontWeight: 600 }}>{mod.label}</p>
-                  <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>{mod.desc}</p>
+                  <p style=${{ fontSize: 15, fontWeight: 600 }}>${mod.label}</p>
+                  <p style=${{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>${mod.desc}</p>
                 </div>
-                <div style={{ display: "flex", justifyContent: "flex-end", color: "var(--text-muted)" }}>
-                  <Icons.ChevronRight />
+                <div style=${{ display: "flex", justifyContent: "flex-end", color: "var(--text-muted)" }}>
+                  <${Icons.ChevronRight} />
                 </div>
               </div>
-            ))}
+            `)}
           </div>
 
-          {/* Nossa Decisao - embaixo, discreto */}
-          <div style={{
+          ${/* Nossa Decisao - embaixo, discreto */null}
+          <div style=${{
             marginTop: 24, background: "var(--bg-secondary)", border: "1px solid var(--border)",
             borderRadius: "var(--radius)", padding: "16px", boxShadow: "var(--shadow)",
           }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-              <p style={{ fontSize: 13, fontWeight: 600, color: "var(--text-muted)" }}>Nossa decisao</p>
-              <p style={{ fontSize: 11, color: "var(--text-muted)" }}>
-                {decisao === "ambos" ? "Ainda decidindo" : decisao === "pl" ? "Palestra Life" : "Unique"}
+            <div style=${{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+              <p style=${{ fontSize: 13, fontWeight: 600, color: "var(--text-muted)" }}>Nossa decisao</p>
+              <p style=${{ fontSize: 11, color: "var(--text-muted)" }}>
+                ${decisao === "ambos" ? "Ainda decidindo" : decisao === "pl" ? "Palestra Life" : "Unique"}
               </p>
             </div>
-            <div style={{ display: "flex", gap: 8 }}>
-              {[
+            <div style=${{ display: "flex", gap: 8 }}>
+              ${[
                 { id: "ambos", label: "Decidindo...", cor: "var(--accent-green)" },
                 { id: "pl", label: "Palestra Life", cor: "var(--accent-indigo)" },
                 { id: "up", label: "Unique", cor: "var(--accent-amber)" },
-              ].map(o => (
-                <button key={o.id} onClick={() => setDecisao(o.id)} style={{
+              ].map(o => html`
+                <button key=${o.id} onClick=${() => setDecisao(o.id)} style=${{
                   flex: 1, padding: "10px 8px", fontSize: 12, fontWeight: 600,
                   background: decisao === o.id ? o.cor : "var(--bg-tertiary)",
                   color: decisao === o.id ? "#fff" : "var(--text-muted)",
                   border: `1px solid ${decisao === o.id ? o.cor : "var(--border)"}`,
                   borderRadius: "var(--radius-sm)", cursor: "pointer", fontFamily: "inherit",
                   transition: "all 0.2s",
-                }}>{o.label}</button>
-              ))}
+                }}>${o.label}</button>
+              `)}
             </div>
           </div>
         </div>
-      );
+      `;
     }
 
     // ========================
@@ -1064,21 +1062,21 @@
       const areaPath = `M${pathPoints[0]} ${pathPoints.map(p => `L${p}`).join(' ')} L${pad.left + chartW},${pad.top + chartH} L${pad.left},${pad.top + chartH} Z`;
       const linePath = `M${pathPoints.join(' L')}`;
 
-      return (
-        <svg width="100%" viewBox={`0 0 ${w} ${h}`} style={{ display: "block" }}>
+      return html`
+        <svg width="100%" viewBox=${`0 0 ${w} ${h}`} style=${{ display: "block" }}>
           <defs>
-            <linearGradient id={`grad-${cor}`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={cor} stopOpacity="0.3" />
-              <stop offset="100%" stopColor={cor} stopOpacity="0.02" />
+            <linearGradient id=${`grad-${cor}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor=${cor} stopOpacity="0.3" />
+              <stop offset="100%" stopColor=${cor} stopOpacity="0.02" />
             </linearGradient>
           </defs>
-          <path d={areaPath} fill={`url(#grad-${cor})`} />
-          <path d={linePath} fill="none" stroke={cor} strokeWidth="2" />
-          <text x={pad.left} y={h - 4} fill="var(--text-muted)" fontSize="9" fontFamily="JetBrains Mono">{fmt(pontos[0].saldo)}</text>
-          <text x={w - pad.right} y={h - 4} fill={cor} fontSize="9" fontFamily="JetBrains Mono" textAnchor="end">{fmt(pontos[pontos.length - 1].saldo)}</text>
-          <text x={w / 2} y={h - 4} fill="var(--text-muted)" fontSize="9" fontFamily="DM Sans" textAnchor="middle">{pontos.length - 1} meses</text>
+          <path d=${areaPath} fill=${`url(#grad-${cor})`} />
+          <path d=${linePath} fill="none" stroke=${cor} strokeWidth="2" />
+          <text x=${pad.left} y=${h - 4} fill="var(--text-muted)" fontSize="9" fontFamily="JetBrains Mono">${fmt(pontos[0].saldo)}</text>
+          <text x=${w - pad.right} y=${h - 4} fill=${cor} fontSize="9" fontFamily="JetBrains Mono" textAnchor="end">${fmt(pontos[pontos.length - 1].saldo)}</text>
+          <text x=${w / 2} y=${h - 4} fill="var(--text-muted)" fontSize="9" fontFamily="DM Sans" textAnchor="middle">${pontos.length - 1} meses</text>
         </svg>
-      );
+      `;
     }
 
     // ========================
@@ -1145,98 +1143,98 @@
         { id: "unique", label: "Unique" },
       ];
 
-      const ApartmentDetail = ({ ap, evolObra, evolSaldo, saldoEntrega, obraTotal, totalFin, cor, corHex }) => (
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          <div style={{
+      const ApartmentDetail = ({ ap, evolObra, evolSaldo, saldoEntrega, obraTotal, totalFin, cor, corHex }) => html`
+        <div style=${{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <div style=${{
             background: "var(--bg-secondary)", border: "1px solid var(--border)",
             borderRadius: "var(--radius)", padding: "18px",
           }}>
-            <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>Evolucao de Obra - Mes a Mes</h3>
-            <p style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 10 }}>
+            <h3 style=${{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>Evolucao de Obra - Mes a Mes</h3>
+            <p style=${{ fontSize: 11, color: "var(--text-muted)", marginBottom: 10 }}>
               Juros sobre o valor liberado ao construtor.
             </p>
             <div>
-              {evolObra.map((m, i) => {
+              ${evolObra.map((m, i) => {
                 const maxJ = evolObra[evolObra.length - 1].jurosMes;
-                return (
-                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 0", borderBottom: "1px solid var(--border)" }}>
-                    <span className="mono" style={{ fontSize: 11, color: "var(--text-muted)", flexShrink: 0 }}>M{m.mes}</span>
-                    <span className="mono" style={{ fontSize: 11, color: "var(--text-muted)", flexShrink: 0 }}>{m.percentual}%</span>
-                    <div style={{ flex: 1, height: 12, background: "var(--border)", borderRadius: 6, overflow: "hidden", minWidth: 40 }}>
-                      <div style={{ height: "100%", width: `${(m.jurosMes / maxJ) * 100}%`, background: cor, borderRadius: 6 }} />
+                return html`
+                  <div key=${i} style=${{ display: "flex", alignItems: "center", gap: 8, padding: "6px 0", borderBottom: "1px solid var(--border)" }}>
+                    <span class="mono" style=${{ fontSize: 11, color: "var(--text-muted)", flexShrink: 0 }}>M${m.mes}</span>
+                    <span class="mono" style=${{ fontSize: 11, color: "var(--text-muted)", flexShrink: 0 }}>${m.percentual}%</span>
+                    <div style=${{ flex: 1, height: 12, background: "var(--border)", borderRadius: 6, overflow: "hidden", minWidth: 40 }}>
+                      <div style=${{ height: "100%", width: `${(m.jurosMes / maxJ) * 100}%`, background: cor, borderRadius: 6 }} />
                     </div>
-                    <span className="mono" style={{ fontSize: 12, fontWeight: 600, flexShrink: 0 }}>{fmt(m.jurosMes)}</span>
+                    <span class="mono" style=${{ fontSize: 12, fontWeight: 600, flexShrink: 0 }}>${fmt(m.jurosMes)}</span>
                   </div>
-                );
+                `;
               })}
             </div>
-            <div style={{
+            <div style=${{
               marginTop: 8, padding: "8px 10px", background: "var(--bg-tertiary)",
               borderRadius: "var(--radius-sm)", display: "flex", justifyContent: "space-between",
             }}>
-              <span style={{ fontSize: 12, fontWeight: 600 }}>Total evol. obra</span>
-              <span className="mono" style={{ fontSize: 13, fontWeight: 700, color: "var(--accent-red)" }}>{fmt(obraTotal)}</span>
+              <span style=${{ fontSize: 12, fontWeight: 600 }}>Total evol. obra</span>
+              <span class="mono" style=${{ fontSize: 13, fontWeight: 700, color: "var(--accent-red)" }}>${fmt(obraTotal)}</span>
             </div>
           </div>
 
-          <div style={{
+          <div style=${{
             background: "var(--bg-secondary)", border: "1px solid var(--border)",
             borderRadius: "var(--radius)", padding: "18px",
           }}>
-            <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>Saldo Devedor (INCC {params.incc}% a.a.)</h3>
-            <p style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 8 }}>Valor financiado na entrega das chaves.</p>
-            <SaldoEvolutionChart pontos={evolSaldo} cor={corHex} width={500} height={100} />
-            <p className="mono" style={{ fontSize: 12, marginTop: 6 }}>
-              {fmt(ap.financiamento)} <span style={{ color: "var(--accent-red)" }}>+{fmt(saldoEntrega - ap.financiamento)}</span> = <strong>{fmt(saldoEntrega)}</strong>
+            <h3 style=${{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>Saldo Devedor (INCC ${params.incc}% a.a.)</h3>
+            <p style=${{ fontSize: 11, color: "var(--text-muted)", marginBottom: 8 }}>Valor financiado na entrega das chaves.</p>
+            <${SaldoEvolutionChart} pontos=${evolSaldo} cor=${corHex} width=${500} height=${100} />
+            <p class="mono" style=${{ fontSize: 12, marginTop: 6 }}>
+              ${fmt(ap.financiamento)} <span style=${{ color: "var(--accent-red)" }}>+${fmt(saldoEntrega - ap.financiamento)}</span> = <strong>${fmt(saldoEntrega)}</strong>
             </p>
           </div>
 
-          <div style={{
+          <div style=${{
             background: "var(--bg-secondary)", border: "1px solid var(--border)",
             borderRadius: "var(--radius)", padding: "18px",
           }}>
-            <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 10 }}>Custo Total - {ap.nome}</h3>
-            {[
+            <h3 style=${{ fontSize: 14, fontWeight: 600, marginBottom: 10 }}>Custo Total - ${ap.nome}</h3>
+            ${[
               { label: "Evolucao de obra (estimada)", valor: obraTotal },
               { label: `Financiamento PRICE (${params.prazoAnos} anos x ${fmt(ap.parcelaPosChave)})`, valor: totalFin },
-            ].map((item, i) => (
-              <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid var(--border)" }}>
-                <span style={{ fontSize: 12 }}>{item.label}</span>
-                <span className="mono" style={{ fontSize: 12, fontWeight: 600 }}>{fmt(item.valor)}</span>
+            ].map((item, i) => html`
+              <div key=${i} style=${{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid var(--border)" }}>
+                <span style=${{ fontSize: 12 }}>${item.label}</span>
+                <span class="mono" style=${{ fontSize: 12, fontWeight: 600 }}>${fmt(item.valor)}</span>
               </div>
-            ))}
-            <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", marginTop: 4 }}>
-              <span style={{ fontSize: 14, fontWeight: 700 }}>TOTAL</span>
-              <span className="mono" style={{ fontSize: 16, fontWeight: 700, color: cor }}>{fmt(obraTotal + totalFin)}</span>
+            `)}
+            <div style=${{ display: "flex", justifyContent: "space-between", padding: "8px 0", marginTop: 4 }}>
+              <span style=${{ fontSize: 14, fontWeight: 700 }}>TOTAL</span>
+              <span class="mono" style=${{ fontSize: 16, fontWeight: 700, color: cor }}>${fmt(obraTotal + totalFin)}</span>
             </div>
           </div>
         </div>
-      );
+      `;
 
-      return (
-        <div className="fade-in">
-          <PageHeader title="Projecao de Gastos" onBack={onBack} />
-          <div className="page-container">
-            <p style={{ color: "var(--text-muted)", fontSize: 12, marginBottom: 14 }}>
+      return html`
+        <div class="fade-in">
+          <${PageHeader} title="Projecao de Gastos" onBack=${onBack} />
+          <div class="page-container">
+            <p style=${{ color: "var(--text-muted)", fontSize: 12, marginBottom: 14 }}>
               Visao completa de quanto voce gasta em cada fase
             </p>
 
-            <div style={{ display: "flex", gap: 6, marginBottom: 16, flexWrap: "wrap" }}>
-              {viewButtons.map(v => (
-                <button key={v.id} onClick={() => setView(v.id)} style={{
+            <div style=${{ display: "flex", gap: 6, marginBottom: 16, flexWrap: "wrap" }}>
+              ${viewButtons.map(v => html`
+                <button key=${v.id} onClick=${() => setView(v.id)} style=${{
                   padding: "7px 14px",
                   background: view === v.id ? "var(--accent-indigo)" : "var(--bg-secondary)",
                   color: view === v.id ? "#fff" : "var(--text-secondary)",
                   border: `1px solid ${view === v.id ? "var(--accent-indigo)" : "var(--border)"}`,
                   borderRadius: "var(--radius-sm)", cursor: "pointer",
                   fontFamily: "inherit", fontSize: 12, fontWeight: 600,
-                }}>{v.label}</button>
-              ))}
+                }}>${v.label}</button>
+              `)}
             </div>
 
-            {view === "combinado" && (
-              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                {[
+            ${view === "combinado" && html`
+              <div style=${{ display: "flex", flexDirection: "column", gap: 14 }}>
+                ${[
                   {
                     nome: "Fase 1: Evolucao de Obra (ambos)",
                     periodo: `Agora ate ${fmtMesAno(pl.entrega)}`, meses: mesesRestPL,
@@ -1258,135 +1256,135 @@
                     custoFim: pl.parcelaPosChave + up.parcelaPosChave,
                     cor: "var(--accent-indigo)", desc: "Parcelas fixas (PRICE). Studio pode gerar renda no Airbnb.",
                   },
-                ].map((f, i) => (
-                  <div key={i} style={{
+                ].map((f, i) => html`
+                  <div key=${i} style=${{
                     background: "var(--bg-secondary)", border: "1px solid var(--border)",
                     borderRadius: "var(--radius)", padding: "18px",
                     borderLeft: `3px solid ${f.cor}`,
                   }}>
-                    <h4 style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>{f.nome}</h4>
-                    <p className="mono" style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 6 }}>{f.periodo} ({f.meses} meses)</p>
-                    <p style={{ fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.5, marginBottom: 8 }}>{f.desc}</p>
-                    <div style={{ textAlign: "right" }}>
-                      {f.custoInicio !== f.custoFim ? (
+                    <h4 style=${{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>${f.nome}</h4>
+                    <p class="mono" style=${{ fontSize: 11, color: "var(--text-muted)", marginBottom: 6 }}>${f.periodo} (${f.meses} meses)</p>
+                    <p style=${{ fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.5, marginBottom: 8 }}>${f.desc}</p>
+                    <div style=${{ textAlign: "right" }}>
+                      ${f.custoInicio !== f.custoFim ? html`
                         <>
-                          <p style={{ fontSize: 10, color: "var(--text-muted)" }}>INICIO → FIM</p>
-                          <p className="mono" style={{ fontSize: 14, fontWeight: 700, color: f.cor }}>{fmt(f.custoInicio)}</p>
-                          <p className="mono" style={{ fontSize: 14, fontWeight: 700, color: "var(--accent-red)" }}>→ {fmt(f.custoFim)}</p>
+                          <p style=${{ fontSize: 10, color: "var(--text-muted)" }}>INICIO → FIM</p>
+                          <p class="mono" style=${{ fontSize: 14, fontWeight: 700, color: f.cor }}>${fmt(f.custoInicio)}</p>
+                          <p class="mono" style=${{ fontSize: 14, fontWeight: 700, color: "var(--accent-red)" }}>→ ${fmt(f.custoFim)}</p>
                         </>
-                      ) : (
+                      ` : html`
                         <>
-                          <p style={{ fontSize: 10, color: "var(--text-muted)" }}>CUSTO/MES (FIXO)</p>
-                          <p className="mono" style={{ fontSize: 16, fontWeight: 700, color: f.cor }}>{fmt(f.custoInicio)}</p>
+                          <p style=${{ fontSize: 10, color: "var(--text-muted)" }}>CUSTO/MES (FIXO)</p>
+                          <p class="mono" style=${{ fontSize: 16, fontWeight: 700, color: f.cor }}>${fmt(f.custoInicio)}</p>
                         </>
-                      )}
+                      `}
                     </div>
                   </div>
-                ))}
+                `)}
 
-                {/* Timeline */}
-                <div style={{
+                ${/* Timeline */null}
+                <div style=${{
                   background: "var(--bg-secondary)", border: "1px solid var(--border)",
                   borderRadius: "var(--radius)", padding: "18px",
                 }}>
-                  <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>Linha do Tempo - Mes a Mes</h3>
-                  <div style={{ display: "flex", gap: 14, marginBottom: 14 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <div style={{ width: 10, height: 10, borderRadius: 3, background: "var(--accent-indigo)" }} />
-                      <span style={{ fontSize: 12, color: "var(--text-muted)" }}>Palestra Life</span>
+                  <h3 style=${{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>Linha do Tempo - Mes a Mes</h3>
+                  <div style=${{ display: "flex", gap: 14, marginBottom: 14 }}>
+                    <div style=${{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <div style=${{ width: 10, height: 10, borderRadius: 3, background: "var(--accent-indigo)" }} />
+                      <span style=${{ fontSize: 12, color: "var(--text-muted)" }}>Palestra Life</span>
                     </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <div style={{ width: 10, height: 10, borderRadius: 3, background: "var(--accent-amber)" }} />
-                      <span style={{ fontSize: 12, color: "var(--text-muted)" }}>Unique</span>
+                    <div style=${{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <div style=${{ width: 10, height: 10, borderRadius: 3, background: "var(--accent-amber)" }} />
+                      <span style=${{ fontSize: 12, color: "var(--text-muted)" }}>Unique</span>
                     </div>
                   </div>
                   <div>
-                    {timeline.map((t, i) => (
-                      <div key={i}>
-                        {t.marco && (
-                          <div style={{
+                    ${timeline.map((t, i) => html`
+                      <div key=${i}>
+                        ${t.marco && html`
+                          <div style=${{
                             padding: "8px 12px", marginBottom: 6, marginTop: i > 0 ? 6 : 0,
                             background: "rgba(99,102,241,0.1)", borderRadius: 10,
                             display: "flex", alignItems: "center", gap: 6,
                           }}>
-                            <Icons.Check />
-                            <span style={{ fontSize: 12, fontWeight: 600, color: "var(--accent-indigo)" }}>{t.marco}</span>
+                            <${Icons.Check} />
+                            <span style=${{ fontSize: 12, fontWeight: 600, color: "var(--accent-indigo)" }}>${t.marco}</span>
                           </div>
-                        )}
-                        <div style={{ padding: "8px 0", borderBottom: "1px solid var(--border)" }}>
-                          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                            <span className="mono" style={{ fontSize: 12, color: "var(--text-secondary)" }}>{t.label}</span>
-                            <span className="mono" style={{ fontSize: 13, fontWeight: 700 }}>{fmt(t.total)}</span>
+                        `}
+                        <div style=${{ padding: "8px 0", borderBottom: "1px solid var(--border)" }}>
+                          <div style=${{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                            <span class="mono" style=${{ fontSize: 12, color: "var(--text-secondary)" }}>${t.label}</span>
+                            <span class="mono" style=${{ fontSize: 13, fontWeight: 700 }}>${fmt(t.total)}</span>
                           </div>
-                          <div style={{ display: "flex", gap: 2, height: 14, borderRadius: 7, overflow: "hidden", background: "var(--border)" }}>
-                            <div style={{
+                          <div style=${{ display: "flex", gap: 2, height: 14, borderRadius: 7, overflow: "hidden", background: "var(--border)" }}>
+                            <div style=${{
                               height: "100%", width: `${(t.custoPL / maxTimeline) * 100}%`,
                               background: "var(--accent-indigo)",
                               minWidth: t.custoPL > 0 ? 3 : 0,
                             }} />
-                            <div style={{
+                            <div style=${{
                               height: "100%", width: `${(t.custoUP / maxTimeline) * 100}%`,
                               background: "var(--accent-amber)",
                               minWidth: t.custoUP > 0 ? 3 : 0,
                             }} />
                           </div>
-                          <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
-                            <span className="mono" style={{ fontSize: 10, color: "var(--accent-indigo)" }}>{t.descPL} {fmt(t.custoPL)}</span>
-                            <span className="mono" style={{ fontSize: 10, color: "var(--accent-amber)" }}>{fmt(t.custoUP)} {t.descUP}</span>
+                          <div style=${{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
+                            <span class="mono" style=${{ fontSize: 10, color: "var(--accent-indigo)" }}>${t.descPL} ${fmt(t.custoPL)}</span>
+                            <span class="mono" style=${{ fontSize: 10, color: "var(--accent-amber)" }}>${fmt(t.custoUP)} ${t.descUP}</span>
                           </div>
                         </div>
                       </div>
-                    ))}
+                    `)}
                   </div>
                 </div>
 
-                {/* Total */}
-                <div style={{
+                ${/* Total */null}
+                <div style=${{
                   background: "var(--bg-secondary)", border: "1px solid var(--border)",
                   borderRadius: "var(--radius)", padding: "18px",
                 }}>
-                  <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 10 }}>Custo Total - Tudo Somado</h3>
-                  {[
+                  <h3 style=${{ fontSize: 14, fontWeight: 600, marginBottom: 10 }}>Custo Total - Tudo Somado</h3>
+                  ${[
                     { label: `Evol. obra PL (${mesesRestPL} m)`, valor: obraTotalPL },
                     { label: `Evol. obra UP (${mesesRestUP} m)`, valor: obraTotalUP },
                     { label: `Financ. PL (${params.prazoAnos}a x ${fmt(pl.parcelaPosChave)})`, valor: totalFinPL },
                     { label: `Financ. UP (${params.prazoAnos}a x ${fmt(up.parcelaPosChave)})`, valor: totalFinUP },
-                  ].map((item, i) => (
-                    <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "5px 0", borderBottom: "1px solid var(--border)", flexWrap: "wrap" }}>
-                      <span style={{ fontSize: 11 }}>{item.label}</span>
-                      <span className="mono" style={{ fontSize: 11, fontWeight: 600 }}>{fmt(item.valor)}</span>
+                  ].map((item, i) => html`
+                    <div key=${i} style=${{ display: "flex", justifyContent: "space-between", padding: "5px 0", borderBottom: "1px solid var(--border)", flexWrap: "wrap" }}>
+                      <span style=${{ fontSize: 11 }}>${item.label}</span>
+                      <span class="mono" style=${{ fontSize: 11, fontWeight: 600 }}>${fmt(item.valor)}</span>
                     </div>
-                  ))}
-                  <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", marginTop: 4 }}>
-                    <span style={{ fontSize: 14, fontWeight: 700 }}>TOTAL GERAL</span>
-                    <span className="mono" style={{ fontSize: 16, fontWeight: 700, color: "var(--accent-indigo)" }}>{fmt(grandTotal)}</span>
+                  `)}
+                  <div style=${{ display: "flex", justifyContent: "space-between", padding: "8px 0", marginTop: 4 }}>
+                    <span style=${{ fontSize: 14, fontWeight: 700 }}>TOTAL GERAL</span>
+                    <span class="mono" style=${{ fontSize: 16, fontWeight: 700, color: "var(--accent-indigo)" }}>${fmt(grandTotal)}</span>
                   </div>
                 </div>
               </div>
-            )}
+            `}
 
-            {view === "palestraLife" && (
-              <ApartmentDetail ap={pl} evolObra={evolObraPL} evolSaldo={evolSaldoPL}
-                saldoEntrega={saldoPL} obraTotal={obraTotalPL} totalFin={totalFinPL}
+            ${view === "palestraLife" && html`
+              <${ApartmentDetail} ap=${pl} evolObra=${evolObraPL} evolSaldo=${evolSaldoPL}
+                saldoEntrega=${saldoPL} obraTotal=${obraTotalPL} totalFin=${totalFinPL}
                 cor="var(--accent-indigo)" corHex="#6366f1" />
-            )}
+            `}
 
-            {view === "unique" && (
-              <ApartmentDetail ap={up} evolObra={evolObraUP} evolSaldo={evolSaldoUP}
-                saldoEntrega={saldoUP} obraTotal={obraTotalUP} totalFin={totalFinUP}
+            ${view === "unique" && html`
+              <${ApartmentDetail} ap=${up} evolObra=${evolObraUP} evolSaldo=${evolSaldoUP}
+                saldoEntrega=${saldoUP} obraTotal=${obraTotalUP} totalFin=${totalFinUP}
                 cor="var(--accent-amber)" corHex="#f59e0b" />
-            )}
+            `}
 
-            <div style={{
+            <div style=${{
               marginTop: 14, padding: "10px 12px", background: "var(--bg-tertiary)",
               borderRadius: "var(--radius-sm)", fontSize: 11, color: "var(--text-secondary)", lineHeight: 1.5,
             }}>
-              <strong>Nota:</strong> Valores de evolucao de obra sao estimativas ({params.taxaJuros}% a.a.).
+              <strong>Nota:</strong> Valores de evolucao de obra sao estimativas (${params.taxaJuros}% a.a.).
               Parcelas informadas pelo banco podem mudar na entrega devido ao INCC.
             </div>
           </div>
         </div>
-      );
+      `;
     }
 
     // ========================
@@ -1435,86 +1433,86 @@
         { titulo: "Fase 3: Chave", descricao: "Inicio do financiamento PRICE", itens: ["Contrato com banco", "Primeira parcela", "Registro em cartorio"] },
       ];
 
-      return (
-        <div className="fade-in">
-          <PageHeader title="Cronograma" onBack={onBack} />
-          <div className="page-container">
-            {/* Marcos */}
-            <div style={{
+      return html`
+        <div class="fade-in">
+          <${PageHeader} title="Cronograma" onBack=${onBack} />
+          <div class="page-container">
+            ${/* Marcos */null}
+            <div style=${{
               background: "var(--bg-secondary)", border: "1px solid var(--border)",
               borderRadius: "var(--radius)", padding: "18px", marginBottom: 14,
             }}>
-              <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 14 }}>Marcos Importantes</h3>
-              <div style={{ position: "relative", paddingLeft: 24 }}>
-                <div style={{ position: "absolute", left: 7, top: 8, bottom: 8, width: 2, background: "var(--border)" }} />
-                {marcos.map((m, i) => (
-                  <div key={i} style={{
+              <h3 style=${{ fontSize: 14, fontWeight: 600, marginBottom: 14 }}>Marcos Importantes</h3>
+              <div style=${{ position: "relative", paddingLeft: 24 }}>
+                <div style=${{ position: "absolute", left: 7, top: 8, bottom: 8, width: 2, background: "var(--border)" }} />
+                ${marcos.map((m, i) => html`
+                  <div key=${i} style=${{
                     display: "flex", alignItems: "flex-start", gap: 10,
                     marginBottom: i < marcos.length - 1 ? 16 : 0, position: "relative",
                   }}>
-                    <div style={{
+                    <div style=${{
                       position: "absolute", left: -20,
                       width: 10, height: 10, borderRadius: "50%",
                       background: m.status === "done" ? m.cor : "var(--bg-tertiary)",
                       border: `2px solid ${m.cor}`, marginTop: 4,
                     }} />
-                    <div style={{ flex: 1 }}>
-                      <p className="mono" style={{ fontSize: 10, color: "var(--text-muted)", marginBottom: 1 }}>{m.data}</p>
-                      <p style={{ fontSize: 13, fontWeight: 500 }}>{m.label}</p>
+                    <div style=${{ flex: 1 }}>
+                      <p class="mono" style=${{ fontSize: 10, color: "var(--text-muted)", marginBottom: 1 }}>${m.data}</p>
+                      <p style=${{ fontSize: 13, fontWeight: 500 }}>${m.label}</p>
                     </div>
-                    {m.status === "done" && (
-                      <span style={{
+                    ${m.status === "done" && html`
+                      <span style=${{
                         fontSize: 9, fontWeight: 600, color: "var(--accent-green)",
                         background: "rgba(34,197,94,0.1)", padding: "2px 6px", borderRadius: 4,
                       }}>OK</span>
-                    )}
+                    `}
                   </div>
-                ))}
+                `)}
               </div>
             </div>
 
-            {/* Fases */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 14 }}>
-              {fases.map((f, i) => (
-                <div key={i} style={{
+            ${/* Fases */null}
+            <div style=${{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 14 }}>
+              ${fases.map((f, i) => html`
+                <div key=${i} style=${{
                   background: "var(--bg-secondary)", border: "1px solid var(--border)",
                   borderRadius: "var(--radius)", padding: "18px",
                 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
-                    <span style={{
+                  <div style=${{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+                    <span style=${{
                       width: 20, height: 20, borderRadius: 5, background: "var(--accent-indigo)",
                       color: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
                       fontSize: 10, fontWeight: 700,
-                    }}>{i + 1}</span>
-                    <h4 style={{ fontSize: 13, fontWeight: 600 }}>{f.titulo}</h4>
+                    }}>${i + 1}</span>
+                    <h4 style=${{ fontSize: 13, fontWeight: 600 }}>${f.titulo}</h4>
                   </div>
-                  <p style={{ color: "var(--text-muted)", fontSize: 11, marginBottom: 8 }}>{f.descricao}</p>
-                  <ul style={{ listStyle: "none", paddingLeft: 0 }}>
-                    {f.itens.map((item, j) => (
-                      <li key={j} style={{ display: "flex", alignItems: "flex-start", gap: 5, fontSize: 12, color: "var(--text-secondary)", marginBottom: 4 }}>
-                        <span style={{ color: "var(--text-muted)", marginTop: 1 }}>&#8226;</span> {item}
+                  <p style=${{ color: "var(--text-muted)", fontSize: 11, marginBottom: 8 }}>${f.descricao}</p>
+                  <ul style=${{ listStyle: "none", paddingLeft: 0 }}>
+                    ${f.itens.map((item, j) => html`
+                      <li key=${j} style=${{ display: "flex", alignItems: "flex-start", gap: 5, fontSize: 12, color: "var(--text-secondary)", marginBottom: 4 }}>
+                        <span style=${{ color: "var(--text-muted)", marginTop: 1 }}>${"\u2022"}</span> ${item}
                       </li>
-                    ))}
+                    `)}
                   </ul>
                 </div>
-              ))}
+              `)}
             </div>
 
-            {/* Checklist */}
-            <div style={{
+            ${/* Checklist */null}
+            <div style=${{
               background: "var(--bg-secondary)", border: "1px solid var(--border)",
               borderRadius: "var(--radius)", padding: "18px",
             }}>
-              <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>Checklist de Documentacao</h3>
-              <div style={{ marginBottom: 12 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                  <span style={{ fontSize: 11, color: "var(--text-secondary)" }}>{doneCount} de {checklist.length}</span>
-                  <span className="mono" style={{ fontSize: 11, color: doneCount === checklist.length ? "var(--accent-green)" : "var(--text-muted)" }}>
-                    {checklist.length > 0 ? fmtNum((doneCount / checklist.length) * 100, 0) : 0}%
+              <h3 style=${{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>Checklist de Documentacao</h3>
+              <div style=${{ marginBottom: 12 }}>
+                <div style=${{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                  <span style=${{ fontSize: 11, color: "var(--text-secondary)" }}>${doneCount} de ${checklist.length}</span>
+                  <span class="mono" style=${{ fontSize: 11, color: doneCount === checklist.length ? "var(--accent-green)" : "var(--text-muted)" }}>
+                    ${checklist.length > 0 ? fmtNum((doneCount / checklist.length) * 100, 0) : 0}%
                   </span>
                 </div>
-                <div style={{ height: 5, background: "var(--border)", borderRadius: 3, overflow: "hidden" }}>
-                  <div style={{
+                <div style=${{ height: 5, background: "var(--border)", borderRadius: 3, overflow: "hidden" }}>
+                  <div style=${{
                     height: "100%", width: `${checklist.length > 0 ? (doneCount / checklist.length) * 100 : 0}%`,
                     background: doneCount === checklist.length ? "var(--accent-green)" : "var(--accent-indigo)",
                     borderRadius: 3, transition: "width 0.3s",
@@ -1522,48 +1520,48 @@
                 </div>
               </div>
 
-              <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 12 }}>
-                {checklist.map(item => (
-                  <div key={item.id} style={{
+              <div style=${{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 12 }}>
+                ${checklist.map(item => html`
+                  <div key=${item.id} style=${{
                     display: "flex", alignItems: "center", gap: 8, padding: "8px 10px",
                     background: "var(--bg-tertiary)", borderRadius: "var(--radius-sm)",
                   }}>
-                    <input type="checkbox" checked={item.done} onChange={() => toggleItem(item.id)}
-                      style={{ width: 16, height: 16, accentColor: "var(--accent-indigo)", cursor: "pointer", flexShrink: 0 }} />
-                    <span style={{
+                    <input type="checkbox" checked=${item.done} onChange=${() => toggleItem(item.id)}
+                      style=${{ width: 16, height: 16, accentColor: "var(--accent-indigo)", cursor: "pointer", flexShrink: 0 }} />
+                    <span style=${{
                       flex: 1, fontSize: 13,
                       textDecoration: item.done ? "line-through" : "none",
                       color: item.done ? "var(--text-muted)" : "var(--text-primary)",
-                    }}>{item.text}</span>
-                    <button onClick={() => removeItem(item.id)} style={{
+                    }}>${item.text}</span>
+                    <button onClick=${() => removeItem(item.id)} style=${{
                       background: "none", border: "none", cursor: "pointer",
                       color: "var(--text-muted)", padding: 3, display: "flex", alignItems: "center", opacity: 0.6,
-                    }}><Icons.X /></button>
+                    }}><${Icons.X} /></button>
                   </div>
-                ))}
+                `)}
               </div>
 
-              <div style={{ display: "flex", gap: 8 }}>
-                <input type="text" value={newItem} onChange={e => setNewItem(e.target.value)}
+              <div style=${{ display: "flex", gap: 8 }}>
+                <input type="text" value=${newItem} onChange=${e => setNewItem(e.target.value)}
                   placeholder="Adicionar item..."
-                  onKeyDown={e => e.key === "Enter" && addItem()}
-                  style={{
+                  onKeyDown=${e => e.key === "Enter" && addItem()}
+                  style=${{
                     flex: 1, padding: "8px 12px", background: "var(--bg-tertiary)",
                     border: "1px solid var(--border)", borderRadius: "var(--radius-sm)",
                     color: "var(--text-primary)", fontSize: 13, fontFamily: "inherit", outline: "none",
                   }} />
-                <button onClick={addItem} style={{
+                <button onClick=${addItem} style=${{
                   padding: "8px 12px", background: "var(--accent-indigo)", color: "#fff",
                   border: "none", borderRadius: "var(--radius-sm)", cursor: "pointer",
                   fontFamily: "inherit", fontSize: 12, fontWeight: 600,
                   display: "flex", alignItems: "center", gap: 4,
                   opacity: newItem.trim() ? 1 : 0.5,
-                }}><Icons.Plus /></button>
+                }}><${Icons.Plus} /></button>
               </div>
             </div>
           </div>
         </div>
-      );
+      `;
     }
 
     // ========================
@@ -1587,79 +1585,79 @@
         setTexto("");
       };
 
-      return (
-        <div className="fade-in">
-          <PageHeader title="Anotacoes" onBack={onBack} />
-          <div className="page-container">
-            <div style={{
+      return html`
+        <div class="fade-in">
+          <${PageHeader} title="Anotacoes" onBack=${onBack} />
+          <div class="page-container">
+            <div style=${{
               background: "var(--bg-secondary)", border: "1px solid var(--border)",
               borderRadius: "var(--radius)", padding: "18px", marginBottom: 16,
             }}>
               <textarea
-                value={texto} onChange={(e) => setTexto(e.target.value)}
+                value=${texto} onChange=${(e) => setTexto(e.target.value)}
                 placeholder="Escreva uma nota..."
-                rows={3}
-                style={{
+                rows=${3}
+                style=${{
                   width: "100%", padding: 12, background: "var(--bg-tertiary)",
                   border: "1px solid var(--border)", borderRadius: "var(--radius-sm)",
                   color: "var(--text-primary)", fontSize: 14, fontFamily: "inherit",
                   resize: "vertical", outline: "none",
                 }}
               />
-              <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 10, flexWrap: "wrap" }}>
-                {categorias.map(c => (
-                  <button key={c} onClick={() => setCategoria(c)} style={{
+              <div style=${{ display: "flex", alignItems: "center", gap: 5, marginTop: 10, flexWrap: "wrap" }}>
+                ${categorias.map(c => html`
+                  <button key=${c} onClick=${() => setCategoria(c)} style=${{
                     padding: "5px 10px",
                     background: categoria === c ? catCores[c] : "var(--bg-tertiary)",
                     color: categoria === c ? "#fff" : "var(--text-secondary)",
                     border: `1px solid ${categoria === c ? catCores[c] : "var(--border)"}`,
                     borderRadius: 5, cursor: "pointer", fontSize: 11, fontFamily: "inherit", fontWeight: 500,
-                  }}>{c}</button>
-                ))}
-                <button onClick={addNota} style={{
+                  }}>${c}</button>
+                `)}
+                <button onClick=${addNota} style=${{
                   marginLeft: "auto", padding: "6px 14px",
                   background: "var(--accent-indigo)", color: "#fff",
                   border: "none", borderRadius: "var(--radius-sm)",
                   cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: "inherit",
                   display: "flex", alignItems: "center", gap: 4,
                   opacity: texto.trim() ? 1 : 0.5,
-                }}><Icons.Plus /> Salvar</button>
+                }}><${Icons.Plus} /> Salvar</button>
               </div>
             </div>
 
-            {notas.length === 0 ? (
-              <div style={{ textAlign: "center", padding: 32, color: "var(--text-muted)", fontSize: 13 }}>
+            ${notas.length === 0 ? html`
+              <div style=${{ textAlign: "center", padding: 32, color: "var(--text-muted)", fontSize: 13 }}>
                 Nenhuma anotacao ainda.
               </div>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {notas.map(n => (
-                  <div key={n.id} style={{
+            ` : html`
+              <div style=${{ display: "flex", flexDirection: "column", gap: 8 }}>
+                ${notas.map(n => html`
+                  <div key=${n.id} style=${{
                     background: "var(--bg-secondary)", border: "1px solid var(--border)",
                     borderRadius: "var(--radius)", padding: "12px 14px",
                     borderLeft: `3px solid ${catCores[n.categoria] || "var(--border)"}`,
                   }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6, flexWrap: "wrap" }}>
-                      <span style={{
+                    <div style=${{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6, flexWrap: "wrap" }}>
+                      <span style=${{
                         fontSize: 10, fontWeight: 600, color: catCores[n.categoria] || "var(--text-muted)",
                         background: "var(--bg-tertiary)", padding: "2px 6px", borderRadius: 3,
-                      }}>{n.categoria}</span>
-                      <span style={{ fontSize: 10, color: "var(--text-muted)", display: "flex", alignItems: "center", gap: 3 }}>
-                        <Icons.Clock /> {n.data}
+                      }}>${n.categoria}</span>
+                      <span style=${{ fontSize: 10, color: "var(--text-muted)", display: "flex", alignItems: "center", gap: 3 }}>
+                        <${Icons.Clock} /> ${n.data}
                       </span>
-                      <button onClick={() => setNotas(notas.filter(x => x.id !== n.id))} style={{
+                      <button onClick=${() => setNotas(notas.filter(x => x.id !== n.id))} style=${{
                         marginLeft: "auto", background: "none", border: "none",
                         cursor: "pointer", color: "var(--text-muted)", padding: 3, display: "flex", alignItems: "center",
-                      }}><Icons.Trash /></button>
+                      }}><${Icons.Trash} /></button>
                     </div>
-                    <p style={{ fontSize: 13, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{n.texto}</p>
+                    <p style=${{ fontSize: 13, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>${n.texto}</p>
                   </div>
-                ))}
+                `)}
               </div>
-            )}
+            `}
           </div>
         </div>
-      );
+      `;
     }
 
     // ========================
@@ -1818,81 +1816,81 @@
         cursor: "pointer", flex: 1, minHeight: 48,
       };
 
-      return (
-        <div className="fade-in" style={{ display: "flex", flexDirection: "column", height: "100dvh" }}>
-          {/* Top bar - compact: back, title, zoom, download */}
-          <div style={{
+      return html`
+        <div class="fade-in" style=${{ display: "flex", flexDirection: "column", height: "100dvh" }}>
+          ${/* Top bar - compact: back, title, zoom, download */null}
+          <div style=${{
             background: "var(--bg-secondary)", borderBottom: "1px solid var(--border)",
             padding: "10px 14px", display: "flex", alignItems: "center", gap: 10,
           }}>
-            <button onClick={onBack} className="back-btn" style={{ flexShrink: 0, minWidth: 40, minHeight: 40, display: "flex", alignItems: "center", justifyContent: "center" }}><Icons.ChevronLeft /></button>
-            <span style={{ fontSize: 13, fontWeight: 600, flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{doc.nome}</span>
-            <div style={{ display: "flex", gap: 6, alignItems: "center", flexShrink: 0 }}>
-              <button onClick={zoomOut} style={btnSmall}><Icons.Minus /></button>
-              <button onClick={zoomFit} style={btnSmall}><Icons.Maximize /></button>
-              <button onClick={zoomIn} style={btnSmall}><Icons.Plus /></button>
-              <a href={doc.arquivo} download style={{
+            <button onClick=${onBack} class="back-btn" style=${{ flexShrink: 0, minWidth: 40, minHeight: 40, display: "flex", alignItems: "center", justifyContent: "center" }}><${Icons.ChevronLeft} /></button>
+            <span style=${{ fontSize: 13, fontWeight: 600, flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>${doc.nome}</span>
+            <div style=${{ display: "flex", gap: 6, alignItems: "center", flexShrink: 0 }}>
+              <button onClick=${zoomOut} style=${btnSmall}><${Icons.Minus} /></button>
+              <button onClick=${zoomFit} style=${btnSmall}><${Icons.Maximize} /></button>
+              <button onClick=${zoomIn} style=${btnSmall}><${Icons.Plus} /></button>
+              <a href=${doc.arquivo} download style=${{
                 ...btnSmall, background: doc.cor, color: "#fff", border: "none", textDecoration: "none",
-              }}><Icons.Download /></a>
+              }}><${Icons.Download} /></a>
             </div>
           </div>
 
-          {/* Rotate hint - only shows in portrait on mobile */}
-          <div className="pdf-rotate-hint" style={{
+          ${/* Rotate hint - only shows in portrait on mobile */null}
+          <div class="pdf-rotate-hint" style=${{
             background: "linear-gradient(135deg, var(--accent-indigo), var(--accent-indigo-light))", color: "#fff",
             padding: "14px 20px", fontSize: 15, fontWeight: 600, textAlign: "center",
             display: "none", alignItems: "center", justifyContent: "center", gap: 10,
           }}>
-            <Icons.Smartphone /> Gire o celular para melhor visualizacao
+            <${Icons.Smartphone} /> Gire o celular para melhor visualizacao
           </div>
 
-          {/* PDF Canvas area */}
-          <div ref={containerRef} style={{
+          ${/* PDF Canvas area */null}
+          <div ref=${containerRef} style=${{
             flex: 1, overflow: "auto", background: "var(--bg-tertiary)",
             display: "flex", justifyContent: "center", alignItems: "flex-start",
             padding: "12px 0",
             WebkitOverflowScrolling: "touch",
           }}>
-            {loading && (
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "var(--text-muted)", fontSize: 15 }}>
+            ${loading && html`
+              <div style=${{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "var(--text-muted)", fontSize: 15 }}>
                 Carregando PDF...
               </div>
-            )}
-            {error && (
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: 16, padding: 24, textAlign: "center" }}>
-                <Icons.AlertCircle />
-                <p style={{ color: "var(--text-muted)", fontSize: 15 }}>{error}</p>
-                <a href={doc.arquivo} target="_blank" rel="noopener noreferrer" style={{ ...btnNav, flex: "none", textDecoration: "none", padding: "12px 24px" }}>
-                  <Icons.ExternalLink /> Abrir em nova aba
+            `}
+            ${error && html`
+              <div style=${{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: 16, padding: 24, textAlign: "center" }}>
+                <${Icons.AlertCircle} />
+                <p style=${{ color: "var(--text-muted)", fontSize: 15 }}>${error}</p>
+                <a href=${doc.arquivo} target="_blank" rel="noopener noreferrer" style=${{ ...btnNav, flex: "none", textDecoration: "none", padding: "12px 24px" }}>
+                  <${Icons.ExternalLink} /> Abrir em nova aba
                 </a>
               </div>
-            )}
-            <canvas ref={canvasRef} style={{ display: loading || error ? "none" : "block" }} />
+            `}
+            <canvas ref=${canvasRef} style=${{ display: loading || error ? "none" : "block" }} />
           </div>
 
-          {/* Bottom page navigation - large touch targets */}
-          <div style={{
+          ${/* Bottom page navigation - large touch targets */null}
+          <div style=${{
             background: "var(--bg-secondary)", borderTop: "1px solid var(--border)",
             padding: "12px 14px calc(12px + var(--safe-bottom))",
             display: "flex", alignItems: "center", gap: 10,
           }}>
-            <button onClick={() => goPage(pageNum - 1)} disabled={pageNum <= 1}
-              style={{ ...btnNav, opacity: pageNum <= 1 ? 0.35 : 1 }}>
-              <Icons.ChevronLeft /> Anterior
+            <button onClick=${() => goPage(pageNum - 1)} disabled=${pageNum <= 1}
+              style=${{ ...btnNav, opacity: pageNum <= 1 ? 0.35 : 1 }}>
+              <${Icons.ChevronLeft} /> Anterior
             </button>
-            <span className="mono" style={{
+            <span class="mono" style=${{
               fontSize: 14, fontWeight: 600, color: "var(--text-secondary)",
               minWidth: 60, textAlign: "center", flexShrink: 0,
             }}>
-              {pageNum}/{numPages}
+              ${pageNum}/${numPages}
             </span>
-            <button onClick={() => goPage(pageNum + 1)} disabled={pageNum >= numPages}
-              style={{ ...btnNav, opacity: pageNum >= numPages ? 0.35 : 1 }}>
-              Proximo <Icons.ChevronRight />
+            <button onClick=${() => goPage(pageNum + 1)} disabled=${pageNum >= numPages}
+              style=${{ ...btnNav, opacity: pageNum >= numPages ? 0.35 : 1 }}>
+              Proximo <${Icons.ChevronRight} />
             </button>
           </div>
         </div>
-      );
+      `;
     }
 
     // ========================
@@ -1917,52 +1915,52 @@
       ];
 
       if (viewing) {
-        return <PdfViewer doc={docs.find(d => d.id === viewing)} onBack={() => setViewing(null)} />;
+        return html`<${PdfViewer} doc=${docs.find(d => d.id === viewing)} onBack=${() => setViewing(null)} />`;
       }
 
-      return (
-        <div className="fade-in">
-          <PageHeader title="Documentos" onBack={onBack} />
-          <div className="page-container">
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {docs.map(d => (
-                <div key={d.id} style={{
+      return html`
+        <div class="fade-in">
+          <${PageHeader} title="Documentos" onBack=${onBack} />
+          <div class="page-container">
+            <div style=${{ display: "flex", flexDirection: "column", gap: 12 }}>
+              ${docs.map(d => html`
+                <div key=${d.id} style=${{
                   background: "var(--bg-secondary)", border: "1px solid var(--border)",
                   borderRadius: "var(--radius)", padding: "16px",
                   borderLeft: `3px solid ${d.cor}`,
                 }}>
-                  <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
-                    <div style={{
+                  <div style=${{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                    <div style=${{
                       width: 40, height: 40, borderRadius: 10, flexShrink: 0,
                       background: "var(--bg-tertiary)", display: "flex",
                       alignItems: "center", justifyContent: "center", color: d.cor,
-                    }}><Icons.Book /></div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>{d.nome}</h3>
-                      <p style={{ fontSize: 12, color: "var(--text-secondary)", marginBottom: 10 }}>{d.desc}</p>
-                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                        <button onClick={() => setViewing(d.id)} style={{
+                    }}><${Icons.Book} /></div>
+                    <div style=${{ flex: 1, minWidth: 0 }}>
+                      <h3 style=${{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>${d.nome}</h3>
+                      <p style=${{ fontSize: 12, color: "var(--text-secondary)", marginBottom: 10 }}>${d.desc}</p>
+                      <div style=${{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                        <button onClick=${() => setViewing(d.id)} style=${{
                           display: "inline-flex", alignItems: "center", gap: 5,
                           padding: "8px 14px", background: d.cor, color: "#fff",
                           border: "none", borderRadius: "var(--radius-sm)",
                           fontSize: 12, fontWeight: 600, fontFamily: "inherit", cursor: "pointer",
-                        }}><Icons.Book /> Ver</button>
-                        <a href={d.arquivo} download style={{
+                        }}><${Icons.Book} /> Ver</button>
+                        <a href=${d.arquivo} download style=${{
                           display: "inline-flex", alignItems: "center", gap: 5,
                           padding: "8px 14px", background: "var(--bg-tertiary)",
                           color: "var(--text-secondary)", border: "1px solid var(--border)",
                           borderRadius: "var(--radius-sm)", textDecoration: "none",
                           fontSize: 12, fontFamily: "inherit",
-                        }}><Icons.Download /> {d.tamanho}</a>
+                        }}><${Icons.Download} /> ${d.tamanho}</a>
                       </div>
                     </div>
                   </div>
                 </div>
-              ))}
+              `)}
             </div>
           </div>
         </div>
-      );
+      `;
     }
 
     // ========================
@@ -1984,42 +1982,42 @@
         { q: "O que acontece ao pegar a chave?", a: "Encerra fase de obra, comeca financiamento bancario. Saldo (corrigido INCC) transferido ao banco. Paga parcelas fixas (PRICE). Pode morar ou alugar — studio no Airbnb pode se pagar." },
       ];
 
-      return (
-        <div className="fade-in">
-          <PageHeader title="FAQ" onBack={onBack} />
-          <div className="page-container">
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {perguntas.map((p, i) => (
-                <div key={i} style={{
+      return html`
+        <div class="fade-in">
+          <${PageHeader} title="FAQ" onBack=${onBack} />
+          <div class="page-container">
+            <div style=${{ display: "flex", flexDirection: "column", gap: 6 }}>
+              ${perguntas.map((p, i) => html`
+                <div key=${i} style=${{
                   background: "var(--bg-secondary)", border: "1px solid var(--border)",
                   borderRadius: "var(--radius)", overflow: "hidden",
                 }}>
                   <button
-                    onClick={() => setOpen(open === i ? null : i)}
-                    style={{
+                    onClick=${() => setOpen(open === i ? null : i)}
+                    style=${{
                       width: "100%", padding: "12px 14px", background: "none", border: "none",
                       color: "var(--text-primary)", cursor: "pointer", fontFamily: "inherit",
                       fontSize: 13, fontWeight: 500, display: "flex", alignItems: "center",
                       justifyContent: "space-between", textAlign: "left",
                     }}
                   >
-                    <span>{p.q}</span>
-                    <span style={{
+                    <span>${p.q}</span>
+                    <span style=${{
                       transform: open === i ? "rotate(180deg)" : "rotate(0)",
                       transition: "transform 0.2s", flexShrink: 0, marginLeft: 8,
-                    }}><Icons.ChevronDown /></span>
+                    }}><${Icons.ChevronDown} /></span>
                   </button>
-                  {open === i && (
-                    <div style={{ padding: "0 14px 12px", color: "var(--text-secondary)", fontSize: 12, lineHeight: 1.7 }}>
-                      {p.a}
+                  ${open === i && html`
+                    <div style=${{ padding: "0 14px 12px", color: "var(--text-secondary)", fontSize: 12, lineHeight: 1.7 }}>
+                      ${p.a}
                     </div>
-                  )}
+                  `}
                 </div>
-              ))}
+              `)}
             </div>
           </div>
         </div>
-      );
+      `;
     }
 
     // ========================
@@ -2058,39 +2056,39 @@
         { label: "Total " + params.prazoAnos + "a", pl: fmt(totalFinPL), up: fmt(totalFinUP) },
       ];
 
-      return (
-        <div className="fade-in">
-          <PageHeader title="Comparativo" onBack={onBack} />
-          <div className="page-container">
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {rows.map((r, i) => (
-                <div key={i} style={{
+      return html`
+        <div class="fade-in">
+          <${PageHeader} title="Comparativo" onBack=${onBack} />
+          <div class="page-container">
+            <div style=${{ display: "flex", flexDirection: "column", gap: 8 }}>
+              ${rows.map((r, i) => html`
+                <div key=${i} style=${{
                   background: "var(--bg-secondary)", borderRadius: "var(--radius-sm)",
                   padding: "12px 14px", border: "1px solid var(--border)",
                 }}>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text-muted)", marginBottom: 8 }}>{r.label}</div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                        <span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--accent-indigo)", flexShrink: 0 }} />
-                        <span style={{ fontSize: 11, color: "var(--text-muted)" }}>PL</span>
+                  <div style=${{ fontSize: 11, fontWeight: 600, color: "var(--text-muted)", marginBottom: 8 }}>${r.label}</div>
+                  <div style=${{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    <div style=${{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style=${{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                        <span style=${{ width: 8, height: 8, borderRadius: "50%", background: "var(--accent-indigo)", flexShrink: 0 }} />
+                        <span style=${{ fontSize: 11, color: "var(--text-muted)" }}>PL</span>
                       </span>
-                      <span className="mono" style={{ fontSize: 13, fontWeight: 600 }}>{r.pl}</span>
+                      <span class="mono" style=${{ fontSize: 13, fontWeight: 600 }}>${r.pl}</span>
                     </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                        <span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--accent-amber)", flexShrink: 0 }} />
-                        <span style={{ fontSize: 11, color: "var(--text-muted)" }}>UP</span>
+                    <div style=${{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style=${{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                        <span style=${{ width: 8, height: 8, borderRadius: "50%", background: "var(--accent-amber)", flexShrink: 0 }} />
+                        <span style=${{ fontSize: 11, color: "var(--text-muted)" }}>UP</span>
                       </span>
-                      <span className="mono" style={{ fontSize: 13, fontWeight: 600 }}>{r.up}</span>
+                      <span class="mono" style=${{ fontSize: 13, fontWeight: 600 }}>${r.up}</span>
                     </div>
                   </div>
                 </div>
-              ))}
+              `)}
             </div>
           </div>
         </div>
-      );
+      `;
     }
 
     // ========================
@@ -2128,87 +2126,87 @@
         e.target.value = "";
       };
 
-      return (
-        <div className="fade-in">
-          <PageHeader title="Galeria" onBack={onBack} />
-          <div className="page-container">
-            <div style={{
+      return html`
+        <div class="fade-in">
+          <${PageHeader} title="Galeria" onBack=${onBack} />
+          <div class="page-container">
+            <div style=${{
               background: "var(--bg-tertiary)", border: "1px solid var(--border)",
               borderRadius: "var(--radius-sm)", padding: "8px 12px", marginBottom: 14,
               display: "flex", alignItems: "center", gap: 6,
             }}>
-              <Icons.AlertCircle />
-              <p style={{ fontSize: 11, color: "var(--text-muted)" }}>Fotos no localStorage (~5MB). Redimensionadas para max 800px.</p>
+              <${Icons.AlertCircle} />
+              <p style=${{ fontSize: 11, color: "var(--text-muted)" }}>Fotos no localStorage (~5MB). Redimensionadas para max 800px.</p>
             </div>
 
-            <div style={{ marginBottom: 16 }}>
-              <label style={{
+            <div style=${{ marginBottom: 16 }}>
+              <label style=${{
                 display: "inline-flex", alignItems: "center", gap: 6,
                 padding: "10px 18px", background: "var(--accent-indigo)", color: "#fff",
                 borderRadius: "var(--radius-sm)", cursor: "pointer", fontSize: 13, fontWeight: 600,
               }}>
-                <Icons.Camera /> Adicionar Fotos
-                <input type="file" accept="image/*" multiple onChange={handleUpload} style={{ display: "none" }} />
+                <${Icons.Camera} /> Adicionar Fotos
+                <input type="file" accept="image/*" multiple onChange=${handleUpload} style=${{ display: "none" }} />
               </label>
             </div>
 
-            {fotos.length === 0 ? (
-              <div style={{
+            ${fotos.length === 0 ? html`
+              <div style=${{
                 textAlign: "center", padding: 40, color: "var(--text-muted)",
                 background: "var(--bg-secondary)", border: "1px solid var(--border)", borderRadius: "var(--radius)",
               }}>
-                <Icons.Image />
-                <p style={{ marginTop: 10, fontSize: 12 }}>Nenhuma foto ainda.</p>
+                <${Icons.Image} />
+                <p style=${{ marginTop: 10, fontSize: 12 }}>Nenhuma foto ainda.</p>
               </div>
-            ) : (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 10 }}>
-                {fotos.map(foto => (
-                  <div key={foto.id} style={{
+            ` : html`
+              <div style=${{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 10 }}>
+                ${fotos.map(foto => html`
+                  <div key=${foto.id} style=${{
                     background: "var(--bg-secondary)", border: "1px solid var(--border)",
                     borderRadius: "var(--radius)", overflow: "hidden",
                   }}>
-                    <div style={{ cursor: "pointer" }} onClick={() => setViewing(foto)}>
-                      <img src={foto.data} alt={foto.caption} style={{ width: "100%", height: 140, objectFit: "cover", display: "block" }} />
+                    <div style=${{ cursor: "pointer" }} onClick=${() => setViewing(foto)}>
+                      <img src=${foto.data} alt=${foto.caption} style=${{ width: "100%", height: 140, objectFit: "cover", display: "block" }} />
                     </div>
-                    <div style={{ padding: "8px 10px" }}>
-                      <input type="text" value={foto.caption} onChange={e => setFotos(fotos.map(f => f.id === foto.id ? { ...f, caption: e.target.value } : f))}
-                        style={{
+                    <div style=${{ padding: "8px 10px" }}>
+                      <input type="text" value=${foto.caption} onChange=${e => setFotos(fotos.map(f => f.id === foto.id ? { ...f, caption: e.target.value } : f))}
+                        style=${{
                           width: "100%", padding: "3px 5px", background: "var(--bg-tertiary)",
                           border: "1px solid var(--border)", borderRadius: 4,
                           color: "var(--text-primary)", fontSize: 11, fontFamily: "inherit", outline: "none",
                         }} />
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 4 }}>
-                        <span style={{ fontSize: 10, color: "var(--text-muted)" }}>{foto.date}</span>
-                        <button onClick={() => { setFotos(fotos.filter(f => f.id !== foto.id)); if (viewing?.id === foto.id) setViewing(null); }} style={{
+                      <div style=${{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 4 }}>
+                        <span style=${{ fontSize: 10, color: "var(--text-muted)" }}>${foto.date}</span>
+                        <button onClick=${() => { setFotos(fotos.filter(f => f.id !== foto.id)); if (viewing?.id === foto.id) setViewing(null); }} style=${{
                           background: "none", border: "none", cursor: "pointer",
                           color: "var(--accent-red)", padding: 2, display: "flex", fontSize: 10, gap: 2,
-                        }}><Icons.Trash /></button>
+                        }}><${Icons.Trash} /></button>
                       </div>
                     </div>
                   </div>
-                ))}
+                `)}
               </div>
-            )}
+            `}
 
-            {viewing && (
-              <div style={{
+            ${viewing && html`
+              <div style=${{
                 position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
                 background: "rgba(0,0,0,0.9)", zIndex: 1000,
                 display: "flex", alignItems: "center", justifyContent: "center", padding: 16,
-              }} onClick={() => setViewing(null)}>
-                <button onClick={() => setViewing(null)} style={{
+              }} onClick=${() => setViewing(null)}>
+                <button onClick=${() => setViewing(null)} style=${{
                   position: "absolute", top: 14, right: 14,
                   background: "rgba(255,255,255,0.15)", border: "none",
                   borderRadius: 8, padding: 8, cursor: "pointer", color: "#fff", display: "flex",
-                }}><Icons.X /></button>
-                <img src={viewing.data} alt={viewing.caption} style={{
+                }}><${Icons.X} /></button>
+                <img src=${viewing.data} alt=${viewing.caption} style=${{
                   maxWidth: "100%", maxHeight: "90vh", objectFit: "contain", borderRadius: "var(--radius)",
-                }} onClick={e => e.stopPropagation()} />
+                }} onClick=${e => e.stopPropagation()} />
               </div>
-            )}
+            `}
           </div>
         </div>
-      );
+      `;
     }
 
     // ========================
@@ -2249,34 +2247,33 @@
       const handleLogout = () => { sessionStorage.removeItem("nossoap_auth"); localStorage.removeItem("nossoap_auth_persist"); setLoggedIn(false); };
       const goHome = () => setPage("home");
 
-      if (!loggedIn) return <LoginScreen onLogin={() => setLoggedIn(true)} />;
+      if (!loggedIn) return html`<${LoginScreen} onLogin=${() => setLoggedIn(true)} />`;
 
       const renderPage = () => {
         switch (page) {
-          case "home": return <HomeScreen setPage={setPage} decisao={decisao} setDecisao={setDecisao} theme={theme} toggleTheme={toggleTheme} onLogout={handleLogout} onSearch={() => setShowSearch(true)} />;
-          case "projecao": return <Projecao onBack={goHome} />;
-          case "cronograma": return <Cronograma onBack={goHome} />;
-          case "comparativo": return <Comparativo onBack={goHome} />;
-          case "galeria": return <Galeria onBack={goHome} />;
-          case "docs": return <Documentos onBack={goHome} />;
-          case "anotacoes": return <Anotacoes onBack={goHome} />;
-          case "faq": return <FAQ onBack={goHome} />;
-          default: return <HomeScreen setPage={setPage} decisao={decisao} setDecisao={setDecisao} theme={theme} toggleTheme={toggleTheme} onLogout={handleLogout} onSearch={() => setShowSearch(true)} />;
+          case "home": return html`<${HomeScreen} setPage=${setPage} decisao=${decisao} setDecisao=${setDecisao} theme=${theme} toggleTheme=${toggleTheme} onLogout=${handleLogout} onSearch=${() => setShowSearch(true)} />`;
+          case "projecao": return html`<${Projecao} onBack=${goHome} />`;
+          case "cronograma": return html`<${Cronograma} onBack=${goHome} />`;
+          case "comparativo": return html`<${Comparativo} onBack=${goHome} />`;
+          case "galeria": return html`<${Galeria} onBack=${goHome} />`;
+          case "docs": return html`<${Documentos} onBack=${goHome} />`;
+          case "anotacoes": return html`<${Anotacoes} onBack=${goHome} />`;
+          case "faq": return html`<${FAQ} onBack=${goHome} />`;
+          default: return html`<${HomeScreen} setPage=${setPage} decisao=${decisao} setDecisao=${setDecisao} theme=${theme} toggleTheme=${toggleTheme} onLogout=${handleLogout} onSearch=${() => setShowSearch(true)} />`;
         }
       };
 
-      return (
-        <div style={{ minHeight: "100vh", background: "var(--bg-primary)" }}>
-          {showOnboarding && <Onboarding onDone={() => setShowOnboarding(false)} />}
-          {showSearch && <QuickSearch onClose={() => setShowSearch(false)} setPage={setPage} />}
-          <main>{renderPage()}</main>
-          <BottomNav page={page} setPage={setPage} />
+      return html`
+        <div style=${{ minHeight: "100vh", background: "var(--bg-primary)" }}>
+          ${showOnboarding && html`<${Onboarding} onDone=${() => setShowOnboarding(false)} />`}
+          ${showSearch && html`<${QuickSearch} onClose=${() => setShowSearch(false)} setPage=${setPage} />`}
+          <main>${renderPage()}</main>
+          <${BottomNav} page=${page} setPage=${setPage} />
         </div>
-      );
+      `;
     }
 
-    const root = ReactDOM.createRoot(document.getElementById("root"));
-    root.render(<App />);
+    render(html`<${App} />`, document.getElementById("root"));
   </script>
 </body>
 </html>
