@@ -1147,17 +1147,17 @@
             <p style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 10 }}>
               Juros sobre o valor liberado ao construtor.
             </p>
-            <div style={{ maxHeight: 300, overflowY: "auto" }}>
+            <div>
               {evolObra.map((m, i) => {
                 const maxJ = evolObra[evolObra.length - 1].jurosMes;
                 return (
-                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, padding: "3px 0", borderBottom: "1px solid var(--border)" }}>
-                    <span className="mono" style={{ fontSize: 10, color: "var(--text-muted)", width: 42, flexShrink: 0 }}>M{m.mes}</span>
-                    <span className="mono" style={{ fontSize: 10, color: "var(--text-muted)", width: 30, flexShrink: 0 }}>{m.percentual}%</span>
-                    <div style={{ flex: 1, height: 10, background: "var(--border)", borderRadius: 3, overflow: "hidden" }}>
-                      <div style={{ height: "100%", width: `${(m.jurosMes / maxJ) * 100}%`, background: cor, borderRadius: 3 }} />
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 0", borderBottom: "1px solid var(--border)" }}>
+                    <span className="mono" style={{ fontSize: 11, color: "var(--text-muted)", flexShrink: 0 }}>M{m.mes}</span>
+                    <span className="mono" style={{ fontSize: 11, color: "var(--text-muted)", flexShrink: 0 }}>{m.percentual}%</span>
+                    <div style={{ flex: 1, height: 12, background: "var(--border)", borderRadius: 6, overflow: "hidden", minWidth: 40 }}>
+                      <div style={{ height: "100%", width: `${(m.jurosMes / maxJ) * 100}%`, background: cor, borderRadius: 6 }} />
                     </div>
-                    <span className="mono" style={{ fontSize: 10, fontWeight: 600, width: 68, textAlign: "right", flexShrink: 0 }}>{fmt(m.jurosMes)}</span>
+                    <span className="mono" style={{ fontSize: 12, fontWeight: 600, flexShrink: 0 }}>{fmt(m.jurosMes)}</span>
                   </div>
                 );
               })}
@@ -1281,48 +1281,54 @@
                   background: "var(--bg-secondary)", border: "1px solid var(--border)",
                   borderRadius: "var(--radius)", padding: "18px",
                 }}>
-                  <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 10 }}>Linha do Tempo - Mes a Mes</h3>
-                  <div style={{ maxHeight: 350, overflowY: "auto" }}>
+                  <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>Linha do Tempo - Mes a Mes</h3>
+                  <div style={{ display: "flex", gap: 14, marginBottom: 14 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <div style={{ width: 10, height: 10, borderRadius: 3, background: "var(--accent-indigo)" }} />
+                      <span style={{ fontSize: 12, color: "var(--text-muted)" }}>Palestra Life</span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <div style={{ width: 10, height: 10, borderRadius: 3, background: "var(--accent-amber)" }} />
+                      <span style={{ fontSize: 12, color: "var(--text-muted)" }}>Unique</span>
+                    </div>
+                  </div>
+                  <div>
                     {timeline.map((t, i) => (
                       <div key={i}>
                         {t.marco && (
                           <div style={{
-                            padding: "5px 8px", marginBottom: 3, marginTop: i > 0 ? 3 : 0,
-                            background: "rgba(99,102,241,0.1)", borderRadius: 6,
-                            display: "flex", alignItems: "center", gap: 5,
+                            padding: "8px 12px", marginBottom: 6, marginTop: i > 0 ? 6 : 0,
+                            background: "rgba(99,102,241,0.1)", borderRadius: 10,
+                            display: "flex", alignItems: "center", gap: 6,
                           }}>
                             <Icons.Check />
-                            <span style={{ fontSize: 11, fontWeight: 600, color: "var(--accent-indigo)" }}>{t.marco}</span>
+                            <span style={{ fontSize: 12, fontWeight: 600, color: "var(--accent-indigo)" }}>{t.marco}</span>
                           </div>
                         )}
-                        <div style={{ display: "flex", alignItems: "center", gap: 5, padding: "3px 0", borderBottom: "1px solid var(--border)" }}>
-                          <span className="mono" style={{ fontSize: 9, color: "var(--text-muted)", width: 56, flexShrink: 0 }}>{t.label}</span>
-                          <div style={{ flex: 1, display: "flex", gap: 1, height: 12 }}>
+                        <div style={{ padding: "8px 0", borderBottom: "1px solid var(--border)" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                            <span className="mono" style={{ fontSize: 12, color: "var(--text-secondary)" }}>{t.label}</span>
+                            <span className="mono" style={{ fontSize: 13, fontWeight: 700 }}>{fmt(t.total)}</span>
+                          </div>
+                          <div style={{ display: "flex", gap: 2, height: 14, borderRadius: 7, overflow: "hidden", background: "var(--border)" }}>
                             <div style={{
                               height: "100%", width: `${(t.custoPL / maxTimeline) * 100}%`,
-                              background: "var(--accent-indigo)", borderRadius: "3px 0 0 3px",
-                              minWidth: t.custoPL > 0 ? 2 : 0,
+                              background: "var(--accent-indigo)",
+                              minWidth: t.custoPL > 0 ? 3 : 0,
                             }} />
                             <div style={{
                               height: "100%", width: `${(t.custoUP / maxTimeline) * 100}%`,
-                              background: "var(--accent-amber)", borderRadius: "0 3px 3px 0",
-                              minWidth: t.custoUP > 0 ? 2 : 0,
+                              background: "var(--accent-amber)",
+                              minWidth: t.custoUP > 0 ? 3 : 0,
                             }} />
                           </div>
-                          <span className="mono" style={{ fontSize: 10, fontWeight: 600, width: 65, textAlign: "right", flexShrink: 0 }}>{fmt(t.total)}</span>
+                          <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
+                            <span className="mono" style={{ fontSize: 10, color: "var(--accent-indigo)" }}>{t.descPL} {fmt(t.custoPL)}</span>
+                            <span className="mono" style={{ fontSize: 10, color: "var(--accent-amber)" }}>{fmt(t.custoUP)} {t.descUP}</span>
+                          </div>
                         </div>
                       </div>
                     ))}
-                  </div>
-                  <div style={{ display: "flex", gap: 12, marginTop: 8 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                      <div style={{ width: 8, height: 8, borderRadius: 2, background: "var(--accent-indigo)" }} />
-                      <span style={{ fontSize: 10, color: "var(--text-muted)" }}>PL</span>
-                    </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                      <div style={{ width: 8, height: 8, borderRadius: 2, background: "var(--accent-amber)" }} />
-                      <span style={{ fontSize: 10, color: "var(--text-muted)" }}>UP</span>
-                    </div>
                   </div>
                 </div>
 
@@ -1841,37 +1847,31 @@
         <div className="fade-in">
           <PageHeader title="Comparativo" onBack={onBack} />
           <div className="page-container">
-            <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
-              <table style={{
-                width: "100%", borderCollapse: "collapse", minWidth: 360,
-                background: "var(--bg-secondary)", borderRadius: "var(--radius)",
-                overflow: "hidden",
-              }}>
-                <thead>
-                  <tr>
-                    <th style={{ padding: "10px", textAlign: "left", fontSize: 11, fontWeight: 600, background: "var(--bg-tertiary)", borderBottom: "2px solid var(--border)", color: "var(--text-muted)" }}></th>
-                    <th style={{ padding: "10px", textAlign: "center", fontSize: 12, fontWeight: 700, background: "var(--bg-tertiary)", borderBottom: "2px solid var(--border)" }}>
-                      <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-                        <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--accent-indigo)" }} />PL
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {rows.map((r, i) => (
+                <div key={i} style={{
+                  background: "var(--bg-secondary)", borderRadius: "var(--radius-sm)",
+                  padding: "12px 14px", border: "1px solid var(--border)",
+                }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text-muted)", marginBottom: 8 }}>{r.label}</div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                        <span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--accent-indigo)", flexShrink: 0 }} />
+                        <span style={{ fontSize: 11, color: "var(--text-muted)" }}>PL</span>
                       </span>
-                    </th>
-                    <th style={{ padding: "10px", textAlign: "center", fontSize: 12, fontWeight: 700, background: "var(--bg-tertiary)", borderBottom: "2px solid var(--border)" }}>
-                      <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-                        <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--accent-amber)" }} />UP
+                      <span className="mono" style={{ fontSize: 13, fontWeight: 600 }}>{r.pl}</span>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                        <span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--accent-amber)", flexShrink: 0 }} />
+                        <span style={{ fontSize: 11, color: "var(--text-muted)" }}>UP</span>
                       </span>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((r, i) => (
-                    <tr key={i} style={{ background: i % 2 === 0 ? "var(--bg-secondary)" : "var(--bg-tertiary)" }}>
-                      <td style={{ padding: "8px 10px", fontSize: 11, fontWeight: 600, borderBottom: "1px solid var(--border)", color: "var(--text-secondary)" }}>{r.label}</td>
-                      <td className="mono" style={{ padding: "8px 10px", fontSize: 11, textAlign: "center", borderBottom: "1px solid var(--border)", borderLeft: "1px solid var(--border)" }}>{r.pl}</td>
-                      <td className="mono" style={{ padding: "8px 10px", fontSize: 11, textAlign: "center", borderBottom: "1px solid var(--border)", borderLeft: "1px solid var(--border)" }}>{r.up}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                      <span className="mono" style={{ fontSize: 13, fontWeight: 600 }}>{r.up}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
