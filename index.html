@@ -149,6 +149,11 @@
       .page-container { padding: 16px; padding-bottom: 110px; }
     }
 
+    /* PDF rotate hint - visible only in portrait on small screens */
+    @media (orientation: portrait) and (max-width: 768px) {
+      .pdf-rotate-hint { display: flex !important; }
+    }
+
     /* Bottom nav */
     .bottom-nav {
       position: fixed;
@@ -1672,6 +1677,37 @@
       const [error, setError] = useState(null);
       const renderTaskRef = useRef(null);
 
+      // Force landscape orientation + hide bottom nav + fullscreen
+      useEffect(() => {
+        // Hide bottom nav
+        const nav = document.querySelector(".bottom-nav");
+        if (nav) nav.style.display = "none";
+
+        // Enter fullscreen + lock to landscape
+        const goFullscreen = async () => {
+          try {
+            const el = document.documentElement;
+            if (el.requestFullscreen) await el.requestFullscreen();
+            else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen();
+          } catch (e) {}
+          try {
+            await screen.orientation.lock("landscape");
+          } catch (e) {}
+        };
+        goFullscreen();
+
+        return () => {
+          // Restore bottom nav
+          if (nav) nav.style.display = "";
+          // Exit fullscreen + unlock orientation
+          try { screen.orientation.unlock(); } catch (e) {}
+          try {
+            if (document.fullscreenElement) document.exitFullscreen();
+            else if (document.webkitFullscreenElement) document.webkitExitFullscreen();
+          } catch (e) {}
+        };
+      }, []);
+
       // Load PDF document
       useEffect(() => {
         if (!window.pdfjsLib) {
@@ -1775,43 +1811,45 @@
       };
 
       return (
-        <div className="fade-in" style={{ display: "flex", flexDirection: "column", height: "100vh" }}>
-          {/* Header */}
+        <div className="fade-in" style={{ display: "flex", flexDirection: "column", height: "100vh", height: "100dvh" }}>
+          {/* Single compact toolbar */}
           <div style={{
             background: "var(--bg-secondary)", borderBottom: "1px solid var(--border)",
-            padding: "10px 14px", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap",
+            padding: "6px 10px", display: "flex", alignItems: "center", gap: 6,
           }}>
-            <button onClick={onBack} className="back-btn"><Icons.ChevronLeft /></button>
-            <span style={{ fontSize: 13, fontWeight: 600, flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{doc.nome}</span>
-            <a href={doc.arquivo} target="_blank" rel="noopener noreferrer" style={{
-              ...btnStyle, textDecoration: "none",
-            }}><Icons.ExternalLink /> Aba</a>
-            <a href={doc.arquivo} download style={{
-              ...btnStyle, background: doc.cor, color: "#fff", border: "none", textDecoration: "none",
-            }}><Icons.Download /></a>
-          </div>
+            <button onClick={onBack} className="back-btn" style={{ flexShrink: 0 }}><Icons.ChevronLeft /></button>
 
-          {/* Controls bar */}
-          <div style={{
-            background: "var(--bg-secondary)", borderBottom: "1px solid var(--border)",
-            padding: "6px 14px", display: "flex", alignItems: "center", gap: 6, justifyContent: "space-between",
-          }}>
-            <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-              <button onClick={zoomOut} style={btnStyle} title="Diminuir"><Icons.Minus /></button>
-              <button onClick={zoomFit} style={btnStyle} title="Ajustar"><Icons.Maximize /></button>
-              <button onClick={zoomIn} style={btnStyle} title="Aumentar"><Icons.Plus /></button>
-            </div>
-            <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-              <button onClick={() => goPage(pageNum - 1)} disabled={pageNum <= 1} style={{ ...btnStyle, opacity: pageNum <= 1 ? 0.4 : 1 }}>
+            {/* Page navigation - center */}
+            <div style={{ display: "flex", gap: 3, alignItems: "center", flex: 1, justifyContent: "center" }}>
+              <button onClick={() => goPage(pageNum - 1)} disabled={pageNum <= 1} style={{ ...btnStyle, padding: "5px 8px", opacity: pageNum <= 1 ? 0.35 : 1 }}>
                 <Icons.ChevronLeft />
               </button>
-              <span className="mono" style={{ fontSize: 12, color: "var(--text-secondary)", minWidth: 60, textAlign: "center" }}>
-                {pageNum} / {numPages}
+              <span className="mono" style={{ fontSize: 11, color: "var(--text-secondary)", minWidth: 50, textAlign: "center" }}>
+                {pageNum}/{numPages}
               </span>
-              <button onClick={() => goPage(pageNum + 1)} disabled={pageNum >= numPages} style={{ ...btnStyle, opacity: pageNum >= numPages ? 0.4 : 1 }}>
+              <button onClick={() => goPage(pageNum + 1)} disabled={pageNum >= numPages} style={{ ...btnStyle, padding: "5px 8px", opacity: pageNum >= numPages ? 0.35 : 1 }}>
                 <Icons.ChevronRight />
               </button>
             </div>
+
+            {/* Zoom + actions - right */}
+            <div style={{ display: "flex", gap: 3, alignItems: "center", flexShrink: 0 }}>
+              <button onClick={zoomOut} style={{ ...btnStyle, padding: "5px 7px" }}><Icons.Minus /></button>
+              <button onClick={zoomFit} style={{ ...btnStyle, padding: "5px 7px" }}><Icons.Maximize /></button>
+              <button onClick={zoomIn} style={{ ...btnStyle, padding: "5px 7px" }}><Icons.Plus /></button>
+              <a href={doc.arquivo} download style={{
+                ...btnStyle, padding: "5px 7px", background: doc.cor, color: "#fff", border: "none", textDecoration: "none",
+              }}><Icons.Download /></a>
+            </div>
+          </div>
+
+          {/* Rotate hint - only shows in portrait on mobile */}
+          <div className="pdf-rotate-hint" style={{
+            background: "var(--accent-indigo)", color: "#fff",
+            padding: "6px 14px", fontSize: 12, textAlign: "center",
+            display: "none", alignItems: "center", justifyContent: "center", gap: 6,
+          }}>
+            <Icons.Smartphone /> Gire o celular para melhor visualizacao
           </div>
 
           {/* PDF Canvas area */}
