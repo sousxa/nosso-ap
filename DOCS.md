@@ -73,4 +73,5 @@ meu-ap/
 
 | Data | Alteracao |
 |------|-----------|
+| 2026-03-28 | Fix PDF viewer - substituido iframe por PDF.js com navegacao de paginas e zoom |
 | 2026-03-27 | MVP completo - todas as 6 telas implementadas |
