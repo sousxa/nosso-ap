@@ -1,4 +1,4 @@
-const CACHE = 'nossoap-v5';
+const CACHE = 'nossoap-v6';
 const STATIC_ASSETS = [
   './',
   './index.html',

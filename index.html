@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Nosso AP</title>
   <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='url(%23g)'/><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0%25' stop-color='%236366f1'/><stop offset='100%25' stop-color='%23f59e0b'/></linearGradient></defs><text x='50' y='68' text-anchor='middle' font-size='50' font-family='sans-serif' fill='white' font-weight='bold'>AP</text></svg>">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='url(%23g)'/><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0%25' stop-color='%238B0A2A'/><stop offset='100%25' stop-color='%23C5943A'/></linearGradient></defs><text x='50' y='68' text-anchor='middle' font-size='50' font-family='sans-serif' fill='white' font-weight='bold'>AP</text></svg>">
   <script src="https://unpkg.com/htm@3.1.1/preact/standalone.umd.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -25,10 +25,10 @@
       --text-primary: #fafafa;
       --text-secondary: #a1a1aa;
       --text-muted: #71717a;
-      --accent-indigo: #6366f1;
-      --accent-indigo-light: #818cf8;
-      --accent-amber: #f59e0b;
-      --accent-amber-light: #fbbf24;
+      --accent-indigo: #8B0A2A;
+      --accent-indigo-light: #A8123A;
+      --accent-amber: #C5943A;
+      --accent-amber-light: #D4A84A;
       --accent-green: #22c55e;
       --accent-red: #ef4444;
       --shadow: 0 2px 6px rgba(0,0,0,0.35);
@@ -50,10 +50,10 @@
       --text-primary: #0f172a;
       --text-secondary: #475569;
       --text-muted: #94a3b8;
-      --accent-indigo: #4f46e5;
-      --accent-indigo-light: #6366f1;
-      --accent-amber: #d97706;
-      --accent-amber-light: #f59e0b;
+      --accent-indigo: #7A0824;
+      --accent-indigo-light: #8B0A2A;
+      --accent-amber: #B08530;
+      --accent-amber-light: #C5943A;
       --accent-green: #16a34a;
       --accent-red: #dc2626;
       --shadow: 0 2px 6px rgba(0,0,0,0.06);
@@ -91,6 +91,31 @@
     }
     .fade-in { animation: fadeIn 0.35s ease-out; }
 
+    @keyframes splashLogo {
+      0% { opacity: 0; transform: scale(0.6); }
+      40% { opacity: 1; transform: scale(1.05); }
+      60% { transform: scale(0.97); }
+      80% { transform: scale(1); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    @keyframes splashText {
+      0% { opacity: 0; transform: translateY(16px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes splashOut {
+      0% { opacity: 1; }
+      100% { opacity: 0; pointer-events: none; }
+    }
+    .splash-screen {
+      position: fixed; inset: 0; z-index: 9999;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background: linear-gradient(160deg, #09090b 0%, #1a0510 40%, #2d0a1a 70%, #09090b 100%);
+    }
+    .splash-screen.out { animation: splashOut 0.5s ease-out forwards; }
+    .splash-logo { animation: splashLogo 0.8s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+    .splash-title { animation: splashText 0.5s ease-out 0.5s forwards; opacity: 0; }
+    .splash-sub { animation: splashText 0.5s ease-out 0.7s forwards; opacity: 0; }
+
     @keyframes slideUp {
       from { opacity: 0; transform: translateY(100%); }
       to { opacity: 1; transform: translateY(0); }
@@ -107,8 +132,8 @@
     }
 
     @keyframes glowPulse {
-      0%, 100% { box-shadow: 0 0 12px rgba(99,102,241,0.3), 0 0 24px rgba(99,102,241,0.1); }
-      50% { box-shadow: 0 0 20px rgba(99,102,241,0.5), 0 0 40px rgba(99,102,241,0.2); }
+      0%, 100% { box-shadow: 0 0 12px rgba(139,10,42,0.3), 0 0 24px rgba(139,10,42,0.1); }
+      50% { box-shadow: 0 0 20px rgba(139,10,42,0.5), 0 0 40px rgba(139,10,42,0.2); }
     }
 
     @keyframes float {
@@ -182,10 +207,10 @@
     }
     .bottom-nav button.active {
       color: var(--accent-indigo);
-      background: rgba(99,102,241,0.12);
+      background: rgba(139,10,42,0.15);
     }
     .bottom-nav button.active svg {
-      filter: drop-shadow(0 0 8px rgba(99,102,241,0.6));
+      filter: drop-shadow(0 0 8px rgba(139,10,42,0.6));
     }
 
     /* Page header */
@@ -465,12 +490,12 @@
             animation: shake ? "shake 0.5s ease" : undefined,
           }}>
             <div class="glow-icon float-anim" style=${{
-              width: 68, height: 68, borderRadius: "20px",
-              background: "linear-gradient(135deg, var(--accent-indigo), var(--accent-amber))",
+              width: 72, height: 72, borderRadius: "20px",
+              background: "linear-gradient(135deg, #2d0a1a, #1a0510)",
               display: "flex", alignItems: "center", justifyContent: "center",
-              margin: "0 auto 24px",
+              margin: "0 auto 24px", border: "1px solid rgba(139,10,42,0.3)",
             }}>
-              <${Icons.Building} />
+              <img src="public/icones/Vector-1.svg" alt="Logo" style=${{ width: 44, height: 44 }} />
             </div>
             <h1 style=${{ fontSize: "24px", fontWeight: 700, marginBottom: 6 }}>Nosso AP</h1>
             <p style=${{ color: "var(--text-muted)", marginBottom: 30, fontSize: 14 }}>
@@ -504,7 +529,7 @@
                 width: "100%", padding: "16px", background: "var(--accent-indigo)", color: "#fff",
                 border: "none", borderRadius: "var(--radius)", fontSize: 16, fontWeight: 600,
                 cursor: "pointer", fontFamily: "inherit",
-                boxShadow: "0 4px 16px rgba(99,102,241,0.3)",
+                boxShadow: "0 4px 16px rgba(139,10,42,0.3)",
                 transition: "transform 0.15s, box-shadow 0.15s",
               }}>Entrar</button>
             </form>
@@ -556,7 +581,7 @@
               width: 64, height: 64, borderRadius: 16,
               background: s.gradient,
               display: "flex", alignItems: "center", justifyContent: "center",
-              margin: "0 auto 20px", boxShadow: "0 4px 20px rgba(99,102,241,0.3)",
+              margin: "0 auto 20px", boxShadow: "0 4px 20px rgba(139,10,42,0.3)",
             }}>${s.icon}</div>
             <h2 style=${{ fontSize: 20, fontWeight: 700, marginBottom: 10 }}>${s.title}</h2>
             <p style=${{ color: "var(--text-secondary)", fontSize: 14, lineHeight: 1.6, marginBottom: 24 }}>${s.desc}</p>
@@ -646,7 +671,7 @@
 
       return html`
         <div style=${{
-          background: "linear-gradient(135deg, rgba(99,102,241,0.15), rgba(245,158,11,0.15))",
+          background: "linear-gradient(135deg, rgba(139,10,42,0.15), rgba(197,148,58,0.15))",
           border: "1px solid var(--border)",
           borderRadius: "var(--radius)", padding: "16px 18px", marginBottom: 16,
           display: "flex", alignItems: "center", gap: 12,
@@ -865,9 +890,10 @@
             <div style=${{ display: "flex", alignItems: "center", gap: 12 }}>
               <div class="glow-icon" style=${{
                 width: 46, height: 46, borderRadius: 15,
-                background: "linear-gradient(135deg, var(--accent-indigo), var(--accent-amber))",
+                background: "linear-gradient(135deg, #2d0a1a, #1a0510)",
                 display: "flex", alignItems: "center", justifyContent: "center",
-              }}><${Icons.Building} /></div>
+                border: "1px solid rgba(139,10,42,0.3)",
+              }}><img src="public/icones/Vector-1.svg" alt="" style=${{ width: 28, height: 28 }} /></div>
               <div>
                 <h1 style=${{ fontSize: 20, fontWeight: 700, lineHeight: 1.2 }}>Nosso AP</h1>
                 <p style=${{ fontSize: 12, color: "var(--text-muted)" }}>Planejamento imobiliario</p>
@@ -938,7 +964,7 @@
             ${/* Total */null}
             <div style=${{
               display: "flex", alignItems: "center", justifyContent: "space-between",
-              background: "linear-gradient(135deg, rgba(99,102,241,0.08), rgba(239,68,68,0.08))",
+              background: "linear-gradient(135deg, rgba(139,10,42,0.08), rgba(239,68,68,0.08))",
               borderRadius: "var(--radius-sm)", padding: "14px 16px",
               border: "1px solid var(--border)",
             }}>
@@ -1311,7 +1337,7 @@
                         ${t.marco && html`
                           <div style=${{
                             padding: "8px 12px", marginBottom: 6, marginTop: i > 0 ? 6 : 0,
-                            background: "rgba(99,102,241,0.1)", borderRadius: 10,
+                            background: "rgba(139,10,42,0.1)", borderRadius: 10,
                             display: "flex", alignItems: "center", gap: 6,
                           }}>
                             <${Icons.Check} />
@@ -1373,13 +1399,13 @@
             ${view === "palestraLife" && html`
               <${ApartmentDetail} ap=${pl} evolObra=${evolObraPL} evolSaldo=${evolSaldoPL}
                 saldoEntrega=${saldoPL} obraTotal=${obraTotalPL} totalFin=${totalFinPL}
-                cor="var(--accent-indigo)" corHex="#6366f1" />
+                cor="var(--accent-indigo)" corHex="#8B0A2A" />
             `}
 
             ${view === "unique" && html`
               <${ApartmentDetail} ap=${up} evolObra=${evolObraUP} evolSaldo=${evolSaldoUP}
                 saldoEntrega=${saldoUP} obraTotal=${obraTotalUP} totalFin=${totalFinUP}
-                cor="var(--accent-amber)" corHex="#f59e0b" />
+                cor="var(--accent-amber)" corHex="#C5943A" />
             `}
 
             <div style=${{
@@ -2217,6 +2243,36 @@
     }
 
     // ========================
+    // COMPONENTE: SPLASH SCREEN
+    // ========================
+    function SplashScreen({ onDone }) {
+      const [out, setOut] = useState(false);
+      useEffect(() => {
+        const t1 = setTimeout(() => setOut(true), 2000);
+        const t2 = setTimeout(onDone, 2500);
+        return () => { clearTimeout(t1); clearTimeout(t2); };
+      }, []);
+      return html`
+        <div class=${"splash-screen" + (out ? " out" : "")}>
+          <div class="splash-logo" style=${{ marginBottom: 20 }}>
+            <img src="public/icones/Vector.svg" alt="Nosso AP" style=${{ width: 100, height: 106 }} />
+          </div>
+          <h1 class="splash-title" style=${{
+            fontSize: 28, fontWeight: 700, color: "#fafafa", letterSpacing: "0.5px",
+          }}>Nosso AP</h1>
+          <p class="splash-sub" style=${{
+            fontSize: 14, color: "rgba(255,255,255,0.5)", marginTop: 8,
+          }}>Planejamento financeiro imobiliario</p>
+          <div class="splash-sub" style=${{
+            width: 40, height: 3, borderRadius: 2,
+            background: "linear-gradient(90deg, #8B0A2A, #C5943A)",
+            marginTop: 24,
+          }} />
+        </div>
+      `;
+    }
+
+    // ========================
     // APP PRINCIPAL
     // ========================
     function App() {
@@ -2228,6 +2284,7 @@
       const [decisao, setDecisao] = useState(() => localStorage.getItem("nossoap_decisao") || "ambos");
       const [showOnboarding, setShowOnboarding] = useState(false);
       const [showSearch, setShowSearch] = useState(false);
+      const [showSplash, setShowSplash] = useState(() => !sessionStorage.getItem("nossoap_splash_done"));
 
       useEffect(() => {
         document.documentElement.setAttribute("data-theme", theme);
@@ -2253,6 +2310,8 @@
       const toggleTheme = () => setTheme(t => t === "dark" ? "light" : "dark");
       const handleLogout = () => { sessionStorage.removeItem("nossoap_auth"); localStorage.removeItem("nossoap_auth_persist"); setLoggedIn(false); };
       const goHome = () => setPage("home");
+
+      if (showSplash) return html`<${SplashScreen} onDone=${() => { setShowSplash(false); sessionStorage.setItem("nossoap_splash_done", "1"); }} />`;
 
       if (!loggedIn) return html`<${LoginScreen} onLogin=${() => setLoggedIn(true)} />`;
 
