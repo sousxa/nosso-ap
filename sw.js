@@ -1,11 +1,13 @@
-const CACHE = 'nossoap-v6';
+const CACHE = 'nossoap-v3';
 const STATIC_ASSETS = [
   './',
   './index.html',
   './manifest.json',
 ];
 const CDN_ASSETS = [
-  'https://unpkg.com/htm@3.1.1/preact/standalone.umd.js',
+  'https://unpkg.com/react@18/umd/react.production.min.js',
+  'https://unpkg.com/react-dom@18/umd/react-dom.production.min.js',
+  'https://unpkg.com/@babel/standalone/babel.min.js',
   'https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap',
   'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js',
