@@ -1802,52 +1802,46 @@
       const zoomOut = () => setScale(s => Math.max((s || baseScale) * 0.7, baseScale * 0.5));
       const zoomFit = () => setScale(null);
 
-      const btnStyle = {
-        display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 4,
-        padding: "6px 10px", background: "var(--bg-tertiary)",
+      const btnSmall = {
+        display: "inline-flex", alignItems: "center", justifyContent: "center",
+        padding: "8px 10px", background: "var(--bg-tertiary)",
         border: "1px solid var(--border)", borderRadius: "var(--radius-sm)",
-        color: "var(--text-secondary)", fontSize: 12, fontFamily: "inherit",
-        cursor: "pointer", flexShrink: 0,
+        color: "var(--text-secondary)", fontSize: 13, fontFamily: "inherit",
+        cursor: "pointer", flexShrink: 0, minWidth: 40, minHeight: 40,
+      };
+
+      const btnNav = {
+        display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6,
+        padding: "12px 20px", background: "var(--bg-tertiary)",
+        border: "1px solid var(--border)", borderRadius: "var(--radius-sm)",
+        color: "var(--text-primary)", fontSize: 14, fontWeight: 600, fontFamily: "inherit",
+        cursor: "pointer", flex: 1, minHeight: 48,
       };
 
       return (
-        <div className="fade-in" style={{ display: "flex", flexDirection: "column", height: "100vh", height: "100dvh" }}>
-          {/* Single compact toolbar */}
+        <div className="fade-in" style={{ display: "flex", flexDirection: "column", height: "100dvh" }}>
+          {/* Top bar - compact: back, title, zoom, download */}
           <div style={{
             background: "var(--bg-secondary)", borderBottom: "1px solid var(--border)",
-            padding: "6px 10px", display: "flex", alignItems: "center", gap: 6,
+            padding: "10px 14px", display: "flex", alignItems: "center", gap: 10,
           }}>
-            <button onClick={onBack} className="back-btn" style={{ flexShrink: 0 }}><Icons.ChevronLeft /></button>
-
-            {/* Page navigation - center */}
-            <div style={{ display: "flex", gap: 3, alignItems: "center", flex: 1, justifyContent: "center" }}>
-              <button onClick={() => goPage(pageNum - 1)} disabled={pageNum <= 1} style={{ ...btnStyle, padding: "5px 8px", opacity: pageNum <= 1 ? 0.35 : 1 }}>
-                <Icons.ChevronLeft />
-              </button>
-              <span className="mono" style={{ fontSize: 11, color: "var(--text-secondary)", minWidth: 50, textAlign: "center" }}>
-                {pageNum}/{numPages}
-              </span>
-              <button onClick={() => goPage(pageNum + 1)} disabled={pageNum >= numPages} style={{ ...btnStyle, padding: "5px 8px", opacity: pageNum >= numPages ? 0.35 : 1 }}>
-                <Icons.ChevronRight />
-              </button>
-            </div>
-
-            {/* Zoom + actions - right */}
-            <div style={{ display: "flex", gap: 3, alignItems: "center", flexShrink: 0 }}>
-              <button onClick={zoomOut} style={{ ...btnStyle, padding: "5px 7px" }}><Icons.Minus /></button>
-              <button onClick={zoomFit} style={{ ...btnStyle, padding: "5px 7px" }}><Icons.Maximize /></button>
-              <button onClick={zoomIn} style={{ ...btnStyle, padding: "5px 7px" }}><Icons.Plus /></button>
+            <button onClick={onBack} className="back-btn" style={{ flexShrink: 0, minWidth: 40, minHeight: 40, display: "flex", alignItems: "center", justifyContent: "center" }}><Icons.ChevronLeft /></button>
+            <span style={{ fontSize: 13, fontWeight: 600, flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{doc.nome}</span>
+            <div style={{ display: "flex", gap: 6, alignItems: "center", flexShrink: 0 }}>
+              <button onClick={zoomOut} style={btnSmall}><Icons.Minus /></button>
+              <button onClick={zoomFit} style={btnSmall}><Icons.Maximize /></button>
+              <button onClick={zoomIn} style={btnSmall}><Icons.Plus /></button>
               <a href={doc.arquivo} download style={{
-                ...btnStyle, padding: "5px 7px", background: doc.cor, color: "#fff", border: "none", textDecoration: "none",
+                ...btnSmall, background: doc.cor, color: "#fff", border: "none", textDecoration: "none",
               }}><Icons.Download /></a>
             </div>
           </div>
 
           {/* Rotate hint - only shows in portrait on mobile */}
           <div className="pdf-rotate-hint" style={{
-            background: "var(--accent-indigo)", color: "#fff",
-            padding: "6px 14px", fontSize: 12, textAlign: "center",
-            display: "none", alignItems: "center", justifyContent: "center", gap: 6,
+            background: "linear-gradient(135deg, var(--accent-indigo), var(--accent-indigo-light))", color: "#fff",
+            padding: "14px 20px", fontSize: 15, fontWeight: 600, textAlign: "center",
+            display: "none", alignItems: "center", justifyContent: "center", gap: 10,
           }}>
             <Icons.Smartphone /> Gire o celular para melhor visualizacao
           </div>
@@ -1855,24 +1849,47 @@
           {/* PDF Canvas area */}
           <div ref={containerRef} style={{
             flex: 1, overflow: "auto", background: "var(--bg-tertiary)",
-            display: "flex", justifyContent: "center", padding: "8px 0",
+            display: "flex", justifyContent: "center", alignItems: "flex-start",
+            padding: "12px 0",
             WebkitOverflowScrolling: "touch",
           }}>
             {loading && (
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "var(--text-muted)", fontSize: 14 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "var(--text-muted)", fontSize: 15 }}>
                 Carregando PDF...
               </div>
             )}
             {error && (
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: 12, padding: 20, textAlign: "center" }}>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: 16, padding: 24, textAlign: "center" }}>
                 <Icons.AlertCircle />
-                <p style={{ color: "var(--text-muted)", fontSize: 14 }}>{error}</p>
-                <a href={doc.arquivo} target="_blank" rel="noopener noreferrer" style={{ ...btnStyle, textDecoration: "none" }}>
+                <p style={{ color: "var(--text-muted)", fontSize: 15 }}>{error}</p>
+                <a href={doc.arquivo} target="_blank" rel="noopener noreferrer" style={{ ...btnNav, flex: "none", textDecoration: "none", padding: "12px 24px" }}>
                   <Icons.ExternalLink /> Abrir em nova aba
                 </a>
               </div>
             )}
             <canvas ref={canvasRef} style={{ display: loading || error ? "none" : "block" }} />
+          </div>
+
+          {/* Bottom page navigation - large touch targets */}
+          <div style={{
+            background: "var(--bg-secondary)", borderTop: "1px solid var(--border)",
+            padding: "12px 14px calc(12px + var(--safe-bottom))",
+            display: "flex", alignItems: "center", gap: 10,
+          }}>
+            <button onClick={() => goPage(pageNum - 1)} disabled={pageNum <= 1}
+              style={{ ...btnNav, opacity: pageNum <= 1 ? 0.35 : 1 }}>
+              <Icons.ChevronLeft /> Anterior
+            </button>
+            <span className="mono" style={{
+              fontSize: 14, fontWeight: 600, color: "var(--text-secondary)",
+              minWidth: 60, textAlign: "center", flexShrink: 0,
+            }}>
+              {pageNum}/{numPages}
+            </span>
+            <button onClick={() => goPage(pageNum + 1)} disabled={pageNum >= numPages}
+              style={{ ...btnNav, opacity: pageNum >= numPages ? 0.35 : 1 }}>
+              Proximo <Icons.ChevronRight />
+            </button>
           </div>
         </div>
       );
